@@ -22,6 +22,10 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Rasmlarni yuklash uchun ruxsat kerak.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Rasmlarni saqlash uchun ruxsat kerak.</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

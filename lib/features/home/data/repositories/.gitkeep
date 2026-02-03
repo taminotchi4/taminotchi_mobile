@@ -1,0 +1,4 @@
+— Clean Architecture folder structure for Home feature —
+- Domain Layer: Entities, Repositories, UseCases
+- Data Layer: DataSources, Models, Repositories
+- Presentation Layer: Pages, Widgets, BLoC/Cubit
