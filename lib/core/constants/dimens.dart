@@ -29,10 +29,11 @@ class AppDimens {
   static const double iconMd = 18;
   static const double iconLg = 22;
   static const double appBarExpanded = 120;
-  static const double carouselHeight = 240;
+  static const double carouselHeight = 250;
   static const double productImageHeight = 140;
   static const double productDetailImageHeight = 260;
   static const double categoryChipMaxWidth = 120;
   static const double productCardAspectRatio = 0.68;
   static const double postImageAspectRatio = 1 / 1.5;
+  static const double searchFieldHeight = 44;
 }

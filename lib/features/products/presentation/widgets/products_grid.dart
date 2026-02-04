@@ -33,19 +33,20 @@ class ProductsGrid extends StatelessWidget {
     return Column(
       children: [
         GridView.builder(
+          padding: EdgeInsets.zero,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: products.length,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
-            mainAxisSpacing: AppDimens.md.h,
-            crossAxisSpacing: AppDimens.md.w,
+            mainAxisSpacing: AppDimens.sm.h,
+            crossAxisSpacing: AppDimens.sm.w,
             childAspectRatio: AppDimens.productCardAspectRatio,
           ),
           itemBuilder: (context, index) => ProductCard(product: products[index]),
         ),
         if (showLoadMore) ...[
-          AppDimens.lg.height,
+          AppDimens.md.height,
           Center(
             child: InkWell(
               onTap: onLoadMore,

@@ -23,6 +23,8 @@ class AppIcons {
   static const categoryService = 'assets/icons/ic_category_service.svg';
   static const categoryEvent = 'assets/icons/ic_category_event.svg';
   static const categoryOther = 'assets/icons/ic_category_other.svg';
+  static const chat = 'assets/icons/ic_chat.svg';
+  static const audio = 'assets/icons/ic_audio.svg';
 }
 
 class AppImages {

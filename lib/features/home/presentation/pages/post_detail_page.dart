@@ -63,6 +63,7 @@ class _PostDetailPageState extends State<PostDetailPage> {
               PostCard(
                 post: post,
                 commentCount: state.activeComments.length,
+                showFullText: true,
               ),
               AppDimens.lg.height,
               Row(

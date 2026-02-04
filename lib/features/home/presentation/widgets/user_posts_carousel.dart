@@ -1,19 +1,23 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-
 import '../../../../core/constants/dimens.dart';
 import '../../../../core/routing/routes.dart';
 import '../../../../core/utils/styles.dart';
+import '../../../../global/widgets/measure_size.dart';
 import '../../domain/entities/post_entity.dart';
 import 'post_card.dart';
 
 class UserPostsCarousel extends StatefulWidget {
   final List<PostEntity> posts;
+  final Map<String, int> commentCounts;
 
-  const UserPostsCarousel({super.key, required this.posts});
+  const UserPostsCarousel({
+    super.key,
+    required this.posts,
+    required this.commentCounts,
+  });
 
   @override
   State<UserPostsCarousel> createState() => _UserPostsCarouselState();
@@ -25,6 +29,8 @@ class _UserPostsCarouselState extends State<UserPostsCarousel> {
   late final PageController _controller;
   Timer? _timer;
   int _currentIndex = 0;
+  double _currentHeight = AppDimens.carouselHeight.h;
+  final Map<int, double> _itemHeights = {};
 
   @override
   void initState() {
@@ -76,31 +82,46 @@ class _UserPostsCarouselState extends State<UserPostsCarousel> {
       );
     }
 
-    // Determine height based on whether any post in the carousel has an image
-    // To keep carousel height consistent
-    final hasImages = widget.posts.any((p) => p.images.isNotEmpty);
-    final carouselHeight = hasImages ? 400.h : 200.h;
-
     return SizedBox(
-      height: carouselHeight,
-      child: PageView.builder(
-        controller: _controller,
-        itemCount: widget.posts.length,
-        onPageChanged: (index) => _currentIndex = index,
-        itemBuilder: (context, index) {
-          final post = widget.posts[index];
-          return Padding(
-            padding: EdgeInsets.symmetric(horizontal: AppDimens.xs.w),
-            child: SingleChildScrollView(
-              physics: const NeverScrollableScrollPhysics(),
-              child: PostCard(
-                post: post,
-                commentCount: post.content.length,
-                onTap: () => context.push(Routes.getPostDetail(post.id)),
-              ),
-            ),
-          );
-        },
+      child: AnimatedSize(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+        child: SizedBox(
+          height: _currentHeight,
+          child: PageView.builder(
+            controller: _controller,
+            itemCount: widget.posts.length,
+            onPageChanged: (index) {
+              setState(() {
+                _currentIndex = index;
+                _currentHeight = _itemHeights[index] ?? _currentHeight;
+              });
+            },
+            itemBuilder: (context, index) {
+              final post = widget.posts[index];
+              final commentCount = widget.commentCounts[post.id] ?? 0;
+              return Padding(
+                padding: EdgeInsets.symmetric(horizontal: AppDimens.xs.w),
+                child: MeasureSize(
+                  onChange: (size) {
+                    if (!mounted) return;
+                    _itemHeights[index] = size.height;
+                    if (_currentIndex == index) {
+                      setState(() {
+                        _currentHeight = _itemHeights[index]!;
+                      });
+                    }
+                  },
+                  child: PostCard(
+                    post: post,
+                    commentCount: commentCount,
+                    onTap: () => context.push(Routes.getPostDetail(post.id)),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
       ),
     );
   }

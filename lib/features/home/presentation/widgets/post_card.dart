@@ -17,14 +17,16 @@ class PostCard extends StatelessWidget {
   final PostEntity post;
   final int commentCount;
   final VoidCallback? onTap;
-  final bool isCarousel;
+  final int? textMaxLines;
+  final bool showFullText;
 
   const PostCard({
     super.key,
     required this.post,
     required this.commentCount,
     this.onTap,
-    this.isCarousel = false,
+    this.textMaxLines,
+    this.showFullText = false,
   });
 
   @override
@@ -33,7 +35,7 @@ class PostCard extends StatelessWidget {
     return Material(
       color: theme.cardColor,
       borderRadius: BorderRadius.circular(AppDimens.cardRadius.r),
-      elevation: isCarousel ? 0 : AppDimens.cardElevation,
+      elevation: AppDimens.cardElevation,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppDimens.cardRadius.r),
@@ -49,8 +51,11 @@ class PostCard extends StatelessWidget {
               if (post.images.isNotEmpty) AppDimens.md.height,
               Text(
                 post.content,
-                maxLines: isCarousel ? 2 : 5,
-                overflow: TextOverflow.ellipsis,
+                maxLines: showFullText
+                    ? null
+                    : (textMaxLines ?? (post.images.isNotEmpty ? 3 : 5)),
+                overflow:
+                    showFullText ? TextOverflow.visible : TextOverflow.ellipsis,
                 style: AppStyles.bodyRegular.copyWith(
                   color: theme.textTheme.bodyMedium?.color,
                 ),
@@ -101,50 +106,30 @@ class PostCard extends StatelessWidget {
   }
 
   Widget _buildImageSection(BuildContext context) {
-    if (isCarousel) {
-      return SizedBox(
-        height: 60.h,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          itemCount: post.images.length,
-          separatorBuilder: (_, __) => AppDimens.xs.width,
-          itemBuilder: (context, index) {
-            return GestureDetector(
-              onTap: () {
-                showDialog(
-                  context: context,
-                  barrierColor: Colors.transparent,
-                  builder: (_) => ImageViewerDialog(images: post.images, initialIndex: index),
-                );
-              },
+    return SizedBox(
+      height: 70.h,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: post.images.length,
+        separatorBuilder: (_, __) => AppDimens.sm.width,
+        itemBuilder: (context, index) {
+          return GestureDetector(
+            onTap: () {
+              showDialog(
+                context: context,
+                barrierColor: Colors.black54,
+                builder: (_) => ImageViewerDialog(images: post.images, initialIndex: index),
+              );
+            },
+            child: AspectRatio(
+              aspectRatio: 1,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(AppDimens.imageRadius.r),
-                child: SizedBox(
-                  width: 60.h,
-                  height: 60.h,
-                  child: _buildImageContent(post.images[index]),
-                ),
+                child: _buildImageContent(post.images[index]),
               ),
-            );
-          },
-        ),
-      );
-    }
-
-    return GestureDetector(
-      onTap: () {
-        showDialog(
-          context: context,
-          barrierColor: Colors.transparent,
-          builder: (_) => ImageViewerDialog(images: post.images),
-        );
-      },
-      child: AspectRatio(
-        aspectRatio: AppDimens.postImageAspectRatio,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(AppDimens.imageRadius.r),
-          child: _buildImageContent(post.images.first),
-        ),
+            ),
+          );
+        },
       ),
     );
   }

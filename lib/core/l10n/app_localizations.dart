@@ -100,18 +100,6 @@ abstract class MyLocalizations {
     Locale('uz'),
   ];
 
-  /// Onboarding qismida birinchi chiqib turadigan qismi
-  ///
-  /// In uz, this message translates to:
-  /// **'Xush kelibsiz!'**
-  String get welcome;
-
-  /// No description provided for @withName.
-  ///
-  /// In uz, this message translates to:
-  /// **'Salom! {name}'**
-  String withName(Object name);
-
   /// No description provided for @selectLanguage.
   ///
   /// In uz, this message translates to:
@@ -121,20 +109,8 @@ abstract class MyLocalizations {
   /// No description provided for @choosePreferredLanguage.
   ///
   /// In uz, this message translates to:
-  /// **'Quyida oʻzingiz yoqtirgan tilni tanlang. Bu sizga yaxshiroq xizmat koʻrsatishimizga yordam beradi.'**
+  /// **'Quyida oʻzingiz yoqtirgan tilni tanlang.'**
   String get choosePreferredLanguage;
-
-  /// No description provided for @selected.
-  ///
-  /// In uz, this message translates to:
-  /// **'Tanlangan'**
-  String get selected;
-
-  /// No description provided for @allLanguages.
-  ///
-  /// In uz, this message translates to:
-  /// **'Hamma tillar'**
-  String get allLanguages;
 
   /// No description provided for @continueButton.
   ///
@@ -142,335 +118,11 @@ abstract class MyLocalizations {
   /// **'Davom etish'**
   String get continueButton;
 
-  /// No description provided for @authCreateAccount.
+  /// No description provided for @home.
   ///
   /// In uz, this message translates to:
-  /// **'Hisob ochish'**
-  String get authCreateAccount;
-
-  /// No description provided for @authUsername.
-  ///
-  /// In uz, this message translates to:
-  /// **'Foydalanuvchi nomi'**
-  String get authUsername;
-
-  /// No description provided for @authCreateUsernameHint.
-  ///
-  /// In uz, this message translates to:
-  /// **'Foydalanuvchi nomini yarating...'**
-  String get authCreateUsernameHint;
-
-  /// No description provided for @authPassword.
-  ///
-  /// In uz, this message translates to:
-  /// **'Parol'**
-  String get authPassword;
-
-  /// No description provided for @authCreatePasswordHint.
-  ///
-  /// In uz, this message translates to:
-  /// **'Parol yarating...'**
-  String get authCreatePasswordHint;
-
-  /// No description provided for @authConfirmPassword.
-  ///
-  /// In uz, this message translates to:
-  /// **'Tasdiqlovchi Parol'**
-  String get authConfirmPassword;
-
-  /// No description provided for @authConfirmPasswordHint.
-  ///
-  /// In uz, this message translates to:
-  /// **'Parolni tasdiqlang...'**
-  String get authConfirmPasswordHint;
-
-  /// No description provided for @authAgreementPart1.
-  ///
-  /// In uz, this message translates to:
-  /// **'Ro‘yxatdan o‘tish orqali siz '**
-  String get authAgreementPart1;
-
-  /// No description provided for @authAgreementPart2.
-  ///
-  /// In uz, this message translates to:
-  /// **'Ommaviy orfeta va Maxfiylik siyosatiga'**
-  String get authAgreementPart2;
-
-  /// No description provided for @authAgreementPart3.
-  ///
-  /// In uz, this message translates to:
-  /// **' rozilik bildirasiz'**
-  String get authAgreementPart3;
-
-  /// No description provided for @authPublicOffer.
-  ///
-  /// In uz, this message translates to:
-  /// **'Ommaviy orfeta'**
-  String get authPublicOffer;
-
-  /// No description provided for @authPrivacyPolicy.
-  ///
-  /// In uz, this message translates to:
-  /// **'Maxfiylik siyosati'**
-  String get authPrivacyPolicy;
-
-  /// No description provided for @signUpButton.
-  ///
-  /// In uz, this message translates to:
-  /// **'Ro’yxatdan o’tish'**
-  String get signUpButton;
-
-  /// No description provided for @authSignUpWithGoogle.
-  ///
-  /// In uz, this message translates to:
-  /// **'Google orqali yozilish'**
-  String get authSignUpWithGoogle;
-
-  /// No description provided for @authAlreadyHaveAccount.
-  ///
-  /// In uz, this message translates to:
-  /// **'Hisobingiz bormi?'**
-  String get authAlreadyHaveAccount;
-
-  /// No description provided for @loginButton.
-  ///
-  /// In uz, this message translates to:
-  /// **'Kirish'**
-  String get loginButton;
-
-  /// No description provided for @authPasswordLengthWarning.
-  ///
-  /// In uz, this message translates to:
-  /// **'Parolingiz kamida 6ta belgidan iborat bo‘lishi shart!'**
-  String get authPasswordLengthWarning;
-
-  /// No description provided for @authEnterUsernameHint.
-  ///
-  /// In uz, this message translates to:
-  /// **'Foydalanuvchi nomini kiriting...'**
-  String get authEnterUsernameHint;
-
-  /// No description provided for @authEnterPasswordHint.
-  ///
-  /// In uz, this message translates to:
-  /// **'Parolingizni kiriting...'**
-  String get authEnterPasswordHint;
-
-  /// No description provided for @authForgotPassword.
-  ///
-  /// In uz, this message translates to:
-  /// **'Parolni unutdingizmi?'**
-  String get authForgotPassword;
-
-  /// No description provided for @authNoAccountYet.
-  ///
-  /// In uz, this message translates to:
-  /// **'Hisobingiz hali yo’qmi?'**
-  String get authNoAccountYet;
-
-  /// No description provided for @authInvalidUsername.
-  ///
-  /// In uz, this message translates to:
-  /// **'Iltimos, to’g’ri foydalanuvchi nomini kiriting!'**
-  String get authInvalidUsername;
-
-  /// No description provided for @authOr.
-  ///
-  /// In uz, this message translates to:
-  /// **'yoki'**
-  String get authOr;
-
-  /// No description provided for @authEnterUsernameValidation.
-  ///
-  /// In uz, this message translates to:
-  /// **'Iltimos, foydalanuvchi nomini kiriting!'**
-  String get authEnterUsernameValidation;
-
-  /// No description provided for @authUsernameLengthValidation.
-  ///
-  /// In uz, this message translates to:
-  /// **'Foydalanuvchi nomi kamida 3 ta belgi bo\'lishi kerak'**
-  String get authUsernameLengthValidation;
-
-  /// No description provided for @authEnterPasswordValidation.
-  ///
-  /// In uz, this message translates to:
-  /// **'Iltimos, Parol kiriting'**
-  String get authEnterPasswordValidation;
-
-  /// No description provided for @authConfirmPasswordValidation.
-  ///
-  /// In uz, this message translates to:
-  /// **'Iltimos, Parolni tasdiqlang'**
-  String get authConfirmPasswordValidation;
-
-  /// No description provided for @authPasswordsNotMatch.
-  ///
-  /// In uz, this message translates to:
-  /// **'Parollar mos kelmadi'**
-  String get authPasswordsNotMatch;
-
-  /// No description provided for @authUsernameMaxLength.
-  ///
-  /// In uz, this message translates to:
-  /// **'Foydalanuvchi nomi 24 tadan ortiq belgi bo\'lishi mumkin emas.'**
-  String get authUsernameMaxLength;
-
-  /// No description provided for @authUsernameCannotStartWithUnderscore.
-  ///
-  /// In uz, this message translates to:
-  /// **'Foydalanuvchi nomi \'_\' bilan boshlanishi mumkin emas.'**
-  String get authUsernameCannotStartWithUnderscore;
-
-  /// No description provided for @authUsernameCannotEndWithUnderscore.
-  ///
-  /// In uz, this message translates to:
-  /// **'Foydalanuvchi nomi \'_\' bilan tugashi mumkin emas.'**
-  String get authUsernameCannotEndWithUnderscore;
-
-  /// No description provided for @authUsernameFormat.
-  ///
-  /// In uz, this message translates to:
-  /// **'Harflar, raqamlar va \'_\' dan foydalaning.'**
-  String get authUsernameFormat;
-
-  /// No description provided for @authUsernameAllowedChars.
-  ///
-  /// In uz, this message translates to:
-  /// **'Faqat kichik harflar (a-z), raqamlar (0-9) va \'_\' belgisiga ruxsat beriladi.'**
-  String get authUsernameAllowedChars;
-
-  /// No description provided for @authPasswordLengthRange.
-  ///
-  /// In uz, this message translates to:
-  /// **'Parol 6 dan 24 gacha belgi oralig\'ida bo\'lishi kerak.'**
-  String get authPasswordLengthRange;
-
-  /// No description provided for @authPasswordMustContainNumber.
-  ///
-  /// In uz, this message translates to:
-  /// **'Parolda kamida 1 ta raqam bo\'lishi kerak.'**
-  String get authPasswordMustContainNumber;
-
-  /// No description provided for @authPasswordMustContainLetter.
-  ///
-  /// In uz, this message translates to:
-  /// **'Parolda kamida 1 ta harf bo\'lishi kerak.'**
-  String get authPasswordMustContainLetter;
-
-  /// No description provided for @authLoginWithTelegram.
-  ///
-  /// In uz, this message translates to:
-  /// **'telegram orqali kirish'**
-  String get authLoginWithTelegram;
-
-  /// No description provided for @authViaTelegram.
-  ///
-  /// In uz, this message translates to:
-  /// **'telegram orqali'**
-  String get authViaTelegram;
-
-  /// No description provided for @comingSoon.
-  ///
-  /// In uz, this message translates to:
-  /// **'tez kunda'**
-  String get comingSoon;
-
-  /// No description provided for @authUsernamePasswordSame.
-  ///
-  /// In uz, this message translates to:
-  /// **'username parol bilan bir xil bo\'la olmaydi.'**
-  String get authUsernamePasswordSame;
-
-  /// No description provided for @joinTheCompetition.
-  ///
-  /// In uz, this message translates to:
-  /// **'Quizzga qo‘shilish'**
-  String get joinTheCompetition;
-
-  /// No description provided for @liveQuizzes.
-  ///
-  /// In uz, this message translates to:
-  /// **'Jonli quizlar'**
-  String get liveQuizzes;
-
-  /// No description provided for @trendingQuizzes.
-  ///
-  /// In uz, this message translates to:
-  /// **'Trenddagi quizlar'**
-  String get trendingQuizzes;
-
-  /// No description provided for @leaderboard.
-  ///
-  /// In uz, this message translates to:
-  /// **'Yetakchilar jadvali'**
-  String get leaderboard;
-
-  /// No description provided for @all.
-  ///
-  /// In uz, this message translates to:
-  /// **'Barchasi'**
-  String get all;
-
-  /// No description provided for @join.
-  ///
-  /// In uz, this message translates to:
-  /// **'Qo‘shilish'**
-  String get join;
-
-  /// No description provided for @level.
-  ///
-  /// In uz, this message translates to:
-  /// **'daraja'**
-  String get level;
-
-  /// No description provided for @editProfile.
-  ///
-  /// In uz, this message translates to:
-  /// **'Profilni tahrirlash'**
-  String get editProfile;
-
-  /// No description provided for @competitions.
-  ///
-  /// In uz, this message translates to:
-  /// **'Bellashuvlar'**
-  String get competitions;
-
-  /// No description provided for @numberOfQuizzes.
-  ///
-  /// In uz, this message translates to:
-  /// **'Quizlar soni'**
-  String get numberOfQuizzes;
-
-  /// No description provided for @likes.
-  ///
-  /// In uz, this message translates to:
-  /// **'Layklar'**
-  String get likes;
-
-  /// No description provided for @addFriends.
-  ///
-  /// In uz, this message translates to:
-  /// **'Do‘st qo‘shish'**
-  String get addFriends;
-
-  /// No description provided for @myQuizzes.
-  ///
-  /// In uz, this message translates to:
-  /// **'Quizlarim'**
-  String get myQuizzes;
-
-  /// No description provided for @myFavoriteQuizzes.
-  ///
-  /// In uz, this message translates to:
-  /// **'Yoqtirgan quizlarim'**
-  String get myFavoriteQuizzes;
-
-  /// No description provided for @myStatistics.
-  ///
-  /// In uz, this message translates to:
-  /// **'Statistikam'**
-  String get myStatistics;
+  /// **'Asosiy'**
+  String get home;
 
   /// No description provided for @profile.
   ///
@@ -478,23 +130,11 @@ abstract class MyLocalizations {
   /// **'Profil'**
   String get profile;
 
-  /// No description provided for @changeImage.
+  /// No description provided for @settings.
   ///
   /// In uz, this message translates to:
-  /// **'Rasmni o‘zgartirish'**
-  String get changeImage;
-
-  /// No description provided for @fullName.
-  ///
-  /// In uz, this message translates to:
-  /// **'To\'liq ism'**
-  String get fullName;
-
-  /// No description provided for @enterYourFirstName.
-  ///
-  /// In uz, this message translates to:
-  /// **'To\'liq ismingizni kiriting...'**
-  String get enterYourFirstName;
+  /// **'Sozlamalar'**
+  String get settings;
 
   /// No description provided for @save.
   ///
@@ -502,101 +142,89 @@ abstract class MyLocalizations {
   /// **'Saqlash'**
   String get save;
 
-  /// No description provided for @emptyStateTitle.
+  /// No description provided for @cancel.
   ///
   /// In uz, this message translates to:
-  /// **'Ups! Hozircha bo\'sh'**
-  String get emptyStateTitle;
+  /// **'Bekor qilish'**
+  String get cancel;
 
-  /// No description provided for @emptyStateDescription.
+  /// No description provided for @error.
   ///
   /// In uz, this message translates to:
-  /// **'Ushbu kategoriyada hali quizlar mavjud emas.\nKeyinroq qaytib ko\'ring.'**
-  String get emptyStateDescription;
+  /// **'Xatolik'**
+  String get error;
 
-  /// No description provided for @refresh.
+  /// No description provided for @noInternet.
   ///
   /// In uz, this message translates to:
-  /// **'Yangilash'**
-  String get refresh;
+  /// **'Internet aloqasi yo\'q'**
+  String get noInternet;
 
-  /// No description provided for @internetNoConnection.
+  /// No description provided for @retry.
   ///
   /// In uz, this message translates to:
-  /// **'Internet aloqasi yo\'q!'**
-  String get internetNoConnection;
+  /// **'Qayta urinish'**
+  String get retry;
 
-  /// No description provided for @internetCheckConnection.
+  /// No description provided for @createPost.
   ///
   /// In uz, this message translates to:
-  /// **'Iltimos, tarmoq ulanishini tekshiring va qayta urinib ko\'ring.'**
-  String get internetCheckConnection;
+  /// **'Elon joylash'**
+  String get createPost;
 
-  /// No description provided for @settings.
+  /// No description provided for @postContentHint.
   ///
   /// In uz, this message translates to:
-  /// **'Sozlamalar'**
-  String get settings;
+  /// **'Elon matnini kiriting...'**
+  String get postContentHint;
 
-  /// No description provided for @connectEmail.
+  /// No description provided for @send.
   ///
   /// In uz, this message translates to:
-  /// **'Email ulash'**
-  String get connectEmail;
+  /// **'Yuborish'**
+  String get send;
 
-  /// No description provided for @connectTelegram.
+  /// No description provided for @success.
   ///
   /// In uz, this message translates to:
-  /// **'Telegram ulash'**
-  String get connectTelegram;
+  /// **'Muvaffaqiyatli'**
+  String get success;
 
-  /// No description provided for @changePassword.
+  /// No description provided for @postCreatedSuccess.
   ///
   /// In uz, this message translates to:
-  /// **'Parolni o’zgartirish'**
-  String get changePassword;
+  /// **'Elon muvaffaqiyatli joylandi'**
+  String get postCreatedSuccess;
 
-  /// No description provided for @privacySettings.
+  /// No description provided for @myPosts.
   ///
   /// In uz, this message translates to:
-  /// **'Maxfiylik sozlamalari'**
-  String get privacySettings;
+  /// **'Mening elonlarim'**
+  String get myPosts;
 
-  /// No description provided for @publicOffer.
+  /// No description provided for @noPostsYet.
   ///
   /// In uz, this message translates to:
-  /// **'Ommaviy oferta'**
-  String get publicOffer;
+  /// **'Sizning postlaringiz hozircha yoq'**
+  String get noPostsYet;
 
-  /// No description provided for @privacyTerms.
+  /// No description provided for @comments.
   ///
   /// In uz, this message translates to:
-  /// **'Maxfiylik shartlari'**
-  String get privacyTerms;
+  /// **'Izohlar'**
+  String get comments;
 
-  /// No description provided for @notifications.
+  /// No description provided for @privateReplies.
   ///
   /// In uz, this message translates to:
-  /// **'Bildirishnomalar'**
-  String get notifications;
+  /// **'Shaxsiy javoblar'**
+  String get privateReplies;
 
-  /// No description provided for @soundEffects.
+  /// No description provided for @all.
   ///
   /// In uz, this message translates to:
-  /// **'Ovoz effektlari'**
-  String get soundEffects;
-
-  /// No description provided for @animations.
-  ///
-  /// In uz, this message translates to:
-  /// **'Animatsiyalar'**
-  String get animations;
-
-  /// No description provided for @languages.
-  ///
-  /// In uz, this message translates to:
-  /// **'Tillar'**
-  String get languages;
+  /// **'Barchasi'**
+  String get all;
 }
 
 class _MyLocalizationsDelegate extends LocalizationsDelegate<MyLocalizations> {

@@ -88,15 +88,35 @@ class HomePage extends StatelessWidget {
                 ),
                 child: BlocBuilder<HomeBloc, HomeState>(
                   builder: (context, state) {
-                    return UserPostsCarousel(posts: state.carouselPosts);
+                    return UserPostsCarousel(
+                      posts: state.carouselPosts,
+                      commentCounts: state.commentCounts,
+                    );
                   },
                 ),
               ),
             ),
             SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: AppDimens.lg.w),
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppDimens.lg.w,
+                  vertical: AppDimens.xs.h,
+                ),
+                child: Divider(
+                  color: Theme.of(context).dividerColor,
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  AppDimens.lg.w,
+                  0,
+                  AppDimens.lg.w,
+                  AppDimens.sm.h,
+                ),
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Expanded(
                       child: Text(
@@ -128,7 +148,7 @@ class HomePage extends StatelessWidget {
               child: Padding(
                 padding: EdgeInsets.fromLTRB(
                   AppDimens.lg.w,
-                  AppDimens.lg.h,
+                  0.h,
                   AppDimens.lg.w,
                   AppDimens.xxl.h,
                 ),
@@ -140,10 +160,11 @@ class HomePage extends StatelessWidget {
                     return ProductsGrid(
                       products: state.visibleProducts,
                       showLoadMore:
-                          state.visibleProducts.length < state.filteredProducts.length,
-                      onLoadMore: () => context
-                          .read<ProductsBloc>()
-                          .add(const ProductsLoadMore()),
+                          state.visibleProducts.length <
+                          state.filteredProducts.length,
+                      onLoadMore: () => context.read<ProductsBloc>().add(
+                        const ProductsLoadMore(),
+                      ),
                     );
                   },
                 ),

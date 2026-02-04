@@ -49,12 +49,16 @@ class AllProductsPage extends StatelessWidget {
     return TextField(
       onChanged: (value) =>
           context.read<ProductsBloc>().add(ProductsUpdateSearch(value)),
+      style: AppStyles.bodyRegular.copyWith(
+        color: Theme.of(context).textTheme.bodyMedium?.color,
+      ),
       decoration: InputDecoration(
         hintText: 'Qidirish...',
         hintStyle:
             AppStyles.bodyRegular.copyWith(color: Theme.of(context).hintColor),
         filled: true,
         fillColor: Theme.of(context).cardColor,
+        isDense: true,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDimens.imageRadius.r),
           borderSide: BorderSide(
@@ -83,6 +87,13 @@ class AllProductsPage extends StatelessWidget {
             size: AppDimens.iconMd,
             color: Theme.of(context).iconTheme.color,
           ),
+        ),
+        contentPadding: EdgeInsets.symmetric(
+          vertical: AppDimens.sm.h,
+          horizontal: AppDimens.md.w,
+        ),
+        constraints: BoxConstraints(
+          minHeight: AppDimens.searchFieldHeight.h,
         ),
       ),
     );
@@ -220,7 +231,7 @@ class AllProductsPage extends StatelessWidget {
                     children: [
                       AppSvgIcon(
                         assetPath: category.iconPath,
-                        size: 16,
+                        size: 16.r,
                         color: Theme.of(context).iconTheme.color,
                       ),
                       AppDimens.xs.width,
