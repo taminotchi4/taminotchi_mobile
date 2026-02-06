@@ -54,6 +54,15 @@ import '../../features/chat/domain/usecases/get_messages_usecase.dart';
 import '../../features/chat/domain/usecases/send_message_usecase.dart';
 import '../../features/chat/presentation/managers/chat_bloc.dart';
 import '../../features/chat/presentation/pages/chat_page.dart';
+import '../../features/chat/presentation/pages/chats_home_page.dart';
+import '../../features/profile/data/datasources/client_profile_local_data_source.dart';
+import '../../features/profile/data/repositories/client_profile_repository_impl.dart';
+import '../../features/profile/domain/usecases/get_client_profile_usecase.dart';
+import '../../features/profile/domain/usecases/update_client_profile_usecase.dart';
+import '../../features/profile/domain/usecases/upload_profile_photo_usecase.dart';
+import '../../features/profile/domain/usecases/logout_usecase.dart';
+import '../../features/profile/presentation/managers/client_profile_bloc.dart';
+import '../../features/category_feed/presentation/pages/category_feed_page.dart';
 import '../../global/widgets/main_shell_page.dart';
 
 final router = GoRouter(
@@ -68,6 +77,8 @@ final router = GoRouter(
         final commentsRepository =
             ProductCommentsRepositoryImpl(ProductCommentsLocalDataSource());
         final chatRepository = ChatRepositoryImpl(ChatLocalDataSource());
+        final clientProfileRepository =
+            ClientProfileRepositoryImpl(ClientProfileLocalDataSource());
         return MultiBlocProvider(
           providers: [
             BlocProvider(
@@ -129,6 +140,16 @@ final router = GoRouter(
                 sendMessageUseCase: SendMessageUseCase(chatRepository),
               ),
             ),
+            BlocProvider(
+              create: (_) => ClientProfileBloc(
+                getProfileUseCase: GetClientProfileUseCase(clientProfileRepository),
+                updateProfileUseCase:
+                    UpdateClientProfileUseCase(clientProfileRepository),
+                uploadPhotoUseCase:
+                    UploadProfilePhotoUseCase(clientProfileRepository),
+                logoutUseCase: LogoutUseCase(clientProfileRepository),
+              ),
+            ),
           ],
           child: MainShellPage(
             location: state.uri.toString(),
@@ -145,6 +166,10 @@ final router = GoRouter(
         GoRoute(
           path: Routes.orders,
           builder: (context, state) => const OrdersPage(),
+        ),
+        GoRoute(
+          path: Routes.chats,
+          builder: (context, state) => const ChatsHomePage(),
         ),
         GoRoute(
           path: Routes.profile,
@@ -186,7 +211,24 @@ final router = GoRouter(
           path: Routes.sellerChat,
           builder: (context, state) {
             final sellerId = state.pathParameters['sellerId'] ?? '';
-            return ChatPage(sellerId: sellerId, userId: 'user_1');
+            final extra = state.extra as Map<String, dynamic>?;
+            return ChatPage(
+              sellerId: sellerId,
+              userId: 'user_1',
+              sellerName: extra?['name'] as String?,
+              sellerRole: extra?['role'] as String?,
+            );
+          },
+        ),
+        GoRoute(
+          path: Routes.categoryFeed,
+          builder: (context, state) {
+            final categoryId = state.pathParameters['categoryId'] ?? '';
+            final showAll = state.uri.queryParameters['showAll'] == 'true';
+            return CategoryFeedPage(
+              categoryId: categoryId,
+              showAllPosts: showAll,
+            );
           },
         ),
       ],

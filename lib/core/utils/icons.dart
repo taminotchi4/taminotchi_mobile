@@ -25,6 +25,7 @@ class AppIcons {
   static const categoryOther = 'assets/icons/ic_category_other.svg';
   static const chat = 'assets/icons/ic_chat.svg';
   static const audio = 'assets/icons/ic_audio.svg';
+  static const notification = 'assets/icons/ic_notification.svg';
 }
 
 class AppImages {

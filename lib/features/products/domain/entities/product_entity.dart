@@ -22,5 +22,10 @@ class ProductEntity {
     required this.imagePaths,
     required this.seller,
     required this.category,
+    this.colors = const [],
+    this.sizes = const [],
   });
+  
+  final List<int> colors;
+  final List<String> sizes;
 }

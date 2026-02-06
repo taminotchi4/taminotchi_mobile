@@ -10,15 +10,33 @@ class AppStyles {
     color: AppColors.black,
   );
 
+  static final h1Bold = TextStyle(
+    fontWeight: FontWeight.w700,
+    fontSize: 32.spMin,
+    color: AppColors.black,
+  );
+
   static final h2Bold = TextStyle(
     fontWeight: FontWeight.w700,
     fontSize: 28.spMin,
     color: AppColors.black,
   );
 
+  static final h3Bold = TextStyle(
+    fontWeight: FontWeight.w700,
+    fontSize: 24.spMin,
+    color: AppColors.black,
+  );
+
   static final h4Bold = TextStyle(
     fontWeight: FontWeight.w700,
     fontSize: 20.spMin,
+    color: AppColors.black,
+  );
+
+  static final bodyMedium = TextStyle(
+    fontWeight: FontWeight.w500,
+    fontSize: 14.spMin,
     color: AppColors.black,
   );
 

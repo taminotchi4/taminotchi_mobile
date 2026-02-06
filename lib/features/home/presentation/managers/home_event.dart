@@ -22,6 +22,12 @@ class HomeSelectCategory extends HomeEvent {
   const HomeSelectCategory(this.category);
 }
 
+class HomeSelectSubcategory extends HomeEvent {
+  final PostCategoryEntity? subcategory;
+
+  const HomeSelectSubcategory(this.subcategory);
+}
+
 class HomeAddImagesFromGallery extends HomeEvent {
   const HomeAddImagesFromGallery();
 }
@@ -50,4 +56,8 @@ class HomeLoadPostDetails extends HomeEvent {
 
 class HomeClearActionStatus extends HomeEvent {
   const HomeClearActionStatus();
+}
+
+class HomeClearContentError extends HomeEvent {
+  const HomeClearContentError();
 }

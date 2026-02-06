@@ -5,6 +5,7 @@ class CommentEntity {
   final String userAvatarPath;
   final String content;
   final DateTime createdAt;
+  final List<CommentEntity>? replies;
 
   const CommentEntity({
     required this.id,
@@ -13,5 +14,6 @@ class CommentEntity {
     required this.userAvatarPath,
     required this.content,
     required this.createdAt,
+    this.replies,
   });
 }

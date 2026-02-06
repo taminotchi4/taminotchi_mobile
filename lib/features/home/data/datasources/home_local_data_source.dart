@@ -16,29 +16,183 @@ class HomeLocalDataSource {
   static const int _maxPrivateReplies = 26;
   late final List<PostCategoryModel> _categories = [
     const PostCategoryModel(
-      id: 'tech',
-      name: 'Texnologiya',
-      iconPath: AppIcons.categoryTech,
+      id: 'all',
+      name: 'Barchasi',
+      iconPath: AppIcons.category,
     ),
     const PostCategoryModel(
-      id: 'food',
-      name: 'Oshxona',
+      id: 'realestate',
+      name: 'Ko\'chmas mulk',
+      iconPath: AppIcons.home,
+    ),
+    const PostCategoryModel(
+      id: 'kids',
+      name: 'Bolalar dunyosi',
+      iconPath: AppIcons.categoryEvent,
+    ),
+    const PostCategoryModel(
+      id: 'electronics',
+      name: 'Elektronika',
+      iconPath: AppIcons.categoryTech,
+      subcategories: [
+        PostCategoryModel(
+          id: 'electronics_computer',
+          name: 'Kompyuter',
+          iconPath: AppIcons.categoryTech,
+          parentId: 'electronics',
+        ),
+        PostCategoryModel(
+          id: 'electronics_phone',
+          name: 'Telefon',
+          iconPath: AppIcons.categoryTech,
+          parentId: 'electronics',
+        ),
+        PostCategoryModel(
+          id: 'electronics_tv',
+          name: 'Televizor',
+          iconPath: AppIcons.categoryTech,
+          parentId: 'electronics',
+        ),
+        PostCategoryModel(
+          id: 'electronics_headphones',
+          name: 'Quloqchin',
+          iconPath: AppIcons.audio,
+          parentId: 'electronics',
+        ),
+        PostCategoryModel(
+          id: 'electronics_other',
+          name: 'Boshqa',
+          iconPath: AppIcons.categoryTech,
+          parentId: 'electronics',
+        ),
+      ],
+    ),
+    const PostCategoryModel(
+      id: 'transport',
+      name: 'Transport',
+      iconPath: AppIcons.orders,
+      subcategories: [
+        PostCategoryModel(
+          id: 'transport_car',
+          name: 'Avtomobil',
+          iconPath: AppIcons.orders,
+          parentId: 'transport',
+        ),
+        PostCategoryModel(
+          id: 'transport_moto',
+          name: 'Mototsikl',
+          iconPath: AppIcons.orders,
+          parentId: 'transport',
+        ),
+        PostCategoryModel(
+          id: 'transport_bicycle',
+          name: 'Velosiped',
+          iconPath: AppIcons.orders,
+          parentId: 'transport',
+        ),
+        PostCategoryModel(
+          id: 'transport_parts',
+          name: 'Ehtiyot qismlar',
+          iconPath: AppIcons.categoryService,
+          parentId: 'transport',
+        ),
+      ],
+    ),
+    const PostCategoryModel(
+      id: 'jobs',
+      name: 'Ish o\'rinlari',
+      iconPath: AppIcons.user,
+    ),
+    const PostCategoryModel(
+      id: 'animals',
+      name: 'Hayvonlar',
+      iconPath: AppIcons.categoryOther,
+    ),
+    const PostCategoryModel(
+      id: 'home_garden',
+      name: 'Uy va bog\'',
       iconPath: AppIcons.categoryFood,
     ),
     const PostCategoryModel(
-      id: 'service',
-      name: 'Xizmat',
+      id: 'business',
+      name: 'Biznes va xizmatlar',
       iconPath: AppIcons.categoryService,
     ),
     const PostCategoryModel(
-      id: 'event',
-      name: 'Tadbir',
+      id: 'fashion',
+      name: 'Moda va kiyim',
+      iconPath: AppIcons.categoryOther,
+      subcategories: [
+        PostCategoryModel(
+          id: 'fashion_men',
+          name: 'Erkaklar kiyimi',
+          iconPath: AppIcons.user,
+          parentId: 'fashion',
+        ),
+        PostCategoryModel(
+          id: 'fashion_women',
+          name: 'Ayollar kiyimi',
+          iconPath: AppIcons.user,
+          parentId: 'fashion',
+        ),
+        PostCategoryModel(
+          id: 'fashion_kids',
+          name: 'Bolalar kiyimi',
+          iconPath: AppIcons.categoryEvent,
+          parentId: 'fashion',
+        ),
+        PostCategoryModel(
+          id: 'fashion_accessories',
+          name: 'Aksessuarlar',
+          iconPath: AppIcons.star,
+          parentId: 'fashion',
+        ),
+      ],
+    ),
+    const PostCategoryModel(
+      id: 'sports',
+      name: 'Sport va dam olish',
       iconPath: AppIcons.categoryEvent,
+    ),
+    const PostCategoryModel(
+      id: 'food',
+      name: 'Oziq-ovqat',
+      iconPath: AppIcons.categoryFood,
+    ),
+    const PostCategoryModel(
+      id: 'books',
+      name: 'Kitoblar',
+      iconPath: AppIcons.file,
+    ),
+    const PostCategoryModel(
+      id: 'health',
+      name: 'Salomatlik',
+      iconPath: AppIcons.categoryService,
+    ),
+    const PostCategoryModel(
+      id: 'education',
+      name: 'Ta\'lim',
+      iconPath: AppIcons.user,
+    ),
+    const PostCategoryModel(
+      id: 'furniture',
+      name: 'Mebel',
+      iconPath: AppIcons.home,
+    ),
+    const PostCategoryModel(
+      id: 'appliances',
+      name: 'Maishiy texnika',
+      iconPath: AppIcons.categoryTech,
+    ),
+    const PostCategoryModel(
+      id: 'hobbies',
+      name: "Sevimli mashg\'ulotlar va kulguli qo'shiqlar",
+      iconPath: AppIcons.star,
     ),
     const PostCategoryModel(
       id: 'other',
       name: 'Boshqa',
-      iconPath: AppIcons.categoryOther,
+      iconPath: AppIcons.category,
     ),
   ];
 

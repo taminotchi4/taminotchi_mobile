@@ -24,6 +24,10 @@ class HomeState {
   final Map<String, int> commentCounts;
   final String currentUserId;
   final UserRole currentUserRole;
+  final String? categoryError;
+  final String? contentError;
+  final PostCategoryEntity? selectedSubcategory;
+  final String? subcategoryError;
 
   const HomeState({
     required this.posts,
@@ -42,6 +46,10 @@ class HomeState {
     required this.commentCounts,
     required this.currentUserId,
     required this.currentUserRole,
+    this.categoryError,
+    this.contentError,
+    this.selectedSubcategory,
+    this.subcategoryError,
   });
 
   bool get canCreatePost => currentUserRole == UserRole.user;
@@ -63,6 +71,10 @@ class HomeState {
     commentCounts: {},
     currentUserId: '',
     currentUserRole: UserRole.user,
+    categoryError: null,
+    contentError: null,
+    selectedSubcategory: null,
+    subcategoryError: null,
   );
 
   HomeState copyWith({
@@ -82,6 +94,10 @@ class HomeState {
     Map<String, int>? commentCounts,
     String? currentUserId,
     UserRole? currentUserRole,
+    Object? categoryError = _unset,
+    Object? contentError = _unset,
+    Object? selectedSubcategory = _unset,
+    Object? subcategoryError = _unset,
   }) {
     return HomeState(
       posts: posts ?? this.posts,
@@ -102,6 +118,10 @@ class HomeState {
       commentCounts: commentCounts ?? this.commentCounts,
       currentUserId: currentUserId ?? this.currentUserId,
       currentUserRole: currentUserRole ?? this.currentUserRole,
+      categoryError: categoryError == _unset ? this.categoryError : categoryError as String?,
+      contentError: contentError == _unset ? this.contentError : contentError as String?,
+      selectedSubcategory: selectedSubcategory == _unset ? this.selectedSubcategory : selectedSubcategory as PostCategoryEntity?,
+      subcategoryError: subcategoryError == _unset ? this.subcategoryError : subcategoryError as String?,
     );
   }
 }

@@ -50,7 +50,7 @@ class AnimatedBottomNav extends StatelessWidget {
               onTap: () => onTap(1),
             ),
             _NavItem(
-              icon: AppIcons.orders,
+              icon: AppIcons.chat,
               isActive: currentIndex == 2,
               onTap: () => onTap(2),
             ),

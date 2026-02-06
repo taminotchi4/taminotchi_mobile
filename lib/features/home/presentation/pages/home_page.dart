@@ -17,6 +17,7 @@ import '../managers/home_state.dart';
 import '../widgets/home_sliver_app_bar.dart';
 import '../widgets/post_creation_section.dart';
 import '../widgets/user_posts_carousel.dart';
+import '../widgets/category_section.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -92,6 +93,19 @@ class HomePage extends StatelessWidget {
                       posts: state.carouselPosts,
                       commentCounts: state.commentCounts,
                     );
+                  },
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  top: AppDimens.lg.h,
+                  bottom: AppDimens.md.h,
+                ),
+                child: BlocBuilder<HomeBloc, HomeState>(
+                  builder: (context, state) {
+                    return CategorySection(categories: state.categories);
                   },
                 ),
               ),

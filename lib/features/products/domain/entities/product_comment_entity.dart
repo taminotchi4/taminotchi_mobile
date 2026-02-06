@@ -8,6 +8,7 @@ class ProductCommentEntity {
   final ProductCommentAuthor authorType;
   final String content;
   final DateTime createdAt;
+  final double rating;
 
   const ProductCommentEntity({
     required this.id,
@@ -17,5 +18,6 @@ class ProductCommentEntity {
     required this.authorType,
     required this.content,
     required this.createdAt,
+    this.rating = 0.0,
   });
 }

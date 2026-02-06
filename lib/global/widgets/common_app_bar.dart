@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../core/constants/dimens.dart';
+import '../../core/utils/styles.dart';
 
 class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -24,15 +25,31 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
-      leading: leading,
-      actions: actions,
+      centerTitle: true,
+      leading: leading != null
+          ? Center(child: leading)
+          : null,
+      leadingWidth: 56.w,
+      actions: actions != null
+          ? actions!.map((a) => Center(child: a)).toList()
+          : null,
       title: Text(
         title,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: Theme.of(context).textTheme.titleMedium,
+        style: AppStyles.h4Bold.copyWith(
+          fontSize: 18.sp,
+          color: Theme.of(context).textTheme.titleLarge?.color,
+        ),
       ),
-      centerTitle: true,
+      bottom: PreferredSize(
+        preferredSize: Size.fromHeight(1.h),
+        child: Divider(
+          height: 1.h,
+          thickness: 1.h,
+          color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
+        ),
+      ),
     );
   }
 }

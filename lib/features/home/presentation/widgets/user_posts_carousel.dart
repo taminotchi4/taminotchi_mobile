@@ -24,7 +24,7 @@ class UserPostsCarousel extends StatefulWidget {
 }
 
 class _UserPostsCarouselState extends State<UserPostsCarousel> {
-  static const Duration _autoScrollInterval = Duration(seconds: 3);
+  static const Duration _autoScrollInterval = Duration(seconds: 4);
   static const Duration _autoScrollDuration = Duration(milliseconds: 300);
   late final PageController _controller;
   Timer? _timer;

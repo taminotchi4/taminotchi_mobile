@@ -103,6 +103,36 @@ class _PostCreationSectionState extends State<PostCreationSection> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildCategoryRow(context, state),
+          if (state.categoryError != null) ...[
+            AppDimens.xs.height,
+            Padding(
+              padding: EdgeInsets.only(left: AppDimens.sm.w),
+              child: Text(
+                state.categoryError!,
+                style: AppStyles.bodySmall.copyWith(
+                  fontSize: 11.sp,
+                  color: AppColors.red,
+                ),
+              ),
+            ),
+          ],
+          if (state.selectedCategory?.hasSubcategories == true) ...[
+            AppDimens.md.height,
+            _buildSubcategoryRow(context, state),
+            if (state.subcategoryError != null) ...[
+              AppDimens.xs.height,
+              Padding(
+                padding: EdgeInsets.only(left: AppDimens.sm.w),
+                child: Text(
+                  state.subcategoryError!,
+                  style: AppStyles.bodySmall.copyWith(
+                    fontSize: 11.sp,
+                    color: AppColors.red,
+                  ),
+                ),
+              ),
+            ],
+          ],
           AppDimens.md.height,
           _buildUploadRow(context),
           if (state.selectedImages.isNotEmpty) ...[
@@ -111,6 +141,19 @@ class _PostCreationSectionState extends State<PostCreationSection> {
           ],
           AppDimens.md.height,
           _buildTextField(context, state),
+          if (state.contentError != null) ...[
+            AppDimens.xs.height,
+            Padding(
+              padding: EdgeInsets.only(left: AppDimens.sm.w),
+              child: Text(
+                state.contentError!,
+                style: AppStyles.bodySmall.copyWith(
+                  fontSize: 11.sp,
+                  color: AppColors.red,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -147,12 +190,13 @@ class _PostCreationSectionState extends State<PostCreationSection> {
                   AppDimens.sm.width,
                   Expanded(
                     child: Text(
-                      state.selectedCategory?.name ?? 'Kategoriya',
+                      state.selectedCategory?.name ?? 'Kategoriyani tanlang',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppStyles.bodySmall.copyWith(
-                        color:
-                            Theme.of(context).textTheme.bodyMedium?.color,
+                        color: state.selectedCategory == null
+                            ? Theme.of(context).hintColor
+                            : Theme.of(context).textTheme.bodyMedium?.color,
                       ),
                     ),
                   ),
@@ -183,6 +227,49 @@ class _PostCreationSectionState extends State<PostCreationSection> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildSubcategoryRow(BuildContext context, HomeState state) {
+    final subcategories = state.selectedCategory?.subcategories ?? [];
+    
+    return Wrap(
+      spacing: AppDimens.sm.w,
+      runSpacing: AppDimens.sm.h,
+      children: subcategories.map((subcategory) {
+        final isSelected = state.selectedSubcategory?.id == subcategory.id;
+        return InkWell(
+          onTap: () => context.read<HomeBloc>().add(HomeSelectSubcategory(subcategory)),
+          borderRadius: BorderRadius.circular(AppDimens.imageRadius.r),
+          child: Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: AppDimens.md.w,
+              vertical: AppDimens.sm.h,
+            ),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
+                  : Theme.of(context).scaffoldBackgroundColor,
+              borderRadius: BorderRadius.circular(AppDimens.imageRadius.r),
+              border: Border.all(
+                color: isSelected
+                    ? Theme.of(context).primaryColor
+                    : Theme.of(context).dividerColor,
+                width: isSelected ? 1.5.w : AppDimens.borderWidth.w,
+              ),
+            ),
+            child: Text(
+              subcategory.name,
+              style: AppStyles.bodySmall.copyWith(
+                color: isSelected
+                    ? Theme.of(context).primaryColor
+                    : Theme.of(context).textTheme.bodyMedium?.color,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -327,6 +414,11 @@ class _PostCreationSectionState extends State<PostCreationSection> {
           controller: _controller,
           minLines: _minLines,
           maxLines: null,
+          onChanged: (value) {
+            if (value.length >= 2 && state.contentError != null) {
+              context.read<HomeBloc>().add(const HomeClearContentError());
+            }
+          },
           style: AppStyles.bodyRegular.copyWith(
             color: Theme.of(context).textTheme.bodyMedium?.color,
           ),

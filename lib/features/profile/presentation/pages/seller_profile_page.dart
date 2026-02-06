@@ -110,45 +110,88 @@ class _SellerProfilePageState extends State<SellerProfilePage> {
 
   Widget _header(BuildContext context, SellerProfileState state) {
     final seller = state.seller!;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(AppDimens.imageRadius.r),
-          child: Container(
-            width: AppDimens.avatarLg.w,
-            height: AppDimens.avatarLg.w,
-            color: Theme.of(context).dividerColor,
-            child: AppSvgIcon(
-              assetPath: seller.avatarPath,
-              size: AppDimens.iconLg,
-              color: Theme.of(context).iconTheme.color,
-            ),
+        Container(
+          padding: EdgeInsets.all(AppDimens.lg.r),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(AppDimens.cardRadius.r),
+            boxShadow: [
+              BoxShadow(
+                color: Theme.of(context).shadowColor.withValues(alpha: 0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-        ),
-        AppDimens.md.width,
-        Expanded(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                seller.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppStyles.h5Bold.copyWith(
-                  color: Theme.of(context).textTheme.titleMedium?.color,
-                ),
+              Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(AppDimens.imageRadius.r),
+                    child: Container(
+                      width: 80.w,
+                      height: 80.w,
+                      color: Theme.of(context).dividerColor,
+                      child: AppSvgIcon(
+                        assetPath: seller.avatarPath,
+                        size: 40.w,
+                        color: Theme.of(context).iconTheme.color,
+                      ),
+                    ),
+                  ),
+                  AppDimens.md.width,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          seller.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppStyles.h4Bold.copyWith(
+                            color: Theme.of(context).textTheme.titleLarge?.color,
+                          ),
+                        ),
+                        AppDimens.xs.height,
+                        Text(
+                          seller.description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppStyles.bodySmall.copyWith(
+                            color: Theme.of(context).textTheme.bodySmall?.color,
+                          ),
+                        ),
+                        AppDimens.sm.height,
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.location_on_outlined,
+                              size: AppDimens.iconSm,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                            4.horizontalSpace,
+                            Expanded(
+                              child: Text(
+                                seller.address,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppStyles.bodySmall.copyWith(
+                                  color: Theme.of(context).primaryColor,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              AppDimens.xs.height,
-              Text(
-                seller.description,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: AppStyles.bodySmall.copyWith(
-                  color: Theme.of(context).textTheme.bodySmall?.color,
-                ),
-              ),
-              AppDimens.md.height,
+              AppDimens.lg.height,
               _followButton(context, state),
             ],
           ),
@@ -161,34 +204,49 @@ class _SellerProfilePageState extends State<SellerProfilePage> {
     final seller = state.seller!;
     return InkWell(
       onTap: state.canFollow
-          ? () => context.read<SellerProfileBloc>().add(
+          ? () {
+              context.read<SellerProfileBloc>().add(
                 const SellerProfileToggleFollow(),
-              )
+              );
+              // TODO: Navigate to chat with seller
+              // context.push(Routes.getChat(seller.id));
+            }
           : null,
-      borderRadius: BorderRadius.circular(AppDimens.imageRadius.r),
+      borderRadius: BorderRadius.circular(AppDimens.buttonRadius.r),
       child: Container(
         padding: EdgeInsets.symmetric(
-          horizontal: AppDimens.lg.w,
-          vertical: AppDimens.sm.h,
+          vertical: 12.h,
         ),
         decoration: BoxDecoration(
           color: seller.isFollowing
-              ? Theme.of(context).cardColor
+              ? Theme.of(context).scaffoldBackgroundColor
               : Theme.of(context).primaryColor,
-          borderRadius: BorderRadius.circular(AppDimens.imageRadius.r),
+          borderRadius: BorderRadius.circular(AppDimens.buttonRadius.r),
           border: Border.all(
-            color: Theme.of(context).dividerColor,
-            width: AppDimens.borderWidth.w,
-          ),
-        ),
-        child: Text(
-          seller.isFollowing ? 'Following' : 'Follow',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: AppStyles.bodySmall.copyWith(
             color: seller.isFollowing
-                ? Theme.of(context).textTheme.bodyMedium?.color
-                : Colors.white,
+                ? Theme.of(context).dividerColor
+                : Colors.transparent,
+            width: 1.w,
+          ),
+          boxShadow: seller.isFollowing
+              ? []
+              : [
+                  BoxShadow(
+                    color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+        ),
+        child: Center(
+          child: Text(
+            seller.isFollowing ? 'Following' : 'Follow',
+            style: AppStyles.bodyMedium.copyWith(
+              color: seller.isFollowing
+                  ? Theme.of(context).textTheme.bodyMedium?.color
+                  : Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       ),
@@ -198,48 +256,85 @@ class _SellerProfilePageState extends State<SellerProfilePage> {
   Widget _countsRow(BuildContext context, SellerProfileState state) {
     return Row(
       children: [
-        InkWell(
-          onTap: () => context.push(Routes.getSellerFollowers(state.seller!.id)),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                state.followersCount.toString(),
-                style: AppStyles.h5Bold.copyWith(
-                  color: Theme.of(context).textTheme.titleMedium?.color,
-                ),
-              ),
-              Text(
-                'Followers',
-                style: AppStyles.bodySmall.copyWith(
-                  color: Theme.of(context).textTheme.bodySmall?.color,
-                ),
-              ),
-            ],
+        Expanded(
+          child: _countItem(
+            context,
+            count: state.followersCount.toString(),
+            label: 'Followers',
+            icon: Icons.people_outline,
+            onTap: () =>
+                context.push(Routes.getSellerFollowers(state.seller!.id)),
           ),
         ),
-        AppDimens.xxl.width,
-        InkWell(
-          onTap: () {},
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                state.productsCount.toString(),
-                style: AppStyles.h5Bold.copyWith(
-                  color: Theme.of(context).textTheme.titleMedium?.color,
-                ),
-              ),
-              Text(
-                'Products',
-                style: AppStyles.bodySmall.copyWith(
-                  color: Theme.of(context).textTheme.bodySmall?.color,
-                ),
-              ),
-            ],
+        AppDimens.md.width,
+        Expanded(
+          child: _countItem(
+            context,
+            count: state.productsCount.toString(),
+            label: 'Products',
+            icon: Icons.inventory_2_outlined,
+            onTap: () {},
           ),
         ),
       ],
+    );
+  }
+
+  Widget _countItem(
+    BuildContext context, {
+    required String count,
+    required String label,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppDimens.cardRadius.r),
+      child: Container(
+        padding: EdgeInsets.all(AppDimens.md.r),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(AppDimens.cardRadius.r),
+          border: Border.all(
+            color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: EdgeInsets.all(8.r),
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                size: 20.r,
+                color: Theme.of(context).primaryColor,
+              ),
+            ),
+            AppDimens.sm.width,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  count,
+                  style: AppStyles.h5Bold.copyWith(
+                    color: Theme.of(context).textTheme.titleMedium?.color,
+                  ),
+                ),
+                Text(
+                  label,
+                  style: AppStyles.bodySmall.copyWith(
+                    color: Theme.of(context).textTheme.bodySmall?.color,
+                    fontSize: 12.sp,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 

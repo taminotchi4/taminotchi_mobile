@@ -88,6 +88,13 @@ class ProductsLocalDataSource {
           imagePaths: productImages,
           seller: seller,
           category: category,
+          colors: const [
+            0xFF212121, // Black
+            0xFFFFFFFF, // White
+            0xFF1976D2, // Blue
+            0xFF388E3C, // Green
+          ],
+          sizes: const ['S', 'M', 'L', 'XL', 'XXL'],
         ),
       );
     }

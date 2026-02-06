@@ -7,6 +7,7 @@ import 'core/routing/router.dart';
 import 'core/utils/theme.dart';
 import 'global/managers/locale/localization_cubit.dart';
 import 'global/managers/locale/locale_repository_impl.dart';
+import 'global/managers/theme/theme_cubit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,24 +22,35 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => LocalizationCubit(
-        localeRepo: LocaleRepositoryImpl(pref),
-      ),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => LocalizationCubit(
+            localeRepo: LocaleRepositoryImpl(pref),
+          ),
+        ),
+        BlocProvider(
+          create: (_) => ThemeCubit(),
+        ),
+      ],
       child: ScreenUtilInit(
         designSize: const Size(440, 956),
         ensureScreenSize: true,
         builder: (context, child) => BlocBuilder<LocalizationCubit, Locale>(
           builder: (context, currentLocale) {
-            return MaterialApp.router(
-              theme: AppTheme().lightTheme,
-              darkTheme: AppTheme().darkTheme,
-              locale: currentLocale,
-              localizationsDelegates: MyLocalizations.localizationsDelegates,
-              supportedLocales: MyLocalizations.supportedLocales,
-              title: 'Taminotchi',
-              themeMode: ThemeMode.light,
-              routerConfig: router,
+            return BlocBuilder<ThemeCubit, ThemeMode>(
+              builder: (context, themeMode) {
+                return MaterialApp.router(
+                  theme: AppTheme().lightTheme,
+                  darkTheme: AppTheme().darkTheme,
+                  locale: currentLocale,
+                  localizationsDelegates: MyLocalizations.localizationsDelegates,
+                  supportedLocales: MyLocalizations.supportedLocales,
+                  title: 'Taminotchi',
+                  themeMode: themeMode,
+                  routerConfig: router,
+                );
+              },
             );
           },
         ),

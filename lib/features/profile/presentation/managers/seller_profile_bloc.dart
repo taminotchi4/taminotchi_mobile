@@ -62,12 +62,14 @@ class SellerProfileBloc extends Bloc<SellerProfileEvent, SellerProfileState> {
           (_) => emit(state.copyWith(isLoading: false, seller: seller)),
           (followers) {
             productsResult.fold(
-              (_) => emit(state.copyWith(
-                isLoading: false,
-                seller: seller,
-                followers: followers,
-                followersCount: followers.length,
-              )),
+              (_) => emit(
+                state.copyWith(
+                  isLoading: false,
+                  seller: seller,
+                  followers: followers,
+                  followersCount: followers.length,
+                ),
+              ),
               (products) {
                 final sellerProducts = products
                     .where((product) => product.seller.id == seller.id)
@@ -86,16 +88,19 @@ class SellerProfileBloc extends Bloc<SellerProfileEvent, SellerProfileState> {
                   followersCount: followers.length,
                   productsCount: sellerProducts.length,
                   isFollowing: seller.isFollowing,
+                  address: seller.address,
                 );
-                emit(state.copyWith(
-                  isLoading: false,
-                  seller: updatedSeller,
-                  followers: followers,
-                  followersCount: followers.length,
-                  sellerProducts: sellerProducts,
-                  filteredProducts: filtered,
-                  productsCount: sellerProducts.length,
-                ));
+                emit(
+                  state.copyWith(
+                    isLoading: false,
+                    seller: updatedSeller,
+                    followers: followers,
+                    followersCount: followers.length,
+                    sellerProducts: sellerProducts,
+                    filteredProducts: filtered,
+                    productsCount: sellerProducts.length,
+                  ),
+                );
               },
             );
           },
@@ -114,18 +119,21 @@ class SellerProfileBloc extends Bloc<SellerProfileEvent, SellerProfileState> {
     result.fold(
       (_) {},
       (count) {
-        emit(state.copyWith(
-          seller: SellerProfileEntity(
-            id: seller.id,
-            name: seller.name,
-            description: seller.description,
-            avatarPath: seller.avatarPath,
+        emit(
+          state.copyWith(
+            seller: SellerProfileEntity(
+              id: seller.id,
+              name: seller.name,
+              description: seller.description,
+              avatarPath: seller.avatarPath,
+              followersCount: count,
+              productsCount: seller.productsCount,
+              isFollowing: !seller.isFollowing,
+              address: seller.address,
+            ),
             followersCount: count,
-            productsCount: seller.productsCount,
-            isFollowing: !seller.isFollowing,
           ),
-          followersCount: count,
-        ));
+        );
       },
     );
   }
@@ -134,20 +142,28 @@ class SellerProfileBloc extends Bloc<SellerProfileEvent, SellerProfileState> {
     SellerProfileFilterCategory event,
     Emitter<SellerProfileState> emit,
   ) {
-    final filtered =
-        _applyFilters(state.sellerProducts, event.category, state.sort);
-    emit(state.copyWith(
-      selectedCategory: event.category,
-      filteredProducts: filtered,
-    ));
+    final filtered = _applyFilters(
+      state.sellerProducts,
+      event.category,
+      state.sort,
+    );
+    emit(
+      state.copyWith(
+        selectedCategory: event.category,
+        filteredProducts: filtered,
+      ),
+    );
   }
 
   void _onSortChanged(
     SellerProfileSortChanged event,
     Emitter<SellerProfileState> emit,
   ) {
-    final filtered =
-        _applyFilters(state.sellerProducts, state.selectedCategory, event.sort);
+    final filtered = _applyFilters(
+      state.sellerProducts,
+      state.selectedCategory,
+      event.sort,
+    );
     emit(state.copyWith(sort: event.sort, filteredProducts: filtered));
   }
 
@@ -158,8 +174,9 @@ class SellerProfileBloc extends Bloc<SellerProfileEvent, SellerProfileState> {
   ) {
     var filtered = products;
     if (category != null && category.id != 'all') {
-      filtered =
-          filtered.where((item) => item.category.id == category.id).toList();
+      filtered = filtered
+          .where((item) => item.category.id == category.id)
+          .toList();
     }
     if (sort == SellerProductSort.highestRating) {
       filtered.sort((a, b) => b.rating.compareTo(a.rating));

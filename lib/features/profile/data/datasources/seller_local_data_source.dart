@@ -22,12 +22,14 @@ class SellerLocalDataSource {
       name: 'Market Plus',
       description: 'Sifatli mahsulotlar va tezkor yetkazib berish.',
       avatar: AppIcons.user,
+      address: 'Toshkent sh. Chilonzor t. 10-uy',
     ),
     'seller_2': const _SellerModel(
       id: 'seller_2',
       name: 'Smart Store',
       description: 'Zamonaviy texnika va xizmatlar.',
       avatar: AppIcons.user,
+      address: 'Toshkent sh. Yunusobod t. 5-mavze',
     ),
   };
 
@@ -63,12 +65,14 @@ class _SellerModel {
   final String name;
   final String description;
   final String avatar;
+  final String address;
 
   const _SellerModel({
     required this.id,
     required this.name,
     required this.description,
     required this.avatar,
+    required this.address,
   });
 }
 

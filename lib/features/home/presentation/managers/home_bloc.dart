@@ -47,12 +47,14 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     on<HomeExpandComposer>(_onExpandComposer);
     on<HomeCollapseComposer>(_onCollapseComposer);
     on<HomeSelectCategory>(_onSelectCategory);
+    on<HomeSelectSubcategory>(_onSelectSubcategory);
     on<HomeAddImagesFromGallery>(_onAddImagesFromGallery);
     on<HomeAddImagesFromFiles>(_onAddImagesFromFiles);
     on<HomeRemoveImage>(_onRemoveImage);
     on<HomeCreatePost>(_onCreatePost);
     on<HomeLoadPostDetails>(_onLoadPostDetails);
     on<HomeClearActionStatus>(_onClearActionStatus);
+    on<HomeClearContentError>(_onClearContentError);
   }
 
   Future<void> _onStarted(HomeStarted event, Emitter<HomeState> emit) async {
@@ -131,7 +133,14 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   }
 
   void _onExpandComposer(HomeExpandComposer event, Emitter<HomeState> emit) {
-    emit(state.copyWith(isComposerExpanded: true));
+    emit(state.copyWith(
+      isComposerExpanded: true,
+      selectedCategory: null,
+      selectedSubcategory: null,
+      categoryError: null,
+      subcategoryError: null,
+      contentError: null,
+    ));
   }
 
   void _onCollapseComposer(HomeCollapseComposer event, Emitter<HomeState> emit) {
@@ -142,7 +151,19 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   }
 
   void _onSelectCategory(HomeSelectCategory event, Emitter<HomeState> emit) {
-    emit(state.copyWith(selectedCategory: event.category));
+    emit(state.copyWith(
+      selectedCategory: event.category,
+      selectedSubcategory: null,
+      categoryError: null,
+      subcategoryError: null,
+    ));
+  }
+
+  void _onSelectSubcategory(HomeSelectSubcategory event, Emitter<HomeState> emit) {
+    emit(state.copyWith(
+      selectedSubcategory: event.subcategory,
+      subcategoryError: null,
+    ));
   }
 
   Future<void> _onAddImagesFromGallery(
@@ -184,12 +205,38 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     if (!state.canCreatePost) return;
     final content = event.content.trim();
     final category = state.selectedCategory;
-    if (content.isEmpty || category == null) return;
+    final subcategory = state.selectedSubcategory;
+    
+    String? categoryError;
+    String? subcategoryError;
+    String? contentError;
+    
+    if (category == null) {
+      categoryError = 'Kategoriyani tanlash majburiy';
+    } else if (category.hasSubcategories && subcategory == null) {
+      subcategoryError = 'Ichki kategoriyani tanlash majburiy';
+    }
+    
+    if (content.length < 2) {
+      contentError = 'Qidirayotgan maxsulotingiz haqida batafsil ma\'lumot yozishingiz kerak';
+    }
+    
+    if (categoryError != null || subcategoryError != null || contentError != null) {
+      emit(state.copyWith(
+        categoryError: categoryError,
+        subcategoryError: subcategoryError,
+        contentError: contentError,
+      ));
+      return;
+    }
+    
     emit(state.copyWith(isSubmitting: true));
+    // Use subcategory if selected, otherwise use parent category
+    final postCategory = subcategory ?? category!;
     final result = await createPostUseCase(
       content: content,
       images: state.selectedImages,
-      category: category,
+      category: postCategory,
     );
     await result.fold(
       (error) async => emit(state.copyWith(
@@ -256,6 +303,13 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     Emitter<HomeState> emit,
   ) {
     emit(state.copyWith(actionStatus: HomeActionStatus.initial));
+  }
+
+  void _onClearContentError(
+    HomeClearContentError event,
+    Emitter<HomeState> emit,
+  ) {
+    emit(state.copyWith(contentError: null));
   }
 
   List<PostEntity> _shufflePosts(List<PostEntity> posts) {

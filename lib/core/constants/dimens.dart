@@ -10,6 +10,7 @@ class AppDimens {
   static const double huge = 40;
   static const double avatar = 36;
   static const double cardRadius = 14;
+  static const double buttonRadius = 12;
   static const double imageRadius = 12;
   static const double circleRadius = 999;
   static const double borderWidth = 1;
@@ -33,7 +34,7 @@ class AppDimens {
   static const double productImageHeight = 140;
   static const double productDetailImageHeight = 260;
   static const double categoryChipMaxWidth = 120;
-  static const double productCardAspectRatio = 0.68;
+  static const double productCardAspectRatio = 0.65;
   static const double postImageAspectRatio = 1 / 1.5;
   static const double searchFieldHeight = 44;
 }

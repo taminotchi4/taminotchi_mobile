@@ -16,11 +16,13 @@ class AppTheme {
       bodyMedium: AppStyles.bodyRegular.copyWith(color: AppColors.gray900),
       bodySmall: AppStyles.bodySmall.copyWith(color: AppColors.gray700),
       titleMedium: AppStyles.h5Bold.copyWith(color: AppColors.gray900),
+      titleLarge: AppStyles.h4Bold.copyWith(color: AppColors.gray900),
     ),
     appBarTheme: AppBarTheme(
       surfaceTintColor: Colors.transparent,
       backgroundColor: AppColors.mainBlue,
       titleTextStyle: AppStyles.h2Bold,
+      iconTheme: const IconThemeData(color: AppColors.gray900),
     ),
   );
 
@@ -36,11 +38,13 @@ class AppTheme {
       bodyMedium: AppStyles.bodyRegular.copyWith(color: AppColors.gray100),
       bodySmall: AppStyles.bodySmall.copyWith(color: AppColors.gray200),
       titleMedium: AppStyles.h5Bold.copyWith(color: AppColors.gray100),
+      titleLarge: AppStyles.h4Bold.copyWith(color: AppColors.gray100),
     ),
     appBarTheme: AppBarTheme(
       surfaceTintColor: Colors.transparent,
       backgroundColor: AppColors.darkBackground,
       titleTextStyle: AppStyles.h2Bold.copyWith(color: AppColors.gray100),
+      iconTheme: const IconThemeData(color: AppColors.gray100),
     ),
   );
 }

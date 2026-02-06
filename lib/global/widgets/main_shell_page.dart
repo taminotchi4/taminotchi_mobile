@@ -30,7 +30,7 @@ class MainShellPage extends StatelessWidget {
 
   int _indexForLocation(String location) {
     if (location.startsWith(Routes.myPosts)) return 1;
-    if (location.startsWith(Routes.orders)) return 2;
+    if (location.startsWith(Routes.chats)) return 2;
     if (location.startsWith(Routes.profile)) return 3;
     return 0;
   }
@@ -41,7 +41,7 @@ class MainShellPage extends StatelessWidget {
         context.go(Routes.myPosts);
         return;
       case 2:
-        context.go(Routes.orders);
+        context.go(Routes.chats);
         return;
       case 3:
         context.go(Routes.profile);

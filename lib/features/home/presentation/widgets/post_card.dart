@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/utils/colors.dart';
 import '../../../../core/constants/dimens.dart';
@@ -9,8 +10,11 @@ import '../../../../core/utils/icons.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/styles.dart';
 import '../../../../global/widgets/app_svg_icon.dart';
+import '../../domain/entities/post_category_entity.dart';
 import '../../domain/entities/post_entity.dart';
 import '../../domain/entities/post_image_entity.dart';
+import '../managers/home_bloc.dart';
+import '../managers/home_state.dart';
 import 'image_viewer_dialog.dart';
 
 class PostCard extends StatelessWidget {
@@ -135,27 +139,56 @@ class PostCard extends StatelessWidget {
   }
 
   Widget _buildFooter(BuildContext context, int commentCount) {
-    return Row(
-      children: [
-        AppSvgIcon(
-          assetPath: post.category.iconPath,
-          size: AppDimens.iconMd,
-          color: Theme.of(context).iconTheme.color,
-        ),
-        const Spacer(),
-        _infoItem(
-          context,
-          AppIcons.comment,
-          commentCount.toString(),
-        ),
-        AppDimens.md.width,
-        _infoItem(
-          context,
-          AppIcons.privateReply,
-          post.privateReplyCount.toString(),
-        ),
-      ],
+    return BlocBuilder<HomeBloc, HomeState>(
+      builder: (context, state) {
+        final categoryName = _getCategoryDisplayName(state.categories);
+        
+        return Row(
+          children: [
+            AppSvgIcon(
+              assetPath: post.category.iconPath,
+              size: AppDimens.iconMd,
+              color: Theme.of(context).iconTheme.color,
+            ),
+            AppDimens.xs.width,
+            Expanded(
+              child: Text(
+                categoryName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppStyles.bodySmall.copyWith(
+                  color: Theme.of(context).textTheme.bodySmall?.color,
+                ),
+              ),
+            ),
+            AppDimens.sm.width,
+            _infoItem(
+              context,
+              AppIcons.comment,
+              commentCount.toString(),
+            ),
+            AppDimens.md.width,
+            _infoItem(
+              context,
+              AppIcons.privateReply,
+              post.privateReplyCount.toString(),
+            ),
+          ],
+        );
+      },
     );
+  }
+
+  String _getCategoryDisplayName(List<PostCategoryEntity> categories) {
+    // If category has a parent, show "Parent > Child" format
+    if (post.category.parentId != null && post.category.parentId!.isNotEmpty) {
+      // Find parent category
+      final parentCategory = categories.where((cat) => cat.id == post.category.parentId).firstOrNull;
+      if (parentCategory != null) {
+        return '${parentCategory.name} > ${post.category.name}';
+      }
+    }
+    return post.category.name;
   }
 
   Widget _infoItem(BuildContext context, String icon, String text) {

@@ -8,7 +8,7 @@ import '../../../../core/utils/styles.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../global/widgets/app_back_button.dart';
 import '../../../../global/widgets/app_svg_icon.dart';
-import '../../../../global/widgets/common_app_bar.dart';
+
 import '../../domain/entities/chat_message_entity.dart';
 import '../managers/chat_bloc.dart';
 import '../managers/chat_event.dart';
@@ -17,11 +17,15 @@ import '../managers/chat_state.dart';
 class ChatPage extends StatefulWidget {
   final String sellerId;
   final String userId;
+  final String? sellerName;
+  final String? sellerRole;
 
   const ChatPage({
     super.key,
     required this.sellerId,
     required this.userId,
+    this.sellerName,
+    this.sellerRole,
   });
 
   @override
@@ -48,9 +52,75 @@ class _ChatPageState extends State<ChatPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CommonAppBar(
-        title: 'Chat',
-        leading: AppBackButton(),
+      appBar: AppBar(
+        leading: const AppBackButton(),
+        titleSpacing: 0,
+        title: Row(
+          children: [
+            CircleAvatar(
+              radius: 18.r,
+              backgroundColor: Theme.of(context).primaryColor,
+              child: Text(
+                (widget.sellerName?.isNotEmpty == true)
+                    ? widget.sellerName![0].toUpperCase()
+                    : '?',
+                style: AppStyles.bodyMedium.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            AppDimens.sm.width,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      widget.sellerName ?? 'Foydalanuvchi',
+                      style: AppStyles.bodyMedium.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).textTheme.titleMedium?.color,
+                      ),
+                    ),
+                    if (widget.sellerRole != null) ...[
+                      AppDimens.xs.width,
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 4.w,
+                          vertical: 1.h,
+                        ),
+                        decoration: BoxDecoration(
+                          color: widget.sellerRole == 'Market'
+                              ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
+                              : Theme.of(context).dividerColor.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(4.r),
+                        ),
+                        child: Text(
+                          widget.sellerRole!,
+                          style: AppStyles.bodySmall.copyWith(
+                            fontSize: 9.sp,
+                            color: widget.sellerRole == 'Market'
+                                ? Theme.of(context).primaryColor
+                                : Theme.of(context).textTheme.bodySmall?.color,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                Text(
+                  'Online', // Mock status
+                  style: AppStyles.bodySmall.copyWith(
+                    fontSize: 10.sp,
+                    color: Colors.green,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
       body: Column(
         children: [

@@ -83,7 +83,7 @@ class HomeSliverAppBar extends StatelessWidget {
                               BorderRadius.circular(AppDimens.imageRadius.r),
                           child: Center(
                             child: AppSvgIcon(
-                              assetPath: AppIcons.search,
+                              assetPath: AppIcons.notification,
                               size: AppDimens.iconLg,
                               color: Theme.of(context).iconTheme.color,
                             ),

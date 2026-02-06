@@ -5,6 +5,7 @@ class SellerProfileEntity {
   final String avatarPath;
   final int followersCount;
   final int productsCount;
+  final String address;
   final bool isFollowing;
 
   const SellerProfileEntity({
@@ -12,6 +13,7 @@ class SellerProfileEntity {
     required this.name,
     required this.description,
     required this.avatarPath,
+    required this.address,
     required this.followersCount,
     required this.productsCount,
     required this.isFollowing,

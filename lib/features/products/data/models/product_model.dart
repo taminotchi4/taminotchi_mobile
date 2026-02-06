@@ -41,6 +41,8 @@ class ProductModel {
   final int reviewCount;
   final List<String> imagePaths;
   final SellerModel seller;
+  final List<int> colors;
+  final List<String> sizes;
   final ProductCategoryModel category;
 
   const ProductModel({
@@ -53,6 +55,8 @@ class ProductModel {
     required this.imagePaths,
     required this.seller,
     required this.category,
+    this.colors = const [],
+    this.sizes = const [],
   });
 
   ProductEntity toEntity() => ProductEntity(
@@ -65,5 +69,7 @@ class ProductModel {
     imagePaths: imagePaths,
     seller: seller.toEntity(),
     category: category.toEntity(),
+    colors: colors,
+    sizes: sizes,
   );
 }

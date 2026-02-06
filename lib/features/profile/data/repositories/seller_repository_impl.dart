@@ -24,6 +24,7 @@ class SellerRepositoryImpl implements SellerRepository {
         name: seller.name,
         description: seller.description,
         avatarPath: seller.avatar,
+        address: seller.address,
         followersCount: followersCount,
         productsCount: 0,
         isFollowing: isFollowing,

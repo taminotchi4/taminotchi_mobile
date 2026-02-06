@@ -26,6 +26,7 @@ class ProductCommentsLocalDataSource {
           authorType: current.authorType,
           content: content,
           createdAt: current.createdAt,
+          rating: current.rating,
         );
         entry.value[index] = updated;
         return updated;
