@@ -54,7 +54,9 @@ class HomePage extends StatelessWidget {
       child: Scaffold(
         body: CustomScrollView(
           slivers: [
-            const HomeSliverAppBar(),
+            HomeSliverAppBar(
+              onRightTap: () => context.push(Routes.notifications),
+            ),
             SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.fromLTRB(

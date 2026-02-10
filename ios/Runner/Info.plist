@@ -26,6 +26,10 @@
 	<string>Rasmlarni yuklash uchun ruxsat kerak.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Rasmlarni saqlash uchun ruxsat kerak.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Audio xabar yozish uchun mikrofon ruxsati kerak.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Rasm yuborish uchun kamera ruxsati kerak.</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

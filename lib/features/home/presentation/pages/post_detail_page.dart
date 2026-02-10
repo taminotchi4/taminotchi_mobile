@@ -232,11 +232,11 @@ class _PostDetailPageState extends State<PostDetailPage>
               color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(AppDimens.cardRadius.r),
               border: Border.all(
-                color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
+                color: Theme.of(context).dividerColor.withOpacity(0.3),
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Theme.of(context).shadowColor.withValues(alpha: 0.05),
+                  color: Theme.of(context).shadowColor.withOpacity(0.05),
                   blurRadius: 4.r,
                   offset: Offset(0, 2.h),
                 ),
@@ -247,7 +247,7 @@ class _PostDetailPageState extends State<PostDetailPage>
                 CircleAvatar(
                   radius: 20.r,
                   backgroundColor:
-                      Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                      Theme.of(context).primaryColor.withOpacity(0.1),
                   child: Text(
                     (reply['name'] as String)[0],
                     style: TextStyle(

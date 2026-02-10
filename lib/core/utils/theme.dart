@@ -5,6 +5,7 @@ import 'colors.dart';
 
 class AppTheme {
   final ThemeData lightTheme = ThemeData(
+    brightness: Brightness.light,
     scaffoldBackgroundColor: AppColors.white,
     fontFamily: 'Poppins',
     cardColor: AppColors.white,
@@ -24,9 +25,16 @@ class AppTheme {
       titleTextStyle: AppStyles.h2Bold,
       iconTheme: const IconThemeData(color: AppColors.gray900),
     ),
+    pageTransitionsTheme: const PageTransitionsTheme(
+      builders: {
+        TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+        TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+      },
+    ),
   );
 
   final ThemeData darkTheme = ThemeData(
+    brightness: Brightness.dark,
     scaffoldBackgroundColor: AppColors.darkBackground,
     fontFamily: 'Poppins',
     cardColor: AppColors.darkCard,
@@ -45,6 +53,12 @@ class AppTheme {
       backgroundColor: AppColors.darkBackground,
       titleTextStyle: AppStyles.h2Bold.copyWith(color: AppColors.gray100),
       iconTheme: const IconThemeData(color: AppColors.gray100),
+    ),
+    pageTransitionsTheme: const PageTransitionsTheme(
+      builders: {
+        TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+        TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+      },
     ),
   );
 }

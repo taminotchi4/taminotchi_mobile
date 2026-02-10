@@ -21,11 +21,21 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return AppBar(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: isDark ? const Color(0xFF0E1013) : Theme.of(context).scaffoldBackgroundColor,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       centerTitle: true,
+      shape: isDark
+          ? RoundedRectangleBorder(
+              side: BorderSide(
+                color: Theme.of(context).primaryColor,
+                width: 1.0,
+              ),
+            )
+          : null,
       leading: leading != null
           ? Center(child: leading)
           : null,
@@ -44,11 +54,13 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       bottom: PreferredSize(
         preferredSize: Size.fromHeight(1.h),
-        child: Divider(
-          height: 1.h,
-          thickness: 1.h,
-          color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
-        ),
+        child: isDark 
+            ? const SizedBox.shrink() 
+            : Divider(
+                height: 1.h,
+                thickness: 1.h,
+                color: Theme.of(context).dividerColor.withOpacity(0.3),
+              ),
       ),
     );
   }

@@ -149,7 +149,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       gradient: LinearGradient(
                         colors: [
                           Theme.of(context).primaryColor,
-                          Theme.of(context).primaryColor.withValues(alpha: 0.7),
+                          Theme.of(context).primaryColor.withOpacity(0.7),
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
@@ -180,7 +180,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             BoxShadow(
                               color: Theme.of(context)
                                   .primaryColor
-                                  .withValues(alpha: 0.3),
+                                  .withOpacity(0.3),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),

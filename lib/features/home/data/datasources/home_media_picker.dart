@@ -15,6 +15,12 @@ class HomeMediaPicker {
         .toList();
   }
 
+  Future<PostImageEntity?> pickFromCamera() async {
+    final file = await _imagePicker.pickImage(source: ImageSource.camera);
+    if (file == null) return null;
+    return PostImageEntity(path: file.path, isLocal: true);
+  }
+
   Future<List<PostImageEntity>> pickFromFiles() async {
     final result = await FilePicker.platform.pickFiles(
       allowMultiple: true,

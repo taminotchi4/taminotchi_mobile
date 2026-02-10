@@ -27,7 +27,7 @@ class ProductCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppDimens.cardRadius.r),
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).shadowColor.withValues(alpha: 0.1),
+              color: Theme.of(context).shadowColor.withOpacity(0.1),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),

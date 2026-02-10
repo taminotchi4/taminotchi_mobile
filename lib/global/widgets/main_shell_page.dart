@@ -3,8 +3,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/routing/routes.dart';
 import 'animated_bottom_nav.dart';
+import 'wide_back_gesture_detector.dart';
 
-class MainShellPage extends StatelessWidget {
+class MainShellPage extends StatefulWidget {
   final Widget child;
   final String location;
 
@@ -15,13 +16,43 @@ class MainShellPage extends StatelessWidget {
   });
 
   @override
+  State<MainShellPage> createState() => _MainShellPageState();
+}
+
+class _MainShellPageState extends State<MainShellPage> {
+  // We maintain a simple history to show the previous page behind during swipe
+  final Map<String, Widget> _pageCache = {};
+  String? _previousLocation;
+  Widget? _previousWidget;
+
+  @override
+  void didUpdateWidget(MainShellPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.location != widget.location) {
+      // Before changing, store the current as previous
+      _previousLocation = oldWidget.location;
+      _previousWidget = oldWidget.child;
+      // Cache pages to recover them if needed
+      _pageCache[oldWidget.location] = oldWidget.child;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final shouldShowNav = _shouldShowNav(location);
+    final shouldShowNav = _shouldShowNav(widget.location);
+    
+    // Attempt to get background widget from cache if it exists
+    final backWidget = _previousWidget ?? _pageCache[_previousLocation ?? ''];
+
     return Scaffold(
-      body: child,
+      body: WideBackGestureDetector(
+        enabled: !shouldShowNav,
+        backChild: backWidget != null ? RepaintBoundary(child: backWidget) : null,
+        child: widget.child,
+      ),
       bottomNavigationBar: shouldShowNav
           ? AnimatedBottomNav(
-              currentIndex: _indexForLocation(location),
+              currentIndex: _indexForLocation(widget.location),
               onTap: (index) => _onTabSelected(context, index),
             )
           : null,
@@ -53,11 +84,13 @@ class MainShellPage extends StatelessWidget {
   }
 
   bool _shouldShowNav(String location) {
-    if (location.startsWith('/post')) return false;
-    if (location.startsWith('/products/') && location != Routes.allProducts) {
-      return false;
-    }
-    if (location.startsWith('/seller')) return false;
-    return true;
+    // Bottom nav should only be visible on top-level pages
+    final topLevelRoutes = [
+      Routes.home,
+      Routes.myPosts,
+      Routes.chats,
+      Routes.profile,
+    ];
+    return topLevelRoutes.contains(location) || location == '/';
   }
 }

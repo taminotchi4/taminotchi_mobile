@@ -120,7 +120,7 @@ class HomeLocalDataSource {
     ),
     const PostCategoryModel(
       id: 'fashion',
-      name: 'Moda va kiyim',
+      name: 'Kiyimlar va Aksessuarlar',
       iconPath: AppIcons.categoryOther,
       subcategories: [
         PostCategoryModel(

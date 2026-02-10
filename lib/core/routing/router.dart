@@ -49,6 +49,9 @@ import '../../features/profile/data/datasources/seller_local_data_source.dart';
 import '../../features/profile/data/repositories/seller_repository_impl.dart';
 import '../../features/chat/data/datasources/chat_local_data_source.dart';
 import '../../features/chat/data/repositories/chat_repository_impl.dart';
+import '../../features/chat/data/services/audio_recorder_service.dart';
+import '../../features/chat/data/services/audio_player_service.dart';
+import '../../features/chat/data/services/gallery_service.dart';
 import '../../features/chat/domain/usecases/get_or_create_chat_usecase.dart';
 import '../../features/chat/domain/usecases/get_messages_usecase.dart';
 import '../../features/chat/domain/usecases/send_message_usecase.dart';
@@ -63,6 +66,7 @@ import '../../features/profile/domain/usecases/upload_profile_photo_usecase.dart
 import '../../features/profile/domain/usecases/logout_usecase.dart';
 import '../../features/profile/presentation/managers/client_profile_bloc.dart';
 import '../../features/category_feed/presentation/pages/category_feed_page.dart';
+import '../../features/notifications/presentation/pages/notifications_page.dart';
 import '../../global/widgets/main_shell_page.dart';
 
 final router = GoRouter(
@@ -138,6 +142,9 @@ final router = GoRouter(
                     GetOrCreateChatUseCase(chatRepository),
                 getMessagesUseCase: GetMessagesUseCase(chatRepository),
                 sendMessageUseCase: SendMessageUseCase(chatRepository),
+                audioRecorder: AudioRecorderService(),
+                audioPlayer: AudioPlayerService(),
+                galleryService: GalleryService(),
               ),
             ),
             BlocProvider(
@@ -230,6 +237,10 @@ final router = GoRouter(
               showAllPosts: showAll,
             );
           },
+        ),
+        GoRoute(
+          path: Routes.notifications,
+          builder: (context, state) => const NotificationsPage(),
         ),
       ],
     ),

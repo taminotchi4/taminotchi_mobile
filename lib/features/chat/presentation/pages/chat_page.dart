@@ -3,16 +3,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../../core/constants/dimens.dart';
-import '../../../../core/utils/icons.dart';
 import '../../../../core/utils/styles.dart';
-import '../../../../core/utils/extensions.dart';
-import '../../../../global/widgets/app_back_button.dart';
-import '../../../../global/widgets/app_svg_icon.dart';
-
 import '../../domain/entities/chat_message_entity.dart';
 import '../managers/chat_bloc.dart';
 import '../managers/chat_event.dart';
 import '../managers/chat_state.dart';
+import '../widgets/chat_app_bar.dart';
+import '../widgets/chat_image_viewer.dart';
+import '../widgets/chat_input_section.dart';
+import '../widgets/message_bubble.dart';
 
 class ChatPage extends StatefulWidget {
   final String sellerId;
@@ -33,7 +32,9 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
-  final TextEditingController _controller = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  final Map<String, GlobalKey> _messageKeys = {};
+  bool _initialScrollDone = false;
 
   @override
   void initState() {
@@ -45,300 +46,182 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   void dispose() {
-    _controller.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _performInitialScroll(List<ChatMessageEntity> messages) {
+    if (_initialScrollDone) return;
+
+    String? targetId;
+    int firstUnreadIndex = -1;
+
+    // Find first unread incoming message
+    for (int i = 0; i < messages.length; i++) {
+      final msg = messages[i];
+      // Assuming isSeller means incoming. And non-read status means unread.
+      if (msg.isSeller && msg.status != MessageStatus.read) {
+        firstUnreadIndex = i;
+        break;
+      }
+    }
+
+    if (firstUnreadIndex != -1) {
+      if (firstUnreadIndex > 0) {
+        // Target is the message BEFORE the first unread (Last Read Message)
+        targetId = messages[firstUnreadIndex - 1].id;
+      } else {
+        // First message is unread, target it directly (align to top)
+        targetId = messages[0].id;
+      }
+    } else if (messages.isNotEmpty) {
+      // All read, scroll to bottom (last message)
+      targetId = messages.last.id;
+    }
+
+    if (targetId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // Double check context and key existence
+        if (_messageKeys.containsKey(targetId)) {
+           final key = _messageKeys[targetId];
+           if (key?.currentContext != null) {
+              Scrollable.ensureVisible(
+                key!.currentContext!,
+                alignment: firstUnreadIndex == 0 ? 1.0 : 0.0, // Top if 1st is unread, Bottom otherwise
+                duration: const Duration(milliseconds: 100), // Instant/Fast jump
+              );
+           }
+        } else if (firstUnreadIndex == -1 && _scrollController.hasClients) {
+           // Fallback for bottom scroll
+           _scrollController.jumpTo(0);
+        }
+        _initialScrollDone = true;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: const AppBackButton(),
-        titleSpacing: 0,
-        title: Row(
-          children: [
-            CircleAvatar(
-              radius: 18.r,
-              backgroundColor: Theme.of(context).primaryColor,
-              child: Text(
-                (widget.sellerName?.isNotEmpty == true)
-                    ? widget.sellerName![0].toUpperCase()
-                    : '?',
-                style: AppStyles.bodyMedium.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            AppDimens.sm.width,
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      widget.sellerName ?? 'Foydalanuvchi',
-                      style: AppStyles.bodyMedium.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).textTheme.titleMedium?.color,
-                      ),
-                    ),
-                    if (widget.sellerRole != null) ...[
-                      AppDimens.xs.width,
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 4.w,
-                          vertical: 1.h,
-                        ),
-                        decoration: BoxDecoration(
-                          color: widget.sellerRole == 'Market'
-                              ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
-                              : Theme.of(context).dividerColor.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(4.r),
-                        ),
-                        child: Text(
-                          widget.sellerRole!,
-                          style: AppStyles.bodySmall.copyWith(
-                            fontSize: 9.sp,
-                            color: widget.sellerRole == 'Market'
-                                ? Theme.of(context).primaryColor
-                                : Theme.of(context).textTheme.bodySmall?.color,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                Text(
-                  'Online', // Mock status
-                  style: AppStyles.bodySmall.copyWith(
-                    fontSize: 10.sp,
-                    color: Colors.green,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+      appBar: ChatAppBar(
+        sellerName: widget.sellerName,
+        sellerRole: widget.sellerRole,
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: BlocBuilder<ChatBloc, ChatState>(
-              builder: (context, state) {
-                if (state.isLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (state.messages.isEmpty) {
-                  return Center(
-                    child: Text(
-                      'Xabarlar yoq',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppStyles.bodySmall.copyWith(
-                        color: Theme.of(context).textTheme.bodySmall?.color,
-                      ),
-                    ),
+      body: BlocListener<ChatBloc, ChatState>(
+        listener: (context, state) {
+          // Handle initial scroll on first load
+          if (!_initialScrollDone && !state.isLoading && state.messages.isNotEmpty) {
+             _performInitialScroll(state.messages);
+          }
+
+          // Handle auto-scroll for NEW messages (only if initial scroll is done)
+          if (_initialScrollDone && state.messages.isNotEmpty) {
+            final lastMessage = state.messages.last;
+            if (!lastMessage.isSeller) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (_scrollController.hasClients) {
+                  _scrollController.animateTo(
+                    0, 
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOut,
                   );
                 }
-                return ListView.builder(
-                  padding: EdgeInsets.all(AppDimens.lg.r),
-                  itemCount: state.messages.length,
-                  itemBuilder: (context, index) {
-                    final message = state.messages[index];
-                    final isMine = !message.isSeller;
-                    return Align(
-                      alignment:
-                          isMine ? Alignment.centerRight : Alignment.centerLeft,
-                      child: Container(
-                        margin: EdgeInsets.only(bottom: AppDimens.sm.h),
-                        padding: EdgeInsets.all(AppDimens.md.r),
-                        decoration: BoxDecoration(
-                          color: isMine
-                              ? Theme.of(context)
-                                  .primaryColor
-                                  .withValues(alpha: 0.1)
-                              : Theme.of(context).cardColor,
-                          borderRadius:
-                              BorderRadius.circular(AppDimens.imageRadius.r),
-                          border: Border.all(
-                            color: Theme.of(context).dividerColor,
-                            width: AppDimens.borderWidth.w,
-                          ),
-                        ),
-                        child: _messageContent(context, message),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-          _inputBar(context),
-        ],
-      ),
-    );
-  }
-
-  Widget _messageContent(BuildContext context, ChatMessageEntity message) {
-    if (message.type == ChatMessageType.text) {
-      return Text(
-        message.content,
-        style: AppStyles.bodyRegular.copyWith(
-          color: Theme.of(context).textTheme.bodyMedium?.color,
-        ),
-      );
-    }
-    final label = message.type == ChatMessageType.image ? 'Image' : 'Audio';
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        AppSvgIcon(
-          assetPath:
-              message.type == ChatMessageType.image ? AppIcons.gallery : AppIcons.audio,
-          size: AppDimens.iconMd,
-          color: Theme.of(context).iconTheme.color,
-        ),
-        AppDimens.sm.width,
-        Text(
-          label,
-          style: AppStyles.bodySmall.copyWith(
-            color: Theme.of(context).textTheme.bodyMedium?.color,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _inputBar(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: Container(
-        padding: EdgeInsets.fromLTRB(
-          AppDimens.lg.w,
-          AppDimens.sm.h,
-          AppDimens.lg.w,
-          AppDimens.sm.h,
-        ),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          border: Border(
-            top: BorderSide(
-              color: Theme.of(context).dividerColor,
-              width: AppDimens.borderWidth.w,
-            ),
-          ),
-        ),
-        child: Row(
+              });
+            }
+          }
+        },
+        child: Column(
           children: [
-            InkWell(
-              onTap: () => context.read<ChatBloc>().add(
-                    const ChatSendMessage(
-                      type: ChatMessageType.image,
-                      content: 'image',
-                    ),
-                  ),
-              borderRadius: BorderRadius.circular(AppDimens.imageRadius.r),
-              child: Padding(
-                padding: EdgeInsets.all(AppDimens.sm.r),
-                child: AppSvgIcon(
-                  assetPath: AppIcons.gallery,
-                  size: AppDimens.iconMd,
-                  color: Theme.of(context).iconTheme.color,
-                ),
-              ),
-            ),
-            InkWell(
-              onTap: () => context.read<ChatBloc>().add(
-                    const ChatSendMessage(
-                      type: ChatMessageType.audio,
-                      content: 'audio',
-                    ),
-                  ),
-              borderRadius: BorderRadius.circular(AppDimens.imageRadius.r),
-              child: Padding(
-                padding: EdgeInsets.all(AppDimens.sm.r),
-                child: AppSvgIcon(
-                  assetPath: AppIcons.audio,
-                  size: AppDimens.iconMd,
-                  color: Theme.of(context).iconTheme.color,
-                ),
-              ),
-            ),
-            AppDimens.sm.width,
             Expanded(
-              child: TextField(
-                controller: _controller,
-                decoration: InputDecoration(
-                  hintText: 'Xabar yozing...',
-                  hintStyle: AppStyles.bodyRegular.copyWith(
-                    color: Theme.of(context).hintColor,
-                  ),
-                  filled: true,
-                  fillColor: Theme.of(context).scaffoldBackgroundColor,
-                  isDense: true,
-                  border: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppDimens.imageRadius.r),
-                    borderSide: BorderSide(
-                      color: Theme.of(context).dividerColor,
-                      width: AppDimens.borderWidth.w,
-                    ),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppDimens.imageRadius.r),
-                    borderSide: BorderSide(
-                      color: Theme.of(context).dividerColor,
-                      width: AppDimens.borderWidth.w,
-                    ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppDimens.imageRadius.r),
-                    borderSide: BorderSide(
-                      color: Theme.of(context).primaryColor,
-                      width: AppDimens.borderWidth.w,
-                    ),
-                  ),
-                  contentPadding: EdgeInsets.symmetric(
-                    vertical: AppDimens.sm.h,
-                    horizontal: AppDimens.md.w,
-                  ),
-                ),
-              ),
-            ),
-            AppDimens.sm.width,
-            InkWell(
-              onTap: () {
-                final text = _controller.text;
-                _controller.clear();
-                context.read<ChatBloc>().add(
-                      ChatSendMessage(
-                        type: ChatMessageType.text,
-                        content: text,
+              child: BlocBuilder<ChatBloc, ChatState>(
+                builder: (context, state) {
+                  if (state.isLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (state.messages.isEmpty) {
+                    return Center(
+                      child: Text(
+                        'Xabarlar yo\'q',
+                        style: AppStyles.bodySmall.copyWith(
+                          color: Theme.of(context).textTheme.bodySmall?.color,
+                        ),
                       ),
                     );
-              },
-              borderRadius: BorderRadius.circular(AppDimens.imageRadius.r),
-              child: Container(
-                padding: EdgeInsets.all(AppDimens.sm.r),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor,
-                  borderRadius:
-                      BorderRadius.circular(AppDimens.imageRadius.r),
-                ),
-                child: const AppSvgIcon(
-                  assetPath: AppIcons.send,
-                  size: AppDimens.iconMd,
-                  color: Colors.white,
-                ),
+                  }
+                  
+                  // Reset keys if messages change drastically? 
+                  // Keys should be stable by ID.
+                  
+                  return ListView(
+                    reverse: true,
+                    controller: _scrollController,
+                    padding: EdgeInsets.all(AppDimens.lg.r),
+                    children: state.messages.reversed.map((message) {
+                      if (!_messageKeys.containsKey(message.id)) {
+                        _messageKeys[message.id] = GlobalKey();
+                      }
+                      final isMine = !message.isSeller;
+                      final isSelected = state.selectedMessageIds.contains(message.id);
+                      return Container(
+                         key: _messageKeys[message.id],
+                         child: MessageBubble(
+                           message: message,
+                           isMine: isMine,
+                           isSelected: isSelected,
+                           onImageTap: (mId, mIndex, mPath) => _handleImageTap(state.messages, mId, mIndex),
+                           onReplyTap: (replyId) => _jumpToMessage(replyId),
+                         ),
+                      );
+                    }).toList(),
+                  );
+                },
               ),
             ),
+            const ChatInputSection(),
           ],
         ),
       ),
     );
+  }
+
+  void _handleImageTap(List<ChatMessageEntity> messages, String targetMessageId, int targetImageIndex) {
+    final allItems = <GalleryImageItem>[];
+    int initialIndex = 0;
+
+    for (var msg in messages) {
+       if (msg.type == ChatMessageType.image) {
+          if (msg.id == targetMessageId && targetImageIndex == 0) initialIndex = allItems.length;
+          allItems.add(GalleryImageItem(path: msg.content, tag: '${msg.id}_0'));
+       } else if (msg.type == ChatMessageType.album) {
+          for (var i = 0; i < msg.images.length; i++) {
+             if (msg.id == targetMessageId && targetImageIndex == i) initialIndex = allItems.length;
+             allItems.add(GalleryImageItem(path: msg.images[i], tag: '${msg.id}_$i'));
+          }
+       }
+    }
+
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        opaque: false,
+        pageBuilder: (_, __, ___) => ChatImageViewer(
+          items: allItems,
+          initialIndex: initialIndex,
+        ),
+      ),
+    );
+  }
+
+  void _jumpToMessage(String messageId) {
+    if (_messageKeys.containsKey(messageId)) {
+      final context = _messageKeys[messageId]!.currentContext;
+      if (context != null) {
+        Scrollable.ensureVisible(
+          context,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+          alignment: 0.5,
+        );
+      }
+    }
   }
 }

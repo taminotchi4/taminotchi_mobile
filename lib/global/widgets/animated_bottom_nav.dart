@@ -90,7 +90,7 @@ class _NavItem extends StatelessWidget {
           padding: EdgeInsets.symmetric(vertical: AppDimens.sm.h),
           decoration: BoxDecoration(
             color: isActive
-                ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
+                ? Theme.of(context).primaryColor.withOpacity(0.1)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(AppDimens.imageRadius.r),
           ),

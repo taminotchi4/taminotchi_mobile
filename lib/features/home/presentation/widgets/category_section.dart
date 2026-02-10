@@ -64,10 +64,10 @@ class CategorySection extends StatelessWidget {
               width: 56.w,
               height: 56.w,
               decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                color: Theme.of(context).primaryColor.withOpacity(0.1),
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
+                  color: Theme.of(context).dividerColor.withOpacity(0.3),
                   width: 1.w,
                 ),
               ),

@@ -32,6 +32,10 @@ class HomeAddImagesFromGallery extends HomeEvent {
   const HomeAddImagesFromGallery();
 }
 
+class HomeAddImageFromCamera extends HomeEvent {
+  const HomeAddImageFromCamera();
+}
+
 class HomeAddImagesFromFiles extends HomeEvent {
   const HomeAddImagesFromFiles();
 }

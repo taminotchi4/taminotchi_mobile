@@ -11,7 +11,8 @@ class Routes {
   static final sellerChat = '/seller/:sellerId/chat';
   static final login = '/login';
   static final postDetail = '/post/:postId';
-  static final categoryFeed = '/category/:categoryId';
+  static const categoryFeed = '/category/:categoryId';
+  static const notifications = '/notifications';
 
   static String getPostDetail(String postId) => '/post/$postId';
   static String getProductDetail(String productId) => '/products/$productId';

@@ -45,12 +45,12 @@ class CommentTile extends StatelessWidget {
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(AppDimens.cardRadius.r),
         border: Border.all(
-          color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
+          color: Theme.of(context).dividerColor.withOpacity(0.3),
           width: 1.w,
         ),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).shadowColor.withValues(alpha: 0.05),
+            color: Theme.of(context).shadowColor.withOpacity(0.05),
             blurRadius: 4.r,
             offset: Offset(0, 2.h),
           ),
@@ -71,7 +71,7 @@ class CommentTile extends StatelessWidget {
                     gradient: LinearGradient(
                       colors: [
                         Theme.of(context).primaryColor,
-                        Theme.of(context).primaryColor.withValues(alpha: 0.7),
+                        Theme.of(context).primaryColor.withOpacity(0.7),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -195,7 +195,7 @@ class CommentTile extends StatelessWidget {
           if (comment.replies != null && comment.replies!.isNotEmpty) ...[
             AppDimens.md.height,
             Divider(
-              color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
+              color: Theme.of(context).dividerColor.withOpacity(0.5),
               thickness: 1.w,
             ),
             AppDimens.sm.height,
@@ -213,8 +213,8 @@ class CommentTile extends StatelessWidget {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              Theme.of(context).primaryColor.withValues(alpha: 0.7),
-                              Theme.of(context).primaryColor.withValues(alpha: 0.5),
+                              Theme.of(context).primaryColor.withOpacity(0.7),
+                              Theme.of(context).primaryColor.withOpacity(0.5),
                             ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
@@ -256,7 +256,7 @@ class CommentTile extends StatelessWidget {
                                 _formatCommentTime(reply.createdAt),
                                 style: AppStyles.bodySmall.copyWith(
                                   fontSize: 9.sp,
-                                  color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                                  color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
                                 ),
                               ),
                             ],

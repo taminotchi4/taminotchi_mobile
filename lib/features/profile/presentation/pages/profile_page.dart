@@ -13,7 +13,8 @@ import '../../../../global/widgets/common_app_bar.dart';
 import '../managers/client_profile_bloc.dart';
 import '../managers/client_profile_event.dart';
 import '../managers/client_profile_state.dart';
-import 'edit_profile_page.dart';
+import '../widgets/profile_header.dart';
+import '../widgets/profile_menu_item.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -99,97 +100,11 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             );
           }
-          final profile = state.profile!;
           return SingleChildScrollView(
             padding: EdgeInsets.all(AppDimens.lg.r),
             child: Column(
               children: [
-                AppDimens.lg.height,
-                Container(
-                  width: 120.r,
-                  height: 120.r,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: [
-                        Theme.of(context).primaryColor,
-                        Theme.of(context).primaryColor.withValues(alpha: 0.7),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Theme.of(context)
-                            .primaryColor
-                            .withValues(alpha: 0.3),
-                        blurRadius: 16,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    profile.name.isNotEmpty
-                        ? profile.name[0].toUpperCase()
-                        : '?',
-                    style: AppStyles.h1Bold.copyWith(
-                      color: Colors.white,
-                      fontSize: 48.sp,
-                    ),
-                  ),
-                ),
-                AppDimens.lg.height,
-                Text(
-                  profile.name,
-                  style: AppStyles.h3Bold.copyWith(
-                    color: Theme.of(context).textTheme.titleMedium?.color,
-                  ),
-                ),
-                AppDimens.xs.height,
-                Text(
-                  profile.username,
-                  style: AppStyles.bodyMedium.copyWith(
-                    color: Theme.of(context).primaryColor,
-                  ),
-                ),
-                AppDimens.sm.height,
-                Text(
-                  profile.phone,
-                  style: AppStyles.bodyRegular.copyWith(
-                    color: Theme.of(context).textTheme.bodySmall?.color,
-                  ),
-                ),
-                AppDimens.xl.height,
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => EditProfilePage(profile: profile),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).primaryColor,
-                      padding: EdgeInsets.symmetric(vertical: 14.h),
-                      shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(AppDimens.buttonRadius.r),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: Text(
-                      'Profilni tahrirlash',
-                      style: AppStyles.bodyMedium.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
+                ProfileHeader(profile: state.profile!),
                 AppDimens.xl.height,
                 _buildSectionTitle('Sozlamalar'),
                 AppDimens.md.height,
@@ -197,7 +112,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   children: [
                     BlocBuilder<ThemeCubit, ThemeMode>(
                       builder: (context, themeMode) {
-                        return _buildSettingItem(
+                        return ProfileMenuItem(
                           icon: Icons.brightness_6_outlined,
                           title: 'Tungi rejim',
                           trailing: Switch(
@@ -213,7 +128,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     _buildDivider(),
                     BlocBuilder<LocalizationCubit, Locale>(
                       builder: (context, locale) {
-                        return _buildSettingItem(
+                        return ProfileMenuItem(
                           icon: Icons.language_outlined,
                           title: 'Til',
                           trailing: DropdownButton<String>(
@@ -249,7 +164,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       },
                     ),
                     _buildDivider(),
-                    _buildSettingItem(
+                    ProfileMenuItem(
                       icon: Icons.notifications_outlined,
                       title: 'Bildirishnomalar',
                       trailing: Icon(
@@ -259,7 +174,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       onTap: () {},
                     ),
                     _buildDivider(),
-                    _buildSettingItem(
+                    ProfileMenuItem(
                       icon: Icons.lock_outline_rounded,
                       title: 'Maxfiylik',
                       trailing: Icon(
@@ -275,7 +190,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 AppDimens.md.height,
                 _buildSettingsCard(
                   children: [
-                    _buildSettingItem(
+                    ProfileMenuItem(
                       icon: Icons.shopping_bag_outlined,
                       title: 'Buyurtmalarim',
                       trailing: Icon(
@@ -285,7 +200,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       onTap: () => context.go(Routes.orders),
                     ),
                     _buildDivider(),
-                    _buildSettingItem(
+                    ProfileMenuItem(
                       icon: Icons.support_agent_rounded,
                       title: 'Yordam',
                       trailing: Icon(
@@ -298,7 +213,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ),
                     _buildDivider(),
-                    _buildSettingItem(
+                    ProfileMenuItem(
                       icon: Icons.logout_rounded,
                       title: 'Chiqish',
                       titleColor: Colors.red,
@@ -338,45 +253,6 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
       ),
       child: Column(children: children),
-    );
-  }
-
-  Widget _buildSettingItem({
-    required IconData icon,
-    required String title,
-    Widget? trailing,
-    Color? titleColor,
-    VoidCallback? onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppDimens.cardRadius.r),
-      child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: AppDimens.md.w,
-          vertical: AppDimens.md.h,
-        ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              size: 24.r,
-              color: titleColor ?? Theme.of(context).iconTheme.color,
-            ),
-            AppDimens.md.width,
-            Expanded(
-              child: Text(
-                title,
-                style: AppStyles.bodyMedium.copyWith(
-                  color: titleColor ??
-                      Theme.of(context).textTheme.bodyMedium?.color,
-                ),
-              ),
-            ),
-            if (trailing != null) trailing,
-          ],
-        ),
-      ),
     );
   }
 

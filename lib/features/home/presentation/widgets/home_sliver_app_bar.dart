@@ -84,7 +84,7 @@ class HomeSliverAppBar extends StatelessWidget {
                           child: Center(
                             child: AppSvgIcon(
                               assetPath: AppIcons.notification,
-                              size: AppDimens.iconLg,
+                              size: AppDimens.avatarXs,
                               color: Theme.of(context).iconTheme.color,
                             ),
                           ),

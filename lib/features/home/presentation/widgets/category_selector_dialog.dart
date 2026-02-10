@@ -58,7 +58,7 @@ class CategorySelectorDialog extends StatelessWidget {
                         color: isSelected
                             ? Theme.of(context)
                                 .primaryColor
-                                .withValues(alpha: 0.12)
+                                .withOpacity(0.12)
                             : Theme.of(context).scaffoldBackgroundColor,
                         borderRadius:
                             BorderRadius.circular(AppDimens.imageRadius.r),

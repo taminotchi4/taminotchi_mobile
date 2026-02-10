@@ -49,6 +49,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     on<HomeSelectCategory>(_onSelectCategory);
     on<HomeSelectSubcategory>(_onSelectSubcategory);
     on<HomeAddImagesFromGallery>(_onAddImagesFromGallery);
+    on<HomeAddImageFromCamera>(_onAddImageFromCamera);
     on<HomeAddImagesFromFiles>(_onAddImagesFromFiles);
     on<HomeRemoveImage>(_onRemoveImage);
     on<HomeCreatePost>(_onCreatePost);
@@ -133,14 +134,22 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   }
 
   void _onExpandComposer(HomeExpandComposer event, Emitter<HomeState> emit) {
-    emit(state.copyWith(
-      isComposerExpanded: true,
-      selectedCategory: null,
-      selectedSubcategory: null,
-      categoryError: null,
-      subcategoryError: null,
-      contentError: null,
-    ));
+    // Only reset categories if composer is currently collapsed
+    // If already expanded or categories are pre-selected, preserve them
+    if (state.isComposerExpanded) {
+      // Already expanded, just ensure it stays expanded
+      emit(state.copyWith(isComposerExpanded: true));
+    } else {
+      // Expanding from collapsed state - reset everything
+      emit(state.copyWith(
+        isComposerExpanded: true,
+        selectedCategory: null,
+        selectedSubcategory: null,
+        categoryError: null,
+        subcategoryError: null,
+        contentError: null,
+      ));
+    }
   }
 
   void _onCollapseComposer(HomeCollapseComposer event, Emitter<HomeState> emit) {
@@ -172,6 +181,16 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   ) async {
     final images = await mediaPicker.pickFromGallery();
     _mergeImages(images, emit);
+  }
+
+  Future<void> _onAddImageFromCamera(
+    HomeAddImageFromCamera event,
+    Emitter<HomeState> emit,
+  ) async {
+    final image = await mediaPicker.pickFromCamera();
+    if (image != null) {
+      _mergeImages([image], emit);
+    }
   }
 
   Future<void> _onAddImagesFromFiles(

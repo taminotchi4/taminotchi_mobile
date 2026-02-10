@@ -248,7 +248,7 @@ class _PostCreationSectionState extends State<PostCreationSection> {
             ),
             decoration: BoxDecoration(
               color: isSelected
-                  ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
+                  ? Theme.of(context).primaryColor.withOpacity(0.1)
                   : Theme.of(context).scaffoldBackgroundColor,
               borderRadius: BorderRadius.circular(AppDimens.imageRadius.r),
               border: Border.all(
@@ -289,10 +289,10 @@ class _PostCreationSectionState extends State<PostCreationSection> {
         Expanded(
           child: _uploadButton(
             context,
-            label: 'Fayllar',
-            icon: AppIcons.file,
+            label: 'Kamera',
+            icon: Icons.camera_alt, // Assuming AppIcons.camera exists for SVG, or replace with Icon(Icons.camera_alt) if _uploadButton is modified
             onTap: () =>
-                context.read<HomeBloc>().add(const HomeAddImagesFromFiles()),
+                context.read<HomeBloc>().add(const HomeAddImageFromCamera()),
           ),
         ),
       ],
@@ -302,7 +302,7 @@ class _PostCreationSectionState extends State<PostCreationSection> {
   Widget _uploadButton(
     BuildContext context, {
     required String label,
-    required String icon,
+    dynamic icon, // Can be String (SVG path) or IconData
     required VoidCallback onTap,
   }) {
     return InkWell(
@@ -322,11 +322,18 @@ class _PostCreationSectionState extends State<PostCreationSection> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            AppSvgIcon(
-              assetPath: icon,
-              size: AppDimens.iconMd,
-              color: Theme.of(context).iconTheme.color,
-            ),
+            if (icon is String)
+              AppSvgIcon(
+                assetPath: icon,
+                size: AppDimens.iconMd,
+                color: Theme.of(context).iconTheme.color,
+              )
+            else if (icon is IconData)
+              Icon(
+                icon,
+                size: AppDimens.iconMd.r,
+                color: Theme.of(context).iconTheme.color,
+              ),
             AppDimens.sm.width,
             Flexible(
               child: Text(
@@ -388,7 +395,7 @@ class _PostCreationSectionState extends State<PostCreationSection> {
                   child: Container(
                     padding: EdgeInsets.all(AppDimens.xxs.r),
                     decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.5),
+                      color: Colors.black.withOpacity(0.5),
                       borderRadius:
                           BorderRadius.circular(AppDimens.imageRadius.r),
                     ),

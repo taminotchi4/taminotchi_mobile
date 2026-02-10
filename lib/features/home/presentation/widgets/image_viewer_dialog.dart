@@ -47,7 +47,7 @@ class ImageViewerDialog extends StatelessWidget {
               child: Container(
                 padding: EdgeInsets.all(AppDimens.sm.r),
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.4),
+                  color: Colors.black.withOpacity(0.4),
                   borderRadius: BorderRadius.circular(AppDimens.xl.r),
                 ),
                 child: const AppSvgIcon(

@@ -116,7 +116,7 @@ class _ChatItem extends StatelessWidget {
                 gradient: LinearGradient(
                   colors: [
                     Theme.of(context).primaryColor,
-                    Theme.of(context).primaryColor.withValues(alpha: 0.7),
+                    Theme.of(context).primaryColor.withOpacity(0.7),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -159,8 +159,8 @@ class _ChatItem extends StatelessWidget {
                               ),
                               decoration: BoxDecoration(
                                 color: role == 'Market'
-                                    ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
-                                    : Theme.of(context).dividerColor.withValues(alpha: 0.2),
+                                    ? Theme.of(context).primaryColor.withOpacity(0.1)
+                                    : Theme.of(context).dividerColor.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(4.r),
                               ),
                               child: Text(
