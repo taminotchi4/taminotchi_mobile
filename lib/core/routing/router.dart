@@ -67,10 +67,11 @@ import '../../features/profile/domain/usecases/logout_usecase.dart';
 import '../../features/profile/presentation/managers/client_profile_bloc.dart';
 import '../../features/category_feed/presentation/pages/category_feed_page.dart';
 import '../../features/notifications/presentation/pages/notifications_page.dart';
+import '../../features/auth/presentation/pages/auth_main_page.dart';
 import '../../global/widgets/main_shell_page.dart';
 
 final router = GoRouter(
-  initialLocation: Routes.home,
+  initialLocation: Routes.auth,
 
   routes: [
     ShellRoute(
@@ -165,6 +166,10 @@ final router = GoRouter(
         );
       },
       routes: [
+        GoRoute(
+          path: Routes.auth,
+          builder: (context, state) => const AuthMainPage(),
+        ),
         GoRoute(path: Routes.home, builder: (context, state) => const HomePage()),
         GoRoute(
           path: Routes.myPosts,

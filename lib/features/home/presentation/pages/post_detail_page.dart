@@ -88,26 +88,7 @@ class _PostDetailPageState extends State<PostDetailPage>
           appBar: CommonAppBar(
             title: 'Post',
             leading: const AppBackButton(),
-            actions: isOwner
-                ? [
-                    IconButton(
-                      onPressed: () {
-                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Edit functionality coming soon')),
-                        );
-                      },
-                      icon: Icon(
-                        Icons.edit_outlined,
-                        color: Theme.of(context).primaryColor,
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: _showDeleteDialog,
-                      icon: const Icon(Icons.delete_outline_rounded,
-                          color: Colors.red),
-                    ),
-                  ]
-                : null,
+            actions: null,
           ),
           body: Column(
             children: [
@@ -122,6 +103,60 @@ class _PostDetailPageState extends State<PostDetailPage>
                             post: post,
                             commentCount: state.activeComments.length,
                             showFullText: true,
+                            trailing: isOwner
+                                ? PopupMenuButton<String>(
+                                    onSelected: (value) {
+                                      if (value == 'edit') {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                              content: Text(
+                                                  'Edit functionality coming soon')),
+                                        );
+                                      } else if (value == 'delete') {
+                                        _showDeleteDialog();
+                                      }
+                                    },
+                                    itemBuilder: (BuildContext context) =>
+                                        <PopupMenuEntry<String>>[
+                                      PopupMenuItem<String>(
+                                        value: 'edit',
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.edit_outlined,
+                                                color: Theme.of(context)
+                                                    .primaryColor),
+                                            SizedBox(width: 8.w),
+                                            const Text('Tahrirlash'),
+                                          ],
+                                        ),
+                                      ),
+                                      PopupMenuItem<String>(
+                                        value: 'delete',
+                                        child: Row(
+                                          children: [
+                                            const Icon(
+                                                Icons.delete_outline_rounded,
+                                                color: Colors.red),
+                                            SizedBox(width: 8.w),
+                                            const Text('O\'chirish'),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                    child: Container(
+                                      padding: EdgeInsets.all(4.w),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context).cardColor,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(Icons.more_vert,
+                                          size: 24.sp,
+                                          color: Theme.of(context)
+                                              .iconTheme
+                                              .color),
+                                    ),
+                                  )
+                                : null,
                           ),
                         ),
                       ),
@@ -179,12 +214,24 @@ class _PostDetailPageState extends State<PostDetailPage>
     }
     return ListView.builder(
       padding: EdgeInsets.symmetric(horizontal: AppDimens.lg.w),
-      itemCount: state.activeComments.length,
+      itemCount: state.activeComments.length + (!isOwner ? 1 : 0),
       itemBuilder: (context, index) {
+        if (!isOwner && index == 0) {
+          return Padding(
+            padding: EdgeInsets.symmetric(vertical: AppDimens.md.h),
+            child: Text(
+              'Izohlar',
+              style: AppStyles.h4Bold.copyWith(
+                color: Theme.of(context).textTheme.titleMedium?.color,
+              ),
+            ),
+          );
+        }
+        final commentIndex = !isOwner ? index - 1 : index;
         return Padding(
           padding: EdgeInsets.only(bottom: AppDimens.md.h),
           child: CommentTile(
-            comment: state.activeComments[index],
+            comment: state.activeComments[commentIndex],
             // In real app, check comment ownership
             isMine: false, // TODO: Add userId to CommentEntity to check ownership
             onReply: isOwner

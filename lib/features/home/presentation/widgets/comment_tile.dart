@@ -91,14 +91,42 @@ class CommentTile extends StatelessWidget {
               ),
               AppDimens.sm.width,
               Expanded(
-                child: Text(
-                  comment.userName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppStyles.bodyMedium.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).textTheme.titleMedium?.color,
-                  ),
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        comment.userName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppStyles.bodyMedium.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).textTheme.titleMedium?.color,
+                        ),
+                      ),
+                    ),
+                    if (comment.userRole != null) ...[
+                      AppDimens.xs.width,
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                        decoration: BoxDecoration(
+                          color: comment.userRole == 'Market' 
+                              ? Theme.of(context).primaryColor.withOpacity(0.1)
+                              : Theme.of(context).dividerColor.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(4.r),
+                        ),
+                        child: Text(
+                          comment.userRole!,
+                          style: AppStyles.bodySmall.copyWith(
+                            fontSize: 9.sp,
+                            fontWeight: FontWeight.bold,
+                            color: comment.userRole == 'Market'
+                                ? Theme.of(context).primaryColor
+                                : Theme.of(context).textTheme.bodySmall?.color,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
               Text(
@@ -194,11 +222,11 @@ class CommentTile extends StatelessWidget {
           ],
           if (comment.replies != null && comment.replies!.isNotEmpty) ...[
             AppDimens.md.height,
-            Divider(
-              color: Theme.of(context).dividerColor.withOpacity(0.5),
-              thickness: 1.w,
+            Container(
+              height: 1.h,
+              color: Theme.of(context).dividerColor.withOpacity(0.6),
             ),
-            AppDimens.sm.height,
+            AppDimens.md.height,
             ...comment.replies!.map((reply) {
               return Padding(
                 padding: EdgeInsets.only(bottom: AppDimens.sm.h),
@@ -241,15 +269,31 @@ class CommentTile extends StatelessWidget {
                           Row(
                             children: [
                               Expanded(
-                                child: Text(
-                                  reply.userName,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: AppStyles.bodySmall.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 12.sp,
-                                    color: Theme.of(context).textTheme.titleMedium?.color,
-                                  ),
+                                child: Row(
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        reply.userName,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: AppStyles.bodySmall.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 12.sp,
+                                          color: Theme.of(context).textTheme.titleMedium?.color,
+                                        ),
+                                      ),
+                                    ),
+                                    if (reply.userRole != null) ...[
+                                      AppDimens.xxs.width,
+                                      Text(
+                                        '(${reply.userRole == 'Market' ? 'Market' : 'User'})',
+                                        style: AppStyles.bodySmall.copyWith(
+                                          fontSize: 9.sp,
+                                          color: Theme.of(context).primaryColor.withOpacity(0.8),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
                                 ),
                               ),
                               Text(

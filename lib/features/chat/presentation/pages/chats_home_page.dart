@@ -8,65 +8,155 @@ import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/styles.dart';
 import '../../../../global/widgets/common_app_bar.dart';
 
-class ChatsHomePage extends StatelessWidget {
+class ChatsHomePage extends StatefulWidget {
   const ChatsHomePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final chats = [
-      {
-        'sellerId': 'seller_1',
-        'name': 'Tech Store',
-        'lastMessage': 'Mahsulot haqida ma\'lumot',
-        'unreadCount': 2,
-        'time': '10:30',
-        'role': 'Market',
-      },
-      {
-        'sellerId': 'seller_2',
-        'name': 'Fashion Shop',
-        'lastMessage': 'Buyurtma qabul qilindi',
-        'unreadCount': 0,
-        'time': 'Kecha',
-        'role': 'Market',
-      },
-      {
-        'sellerId': 'seller_3',
-        'name': 'Ali Valiyev',
-        'lastMessage': 'Yetkazib berish haqida',
-        'unreadCount': 1,
-        'time': '15:45',
-        'role': 'User',
-      },
-    ];
+  State<ChatsHomePage> createState() => _ChatsHomePageState();
+}
 
-    return Scaffold(
+class _ChatsHomePageState extends State<ChatsHomePage> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  final List<Map<String, dynamic>> _allChats = [
+    {
+      'sellerId': 'seller_1',
+      'name': 'Tech Store',
+      'lastMessage': 'Mahsulot haqida ma\'lumot',
+      'unreadCount': 2,
+      'time': '10:30',
+      'role': 'Market',
+    },
+    {
+      'sellerId': 'seller_2',
+      'name': 'Fashion Shop',
+      'lastMessage': 'Buyurtma qabul qilindi',
+      'unreadCount': 0,
+      'time': 'Kecha',
+      'role': 'Market',
+    },
+    {
+      'sellerId': 'seller_3',
+      'name': 'Ali Valiyev',
+      'lastMessage': 'Yetkazib berish haqida',
+      'unreadCount': 1,
+      'time': '15:45',
+      'role': 'User',
+    },
+  ];
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<Map<String, dynamic>> get _filteredChats {
+    if (_searchQuery.isEmpty) return _allChats;
+    return _allChats.where((chat) {
+      final name = (chat['name'] as String).toLowerCase();
+      final message = (chat['lastMessage'] as String).toLowerCase();
+      final query = _searchQuery.toLowerCase();
+      return name.contains(query) || message.contains(query);
+    }).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final chats = _filteredChats;
+
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
       appBar: const CommonAppBar(title: 'Chatlar'),
-      body: chats.isEmpty
-          ? Center(
-              child: Text(
-                'Chatlar yo\'q',
+      body: Column(
+        children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              AppDimens.lg.w,
+              AppDimens.sm.h,
+              AppDimens.lg.w,
+              AppDimens.sm.h,
+            ),
+            child: SizedBox(
+              height: 40.h,
+              child: TextField(
+                controller: _searchController,
+                onChanged: (value) => setState(() => _searchQuery = value),
                 style: AppStyles.bodySmall.copyWith(
-                  color: Theme.of(context).textTheme.bodySmall?.color,
+                  fontSize: 13.sp,
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                ),
+                decoration: InputDecoration(
+                  hintText: 'Qidirish...',
+                  hintStyle: AppStyles.bodySmall.copyWith(
+                    color: Theme.of(context).hintColor,
+                    fontSize: 13.sp,
+                  ),
+                  prefixIcon: Icon(Icons.search, size: 18.r),
+                  suffixIcon: _searchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: Icon(Icons.clear, size: 18.r),
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() => _searchQuery = '');
+                          },
+                        )
+                      : null,
+                  filled: true,
+                  fillColor: Theme.of(context).cardColor,
+                  contentPadding: EdgeInsets.zero,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20.r),
+                    borderSide: BorderSide(color: Theme.of(context).dividerColor),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20.r),
+                    borderSide: BorderSide(color: Theme.of(context).dividerColor),
+                  ),
                 ),
               ),
-            )
-          : ListView.separated(
-              padding: EdgeInsets.all(AppDimens.lg.r),
-              itemCount: chats.length,
-              separatorBuilder: (context, index) => AppDimens.md.height,
-              itemBuilder: (context, index) {
-                final chat = chats[index];
-                  return _ChatItem(
-                    sellerId: chat['sellerId'] as String,
-                    name: chat['name'] as String,
-                    lastMessage: chat['lastMessage'] as String,
-                    unreadCount: chat['unreadCount'] as int,
-                    time: chat['time'] as String,
-                    role: chat['role'] as String,
-                  );
-              },
             ),
+          ),
+          Expanded(
+            child: chats.isEmpty
+                ? Center(
+                    child: Text(
+                      _searchQuery.isEmpty ? 'Chatlar yo\'q' : 'Natija topilmadi',
+                      style: AppStyles.bodySmall.copyWith(
+                        color: Theme.of(context).textTheme.bodySmall?.color,
+                      ),
+                    ),
+                  )
+                : NotificationListener<ScrollNotification>(
+                    onNotification: (notification) {
+                      if (notification is ScrollStartNotification) {
+                        FocusScope.of(context).unfocus();
+                      }
+                      return false;
+                    },
+                    child: ListView.separated(
+                        padding: EdgeInsets.all(AppDimens.lg.r),
+                        itemCount: chats.length,
+                        separatorBuilder: (context, index) => AppDimens.md.height,
+                        itemBuilder: (context, index) {
+                          final chat = chats[index];
+                          return _ChatItem(
+                            sellerId: chat['sellerId'] as String,
+                            name: chat['name'] as String,
+                            lastMessage: chat['lastMessage'] as String,
+                            unreadCount: chat['unreadCount'] as int,
+                            time: chat['time'] as String,
+                            role: chat['role'] as String,
+                          );
+                        },
+                      ),
+                  ),
+          ),
+        ],
+      ),
+      ),
     );
   }
 }
@@ -171,6 +261,7 @@ class _ChatItem extends StatelessWidget {
                                       ? Theme.of(context).primaryColor
                                       : Theme.of(context).textTheme.bodySmall?.color,
                                   fontWeight: FontWeight.w500,
+                                  // role format
                                 ),
                               ),
                             ),

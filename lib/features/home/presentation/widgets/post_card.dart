@@ -23,6 +23,7 @@ class PostCard extends StatelessWidget {
   final VoidCallback? onTap;
   final int? textMaxLines;
   final bool showFullText;
+  final Widget? trailing;
 
   const PostCard({
     super.key,
@@ -31,6 +32,7 @@ class PostCard extends StatelessWidget {
     this.onTap,
     this.textMaxLines,
     this.showFullText = false,
+    this.trailing,
   });
 
   @override
@@ -105,6 +107,10 @@ class PostCard extends StatelessWidget {
             ),
           ),
         ),
+        if (trailing != null) ...[
+          AppDimens.sm.width,
+          trailing!,
+        ],
       ],
     );
   }

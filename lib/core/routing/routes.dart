@@ -9,6 +9,7 @@ class Routes {
   static final sellerProfile = '/seller/:sellerId';
   static final sellerFollowers = '/seller/:sellerId/followers';
   static final sellerChat = '/seller/:sellerId/chat';
+  static final auth = '/auth';
   static final login = '/login';
   static final postDetail = '/post/:postId';
   static const categoryFeed = '/category/:categoryId';

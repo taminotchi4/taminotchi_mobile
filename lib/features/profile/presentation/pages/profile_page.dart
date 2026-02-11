@@ -171,7 +171,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         Icons.chevron_right_rounded,
                         color: Theme.of(context).iconTheme.color,
                       ),
-                      onTap: () {},
+                      onTap: () => context.push(Routes.notifications),
                     ),
                     _buildDivider(),
                     ProfileMenuItem(
@@ -211,6 +211,19 @@ class _ProfilePageState extends State<ProfilePage> {
                         Routes.getSellerChat('admin'),
                         extra: {'name': 'Admin', 'role': 'Support'},
                       ),
+                    ),
+                    _buildDivider(),
+                    ProfileMenuItem(
+                      icon: Icons.help_outline_rounded,
+                      title: 'Ko\'p beriladigan savollar (FAQs)',
+                      trailing: Icon(
+                        Icons.chevron_right_rounded,
+                        color: Theme.of(context).iconTheme.color,
+                      ),
+                      onTap: () {
+                        // FAQ functionality could be a dialog or a new page
+                        _showFAQDialog(context);
+                      },
                     ),
                     _buildDivider(),
                     ProfileMenuItem(
@@ -261,6 +274,79 @@ class _ProfilePageState extends State<ProfilePage> {
       height: 1.h,
       thickness: 1.h,
       color: Theme.of(context).dividerColor,
+    );
+  }
+  void _showFAQDialog(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+        ),
+        child: Column(
+          children: [
+            Container(
+              margin: EdgeInsets.only(top: 12.h),
+              width: 40.w,
+              height: 4.h,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2.r),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.all(20.r),
+              child: Text(
+                'Ko\'p beriladigan savollar',
+                style: AppStyles.h4Bold,
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.symmetric(horizontal: 20.w),
+                children: [
+                  _buildFAQItem(
+                    context,
+                    'Qanday qilib e\'lon joylashtirish mumkin?',
+                    'Asosiy sahifadagi "+ Elon joylash" tugmasini bosing, kerakli ma\'lumotlarni kiriting va yuboring.',
+                  ),
+                  _buildFAQItem(
+                    context,
+                    'Xarid qilgan mahsulotimni qanday qaytaraman?',
+                    'Mahsulotni qaytarish shartlari sotuvchi bilan kelishiladi. Admin bilan bog\'lanish uchun "Yordam" tugmasidan foydalaning.',
+                  ),
+                  _buildFAQItem(
+                    context,
+                    'Profil ma\'lumotlarini qanday o\'zgartiraman?',
+                    'Profil sahifasidagi tahrirlash belgisini bosing.',
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFAQItem(BuildContext context, String question, String answer) {
+    return ExpansionTile(
+      title: Text(
+        question,
+        style: AppStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+      ),
+      childrenPadding: EdgeInsets.only(left: 16.w, right: 16.w, bottom: 16.h),
+      expandedAlignment: Alignment.centerLeft,
+      children: [
+        Text(
+          answer,
+          style: AppStyles.bodySmall.copyWith(color: Colors.grey[600]),
+        ),
+      ],
     );
   }
 }

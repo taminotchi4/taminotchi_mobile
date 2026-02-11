@@ -311,6 +311,7 @@ class HomeLocalDataSource {
         id: '${postId}_comment_$index',
         postId: postId,
         userName: _randomUserName(),
+        userRole: _random.nextBool() ? 'Market' : 'User',
         userAvatarPath: AppIcons.user,
         content: _randomComment(),
         createdAt: DateTime.now()

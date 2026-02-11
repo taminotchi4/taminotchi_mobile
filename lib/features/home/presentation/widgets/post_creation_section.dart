@@ -61,30 +61,63 @@ class _PostCreationSectionState extends State<PostCreationSection> {
   }
 
   Widget _buildCollapsed(BuildContext context) {
-    return InkWell(
-      onTap: () => context.read<HomeBloc>().add(const HomeExpandComposer()),
-      borderRadius: BorderRadius.circular(AppDimens.cardRadius.r),
-      child: Container(
-        height: AppDimens.buttonHeight.h,
-        padding: EdgeInsets.symmetric(horizontal: AppDimens.lg.w),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
+    return Column(
+      children: [
+        Text(
+          "E'lon joylash uchun tugmani bosing",
+          style: AppStyles.bodySmall.copyWith(
+            color: Theme.of(context).primaryColor,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        AppDimens.sm.height,
+        InkWell(
+          onTap: () => context.read<HomeBloc>().add(const HomeExpandComposer()),
           borderRadius: BorderRadius.circular(AppDimens.cardRadius.r),
-          border: Border.all(
-            color: Theme.of(context).dividerColor,
-            width: AppDimens.borderWidth.w,
+          child: Container(
+            height: AppDimens.buttonHeight.h,
+            padding: EdgeInsets.symmetric(horizontal: AppDimens.lg.w),
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(AppDimens.cardRadius.r),
+              border: Border.all(
+                color: AppColors.mainBlue,
+                width: 1.5.w,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.mainBlue.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              "+ Elon joylash",
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppStyles.bodyRegular.copyWith(
+                color: AppColors.mainBlue,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ),
-        alignment: Alignment.center,
-        child: Text(
-          "+ Elon joylash",
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: AppStyles.bodyRegular.copyWith(
-            color: Theme.of(context).textTheme.bodySmall?.color,
+        AppDimens.md.height,
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: AppDimens.md.w),
+          child: Text(
+            "Siz maxsulot qidirmaysiz! Nima kerak ekanligini yozing, sotuvchilar o'zi sizni topishadi",
+            textAlign: TextAlign.center,
+            style: AppStyles.bodySmall.copyWith(
+              color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
+              fontSize: 11.sp,
+              fontStyle: FontStyle.italic,
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
 
@@ -134,6 +167,13 @@ class _PostCreationSectionState extends State<PostCreationSection> {
             ],
           ],
           AppDimens.md.height,
+          Text("Maxsulotning taxminiy rasmi bo'lsa yuklang(ixtiyoriy)",
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppStyles.bodySmall.copyWith(
+              color: Theme.of(context).textTheme.bodyMedium?.color!.withValues(alpha: 0.7),
+            ),),
+          AppDimens.xxs.height,
           _buildUploadRow(context),
           if (state.selectedImages.isNotEmpty) ...[
             AppDimens.md.height,
@@ -430,9 +470,9 @@ class _PostCreationSectionState extends State<PostCreationSection> {
             color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
           decoration: InputDecoration(
-            hintText: "E'lon sifatida joylanishi kerak bo'lgan maxsulotning to'liq matnini kiriting",
+            hintText: "Qidirayotgan maxsulotingizni to'liq tasvirlab bering. Nomi, sifati, hajmi, taxmiy narxi va boshqa narsalarni yozishingiz mumkin...",
             hintStyle:
-                AppStyles.bodyRegular.copyWith(color: Theme.of(context).hintColor),
+                AppStyles.bodySmall.copyWith(color: Theme.of(context).hintColor),
             filled: true,
             fillColor: Theme.of(context).scaffoldBackgroundColor,
             border: OutlineInputBorder(
@@ -456,11 +496,9 @@ class _PostCreationSectionState extends State<PostCreationSection> {
                 width: AppDimens.borderWidthActive.w,
               ),
             ),
-            contentPadding: EdgeInsets.fromLTRB(
-              AppDimens.md.w,
-              AppDimens.md.h,
-              AppDimens.buttonHeight.w,
-              AppDimens.buttonHeight.h,
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: AppDimens.md.w,
+              vertical: AppDimens.md.h,
             ),
           ),
         ),

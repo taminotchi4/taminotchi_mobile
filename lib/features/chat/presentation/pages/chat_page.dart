@@ -102,7 +102,9 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
       appBar: ChatAppBar(
         sellerName: widget.sellerName,
         sellerRole: widget.sellerRole,
@@ -152,7 +154,14 @@ class _ChatPageState extends State<ChatPage> {
                   // Reset keys if messages change drastically? 
                   // Keys should be stable by ID.
                   
-                  return ListView(
+                  return NotificationListener<ScrollNotification>(
+                    onNotification: (notification) {
+                      if (notification is ScrollStartNotification) {
+                        FocusScope.of(context).unfocus();
+                      }
+                      return false;
+                    },
+                    child: ListView(
                     reverse: true,
                     controller: _scrollController,
                     padding: EdgeInsets.all(AppDimens.lg.r),
@@ -173,6 +182,7 @@ class _ChatPageState extends State<ChatPage> {
                          ),
                       );
                     }).toList(),
+                    ),
                   );
                 },
               ),
@@ -180,6 +190,7 @@ class _ChatPageState extends State<ChatPage> {
             const ChatInputSection(),
           ],
         ),
+      ),
       ),
     );
   }
@@ -199,7 +210,6 @@ class _ChatPageState extends State<ChatPage> {
           }
        }
     }
-
     Navigator.of(context).push(
       PageRouteBuilder(
         opaque: false,
