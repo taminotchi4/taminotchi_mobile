@@ -17,6 +17,22 @@ class AppSvgIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final iconColor = color ?? Theme.of(context).iconTheme.color;
+    final isNetwork = assetPath.startsWith('http');
+
+    if (isNetwork) {
+      return SvgPicture.network(
+        assetPath,
+        width: size.w,
+        height: size.w,
+        colorFilter: iconColor == null
+            ? null
+            : ColorFilter.mode(iconColor, BlendMode.srcIn),
+        placeholderBuilder: (BuildContext context) => Container(
+            padding: const EdgeInsets.all(10.0),
+            child: const CircularProgressIndicator()),
+      );
+    }
+
     return SvgPicture.asset(
       assetPath,
       width: size.w,

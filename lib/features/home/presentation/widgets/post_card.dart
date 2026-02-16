@@ -13,6 +13,7 @@ import '../../../../global/widgets/app_svg_icon.dart';
 import '../../domain/entities/post_category_entity.dart';
 import '../../domain/entities/post_entity.dart';
 import '../../domain/entities/post_image_entity.dart';
+import '../../domain/entities/post_status.dart';
 import '../managers/home_bloc.dart';
 import '../managers/home_state.dart';
 import 'image_viewer_dialog.dart';
@@ -98,21 +99,81 @@ class PostCard extends StatelessWidget {
         ),
         AppDimens.sm.width,
         Expanded(
-          child: Text(
-            post.authorName,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppStyles.h5Bold.copyWith(
-              color: Theme.of(context).textTheme.titleMedium?.color,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                post.authorName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppStyles.h5Bold.copyWith(
+                  color: Theme.of(context).textTheme.titleMedium?.color,
+                ),
+              ),
+              SizedBox(height: 2.h),
+              Text(
+                _formatDate(post.createdAt),
+                style: AppStyles.bodySmall.copyWith(
+                  fontSize: 10.sp,
+                  color: Theme.of(context).textTheme.bodySmall?.color,
+                ),
+              ),
+            ],
           ),
         ),
+        AppDimens.sm.width,
+        _buildStatusChip(context),
         if (trailing != null) ...[
           AppDimens.sm.width,
           trailing!,
         ],
       ],
     );
+  }
+
+  Widget _buildStatusChip(BuildContext context) {
+    final isArchived = post.status == PostStatus.archived;
+    final color = isArchived ? Colors.grey : Colors.green;
+    final icon = isArchived ? Icons.check_circle_outline : Icons.fiber_manual_record;
+    final label = isArchived ? 'Kelishilgan' : 'Active';
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: color.withOpacity(0.5)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10.sp, color: color),
+          SizedBox(width: 4.w),
+          Text(
+            label,
+            style: AppStyles.bodySmall.copyWith(
+              color: color,
+              fontWeight: FontWeight.bold,
+              fontSize: 10.sp,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+    if (difference.inDays > 0) {
+      return '${difference.inDays} kun oldin';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours} soat oldin';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes} daqiqa oldin';
+    } else {
+      return 'Hozirgina';
+    }
   }
 
   Widget _buildImageSection(BuildContext context) {

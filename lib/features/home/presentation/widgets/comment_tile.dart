@@ -6,7 +6,7 @@ import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/styles.dart';
 import '../../domain/entities/comment_entity.dart';
 
-class CommentTile extends StatelessWidget {
+class CommentTile extends StatefulWidget {
   final CommentEntity comment;
   final bool isMine;
   final VoidCallback? onEdit;
@@ -21,6 +21,13 @@ class CommentTile extends StatelessWidget {
     this.onDelete,
     this.onReply,
   });
+
+  @override
+  State<CommentTile> createState() => _CommentTileState();
+}
+
+class _CommentTileState extends State<CommentTile> {
+  bool _isRepliesExpanded = false;
 
   String _formatCommentTime(DateTime dateTime) {
     final now = DateTime.now();
@@ -79,8 +86,8 @@ class CommentTile extends StatelessWidget {
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    comment.userName.isNotEmpty 
-                        ? comment.userName[0].toUpperCase()
+                    widget.comment.userName.isNotEmpty 
+                        ? widget.comment.userName[0].toUpperCase()
                         : '?',
                     style: AppStyles.bodyMedium.copyWith(
                       color: Colors.white,
@@ -95,7 +102,7 @@ class CommentTile extends StatelessWidget {
                   children: [
                     Flexible(
                       child: Text(
-                        comment.userName,
+                        widget.comment.userName,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppStyles.bodyMedium.copyWith(
@@ -104,22 +111,22 @@ class CommentTile extends StatelessWidget {
                         ),
                       ),
                     ),
-                    if (comment.userRole != null) ...[
+                    if (widget.comment.userRole != null) ...[
                       AppDimens.xs.width,
                       Container(
                         padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                         decoration: BoxDecoration(
-                          color: comment.userRole == 'Market' 
+                          color: widget.comment.userRole == 'Market' 
                               ? Theme.of(context).primaryColor.withOpacity(0.1)
                               : Theme.of(context).dividerColor.withOpacity(0.3),
                           borderRadius: BorderRadius.circular(4.r),
                         ),
                         child: Text(
-                          comment.userRole!,
+                          widget.comment.userRole!,
                           style: AppStyles.bodySmall.copyWith(
                             fontSize: 9.sp,
                             fontWeight: FontWeight.bold,
-                            color: comment.userRole == 'Market'
+                            color: widget.comment.userRole == 'Market'
                                 ? Theme.of(context).primaryColor
                                 : Theme.of(context).textTheme.bodySmall?.color,
                           ),
@@ -130,13 +137,13 @@ class CommentTile extends StatelessWidget {
                 ),
               ),
               Text(
-                _formatCommentTime(comment.createdAt),
+                _formatCommentTime(widget.comment.createdAt),
                 style: AppStyles.bodySmall.copyWith(
                   fontSize: 10.sp,
                   color: Theme.of(context).textTheme.bodySmall?.color,
                 ),
               ),
-              if (isMine) ...[
+              if (widget.isMine) ...[
                 4.horizontalSpace,
                 PopupMenuButton<String>(
                   padding: EdgeInsets.zero,
@@ -149,10 +156,10 @@ class CommentTile extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                   onSelected: (value) {
-                    if (value == 'edit' && onEdit != null) {
-                      onEdit!();
-                    } else if (value == 'delete' && onDelete != null) {
-                      onDelete!();
+                    if (value == 'edit' && widget.onEdit != null) {
+                      widget.onEdit!();
+                    } else if (value == 'delete' && widget.onDelete != null) {
+                      widget.onDelete!();
                     }
                   },
                   itemBuilder: (context) => [
@@ -201,126 +208,189 @@ class CommentTile extends StatelessWidget {
           ),
           AppDimens.xs.height,
           Text(
-            comment.content,
+            widget.comment.content,
             style: AppStyles.bodyRegular.copyWith(
               color: Theme.of(context).textTheme.bodyMedium?.color,
               height: 1.4,
             ),
           ),
-          if (onReply != null) ...[
+          if (widget.onReply != null) ...[
             AppDimens.sm.height,
-            InkWell(
-              onTap: onReply,
-              child: Text(
-                'Javob berish',
-                style: AppStyles.bodySmall.copyWith(
-                  color: Theme.of(context).primaryColor,
-                  fontWeight: FontWeight.w600,
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: widget.onReply,
+                borderRadius: BorderRadius.circular(4.r),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 4.w,
+                    vertical: 2.h,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.reply_rounded,
+                        size: 16.sp,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                      SizedBox(width: 4.w),
+                      Text(
+                        'Javob berish',
+                        style: AppStyles.bodySmall.copyWith(
+                          color: Theme.of(context).primaryColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ],
-          if (comment.replies != null && comment.replies!.isNotEmpty) ...[
+          if (widget.comment.replies != null && widget.comment.replies!.isNotEmpty) ...[
             AppDimens.md.height,
-            Container(
-              height: 1.h,
-              color: Theme.of(context).dividerColor.withOpacity(0.6),
-            ),
-            AppDimens.md.height,
-            ...comment.replies!.map((reply) {
-              return Padding(
-                padding: EdgeInsets.only(bottom: AppDimens.sm.h),
+            InkWell(
+              onTap: () {
+                setState(() {
+                  _isRepliesExpanded = !_isRepliesExpanded;
+                });
+              },
+              borderRadius: BorderRadius.circular(4.r),
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 4.h),
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(AppDimens.circleRadius.r),
-                      child: Container(
-                        width: 28.w,
-                        height: 28.w,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Theme.of(context).primaryColor.withOpacity(0.7),
-                              Theme.of(context).primaryColor.withOpacity(0.5),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          reply.userName.isNotEmpty 
-                              ? reply.userName[0].toUpperCase()
-                              : '?',
-                          style: AppStyles.bodySmall.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 11.sp,
-                          ),
-                        ),
-                      ),
+                    Container(
+                      width: 24.w,
+                      height: 1.h,
+                      color: Theme.of(context).dividerColor,
                     ),
-                    AppDimens.xs.width,
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Row(
-                                  children: [
-                                    Flexible(
-                                      child: Text(
-                                        reply.userName,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: AppStyles.bodySmall.copyWith(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 12.sp,
-                                          color: Theme.of(context).textTheme.titleMedium?.color,
-                                        ),
-                                      ),
-                                    ),
-                                    if (reply.userRole != null) ...[
-                                      AppDimens.xxs.width,
-                                      Text(
-                                        '(${reply.userRole == 'Market' ? 'Market' : 'User'})',
-                                        style: AppStyles.bodySmall.copyWith(
-                                          fontSize: 9.sp,
-                                          color: Theme.of(context).primaryColor.withOpacity(0.8),
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                              Text(
-                                _formatCommentTime(reply.createdAt),
-                                style: AppStyles.bodySmall.copyWith(
-                                  fontSize: 9.sp,
-                                  color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
-                                ),
-                              ),
-                            ],
-                          ),
-                          2.verticalSpace,
-                          Text(
-                            reply.content,
-                            style: AppStyles.bodySmall.copyWith(
-                              fontSize: 12.sp,
-                              color: Theme.of(context).textTheme.bodyMedium?.color,
-                              height: 1.3,
-                            ),
-                          ),
-                        ],
+                    SizedBox(width: 12.w),
+                    Text(
+                      _isRepliesExpanded 
+                        ? 'Javoblarni yashirish' 
+                        : 'Javoblarni ko\'rish (${widget.comment.replies!.length})',
+                      style: AppStyles.bodySmall.copyWith(
+                        color: Theme.of(context).hintColor,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 11.sp,
                       ),
                     ),
                   ],
                 ),
-              );
-            }).toList(),
+              ),
+            ),
+            if (_isRepliesExpanded) ...[
+              AppDimens.sm.height,
+              ...widget.comment.replies!.map((reply) {
+                return Padding(
+                  padding: EdgeInsets.only(top: AppDimens.sm.h),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(width: 24.w), // Indent replies
+                      ClipRRect(
+                        borderRadius:
+                            BorderRadius.circular(AppDimens.circleRadius.r),
+                        child: Container(
+                          width: 24.w,
+                          height: 24.w,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).primaryColor.withOpacity(0.1),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            reply.userName.isNotEmpty
+                                ? reply.userName[0].toUpperCase()
+                                : '?',
+                            style: AppStyles.bodySmall.copyWith(
+                              color: Theme.of(context).primaryColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 10.sp,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  reply.userName,
+                                  style: AppStyles.bodySmall.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.color,
+                                  ),
+                                ),
+                                SizedBox(width: 4.w),
+                                if (reply.userRole != null)
+                                  Container(
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 4.w, vertical: 1.h),
+                                    decoration: BoxDecoration(
+                                      color: reply.userRole == 'Market'
+                                          ? Theme.of(context)
+                                              .primaryColor
+                                              .withOpacity(0.1)
+                                          : Theme.of(context)
+                                              .dividerColor
+                                              .withOpacity(0.3),
+                                      borderRadius: BorderRadius.circular(2.r),
+                                    ),
+                                    child: Text(
+                                      reply.userRole!,
+                                      style: AppStyles.bodySmall.copyWith(
+                                        fontSize: 8.sp,
+                                        fontWeight: FontWeight.bold,
+                                        color: reply.userRole == 'Market'
+                                            ? Theme.of(context).primaryColor
+                                            : Theme.of(context)
+                                                .textTheme
+                                                .bodySmall
+                                                ?.color,
+                                      ),
+                                    ),
+                                  ),
+                                const Spacer(),
+                                Text(
+                                  _formatCommentTime(reply.createdAt),
+                                  style: AppStyles.bodySmall.copyWith(
+                                    fontSize: 10.sp,
+                                    color: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall
+                                        ?.color,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 2.h),
+                            Text(
+                              reply.content,
+                              style: AppStyles.bodyRegular.copyWith(
+                                fontSize: 12.sp,
+                                color: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.color,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ],
           ],
         ],
       ),

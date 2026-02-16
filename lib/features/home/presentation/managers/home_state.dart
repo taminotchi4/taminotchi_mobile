@@ -4,7 +4,7 @@ import '../../domain/entities/post_entity.dart';
 import '../../domain/entities/post_image_entity.dart';
 import '../../domain/entities/user_role.dart';
 
-enum HomeActionStatus { initial, postCreated, error }
+enum HomeActionStatus { initial, postCreated, error, authRequired }
 
 class HomeState {
   static const Object _unset = Object();
@@ -52,7 +52,7 @@ class HomeState {
     this.subcategoryError,
   });
 
-  bool get canCreatePost => currentUserRole == UserRole.user;
+  bool get canCreatePost => true;
 
   factory HomeState.initial() => const HomeState(
     posts: [],

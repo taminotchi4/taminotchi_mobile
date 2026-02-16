@@ -1,6 +1,8 @@
 import '../../domain/entities/post_category_entity.dart';
 import '../../domain/entities/post_entity.dart';
 import '../../domain/entities/post_image_entity.dart';
+import '../../domain/entities/post_status.dart';
+import 'post_category_model.dart';
 
 class PostImageModel {
   final String path;
@@ -17,38 +19,7 @@ class PostImageModel {
       PostImageModel(path: entity.path, isLocal: entity.isLocal);
 }
 
-class PostCategoryModel {
-  final String id;
-  final String name;
-  final String iconPath;
-  final List<PostCategoryModel>? subcategories;
-  final String? parentId;
 
-  const PostCategoryModel({
-    required this.id,
-    required this.name,
-    required this.iconPath,
-    this.subcategories,
-    this.parentId,
-  });
-
-  PostCategoryEntity toEntity() => PostCategoryEntity(
-        id: id,
-        name: name,
-        iconPath: iconPath,
-        subcategories: subcategories?.map((e) => e.toEntity()).toList(),
-        parentId: parentId,
-      );
-
-  factory PostCategoryModel.fromEntity(PostCategoryEntity entity) =>
-      PostCategoryModel(
-        id: entity.id,
-        name: entity.name,
-        iconPath: entity.iconPath,
-        subcategories: entity.subcategories?.map((e) => PostCategoryModel.fromEntity(e)).toList(),
-        parentId: entity.parentId,
-      );
-}
 
 class PostModel {
   final String id;
@@ -60,6 +31,7 @@ class PostModel {
   final PostCategoryModel category;
   final DateTime createdAt;
   final int privateReplyCount;
+  final PostStatus status;
 
   const PostModel({
     required this.id,
@@ -71,6 +43,7 @@ class PostModel {
     required this.category,
     required this.createdAt,
     required this.privateReplyCount,
+    this.status = PostStatus.active,
   });
 
   PostEntity toEntity() => PostEntity(
@@ -83,6 +56,7 @@ class PostModel {
     category: category.toEntity(),
     createdAt: createdAt,
     privateReplyCount: privateReplyCount,
+    status: status,
   );
 
   factory PostModel.fromEntity(PostEntity entity) => PostModel(
@@ -95,5 +69,6 @@ class PostModel {
     category: PostCategoryModel.fromEntity(entity.category),
     createdAt: entity.createdAt,
     privateReplyCount: entity.privateReplyCount,
+    status: entity.status,
   );
 }

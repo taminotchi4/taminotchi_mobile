@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../data/datasources/home_media_picker.dart';
 import '../../domain/entities/post_entity.dart';
 import '../../domain/entities/post_image_entity.dart';
+import '../../domain/entities/user_role.dart';
 import '../../domain/usecases/create_post_usecase.dart';
 import '../../domain/usecases/get_categories_usecase.dart';
 import '../../domain/usecases/get_comment_counts_usecase.dart';
@@ -14,6 +15,9 @@ import '../../domain/usecases/get_current_user_role_usecase.dart';
 import '../../domain/usecases/get_post_by_id_usecase.dart';
 import '../../domain/usecases/get_all_posts_usecase.dart';
 import '../../domain/usecases/get_my_posts_usecase.dart';
+import '../../domain/usecases/reply_to_comment_usecase.dart';
+import '../../domain/usecases/update_post_status_usecase.dart';
+import '../../domain/entities/post_status.dart';
 import 'home_event.dart';
 import 'home_state.dart';
 
@@ -28,6 +32,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final GetCategoriesUseCase getCategoriesUseCase;
   final GetCurrentUserIdUseCase getCurrentUserIdUseCase;
   final GetCurrentUserRoleUseCase getCurrentUserRoleUseCase;
+  final ReplyToCommentUseCase replyToCommentUseCase;
+  final UpdatePostStatusUseCase updatePostStatusUseCase;
   final HomeMediaPicker mediaPicker;
   final Random _random = Random();
 
@@ -41,6 +47,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     required this.getCategoriesUseCase,
     required this.getCurrentUserIdUseCase,
     required this.getCurrentUserRoleUseCase,
+    required this.replyToCommentUseCase,
+    required this.updatePostStatusUseCase,
     required this.mediaPicker,
   }) : super(HomeState.initial()) {
     on<HomeStarted>(_onStarted);
@@ -56,6 +64,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     on<HomeLoadPostDetails>(_onLoadPostDetails);
     on<HomeClearActionStatus>(_onClearActionStatus);
     on<HomeClearContentError>(_onClearContentError);
+    on<HomeReplyToComment>(_onReplyToComment);
+    on<HomeUpdatePostStatus>(_onUpdatePostStatus);
   }
 
   Future<void> _onStarted(HomeStarted event, Emitter<HomeState> emit) async {
@@ -136,18 +146,26 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   void _onExpandComposer(HomeExpandComposer event, Emitter<HomeState> emit) {
     // Only reset categories if composer is currently collapsed
     // If already expanded or categories are pre-selected, preserve them
-    if (state.isComposerExpanded) {
-      // Already expanded, just ensure it stays expanded
-      emit(state.copyWith(isComposerExpanded: true));
+    // Check if user is authenticated (not a guest)
+    if (state.currentUserRole == UserRole.user) { // Assuming UserRole.user means authenticated
+      if (state.isComposerExpanded) {
+        // Already expanded, just ensure it stays expanded
+        emit(state.copyWith(isComposerExpanded: true));
+      } else {
+        // Expanding from collapsed state - reset everything
+        emit(state.copyWith(
+          isComposerExpanded: true,
+          selectedCategory: null,
+          selectedSubcategory: null,
+          categoryError: null,
+          subcategoryError: null,
+          contentError: null,
+        ));
+      }
     } else {
-      // Expanding from collapsed state - reset everything
+      // User is guest, trigger authentication requirement
       emit(state.copyWith(
-        isComposerExpanded: true,
-        selectedCategory: null,
-        selectedSubcategory: null,
-        categoryError: null,
-        subcategoryError: null,
-        contentError: null,
+        actionStatus: HomeActionStatus.authRequired,
       ));
     }
   }
@@ -329,6 +347,50 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     Emitter<HomeState> emit,
   ) {
     emit(state.copyWith(contentError: null));
+  }
+
+  Future<void> _onReplyToComment(
+    HomeReplyToComment event,
+    Emitter<HomeState> emit,
+  ) async {
+    final result = await replyToCommentUseCase(
+      postId: event.postId,
+      parentCommentId: event.parentCommentId,
+      content: event.content,
+    );
+
+    result.fold(
+      (error) => emit(state.copyWith(
+        actionStatus: HomeActionStatus.error,
+        errorMessage: error.toString(),
+      )),
+      (_) {
+        add(HomeLoadPostDetails(event.postId));
+      },
+    );
+  }
+
+  Future<void> _onUpdatePostStatus(
+    HomeUpdatePostStatus event,
+    Emitter<HomeState> emit,
+  ) async {
+    final result = await updatePostStatusUseCase(
+      postId: event.postId,
+      status: event.status,
+    );
+
+    result.fold(
+      (error) => emit(state.copyWith(
+        actionStatus: HomeActionStatus.error,
+        errorMessage: error.toString(),
+      )),
+      (_) {
+        // Reload all posts and my posts to reflect status change globally
+        add(const HomeStarted());
+        // Also reload post details to refresh the active post
+        add(HomeLoadPostDetails(event.postId));
+      },
+    );
   }
 
   List<PostEntity> _shufflePosts(List<PostEntity> posts) {

@@ -2,7 +2,9 @@ import 'dart:math';
 
 import '../../../../core/utils/icons.dart';
 import '../../domain/entities/user_role.dart';
+import '../../domain/entities/post_status.dart';
 import '../models/comment_model.dart';
+import '../models/post_category_model.dart';
 import '../models/post_model.dart';
 
 class HomeLocalDataSource {
@@ -206,7 +208,7 @@ class HomeLocalDataSource {
     final seedPosts = [
       PostModel(
         id: 'post_1',
-        authorId: 'user_2',
+        authorId: 'user_1', // Changed to current user for testing reply
         authorName: 'Akmal',
         authorAvatarPath: AppIcons.user,
         content:
@@ -227,6 +229,7 @@ class HomeLocalDataSource {
         category: _categories[1],
         createdAt: now.subtract(const Duration(hours: seedHourOne)),
         privateReplyCount: _random.nextInt(_maxPrivateReplies),
+        status: PostStatus.archived,
       ),
     ];
 
@@ -238,7 +241,9 @@ class HomeLocalDataSource {
 
   List<PostModel> getAllPosts() {
     ensureSeeded();
-    return List.unmodifiable(_posts);
+    return List.unmodifiable(
+      _posts.where((post) => post.status == PostStatus.active).toList(),
+    );
   }
 
   List<PostModel> getMyPosts(String userId) {
@@ -270,6 +275,26 @@ class HomeLocalDataSource {
     return post;
   }
 
+  void updatePostStatus(String postId, PostStatus status) {
+    ensureSeeded();
+    final index = _posts.indexWhere((p) => p.id == postId);
+    if (index != -1) {
+      final post = _posts[index];
+      _posts[index] = PostModel(
+        id: post.id,
+        authorId: post.authorId,
+        authorName: post.authorName,
+        authorAvatarPath: post.authorAvatarPath,
+        content: post.content,
+        images: post.images,
+        category: post.category,
+        createdAt: post.createdAt,
+        privateReplyCount: post.privateReplyCount,
+        status: status,
+      );
+    }
+  }
+
   PostModel? getPostById(String id) {
     ensureSeeded();
     try {
@@ -282,6 +307,37 @@ class HomeLocalDataSource {
   List<CommentModel> getComments(String postId) {
     ensureSeeded();
     return List.unmodifiable(_comments[postId] ?? []);
+  }
+
+  void addComment(String postId, CommentModel comment) {
+    ensureSeeded();
+    if (_comments[postId] == null) {
+      _comments[postId] = [];
+    }
+    _comments[postId]!.insert(0, comment);
+  }
+
+  void addReply(String postId, String parentCommentId, CommentModel reply) {
+    ensureSeeded();
+    final comments = _comments[postId];
+    if (comments == null) return;
+
+    final parentIndex = comments.indexWhere((c) => c.id == parentCommentId);
+    if (parentIndex != -1) {
+      final parent = comments[parentIndex];
+      final updatedReplies = List<CommentModel>.from(parent.replies ?? [])..add(reply);
+      
+      comments[parentIndex] = CommentModel(
+        id: parent.id,
+        postId: parent.postId,
+        userName: parent.userName,
+        userRole: parent.userRole,
+        userAvatarPath: parent.userAvatarPath,
+        content: parent.content,
+        createdAt: parent.createdAt,
+        replies: updatedReplies,
+      );
+    }
   }
 
   List<PostCategoryModel> getCategories() {

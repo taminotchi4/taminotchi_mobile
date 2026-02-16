@@ -9,6 +9,8 @@ class CommentModel {
   final String content;
   final DateTime createdAt;
 
+  final List<CommentModel>? replies;
+
   const CommentModel({
     required this.id,
     required this.postId,
@@ -17,6 +19,7 @@ class CommentModel {
     required this.userAvatarPath,
     required this.content,
     required this.createdAt,
+    this.replies,
   });
 
   CommentEntity toEntity() => CommentEntity(
@@ -27,6 +30,7 @@ class CommentModel {
     userAvatarPath: userAvatarPath,
     content: content,
     createdAt: createdAt,
+    replies: replies?.map((e) => e.toEntity()).toList(),
   );
 
   factory CommentModel.fromEntity(CommentEntity entity) => CommentModel(
@@ -37,5 +41,6 @@ class CommentModel {
     userAvatarPath: entity.userAvatarPath,
     content: entity.content,
     createdAt: entity.createdAt,
+    replies: entity.replies?.map((e) => CommentModel.fromEntity(e)).toList(),
   );
 }

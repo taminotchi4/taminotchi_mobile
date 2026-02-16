@@ -1,4 +1,5 @@
 import '../../domain/entities/post_category_entity.dart';
+import '../../domain/entities/post_status.dart';
 
 sealed class HomeEvent {
   const HomeEvent();
@@ -64,4 +65,26 @@ class HomeClearActionStatus extends HomeEvent {
 
 class HomeClearContentError extends HomeEvent {
   const HomeClearContentError();
+}
+
+class HomeReplyToComment extends HomeEvent {
+  final String postId;
+  final String parentCommentId;
+  final String content;
+
+  const HomeReplyToComment({
+    required this.postId,
+    required this.parentCommentId,
+    required this.content,
+  });
+}
+
+class HomeUpdatePostStatus extends HomeEvent {
+  final String postId;
+  final PostStatus status;
+
+  const HomeUpdatePostStatus({
+    required this.postId,
+    required this.status,
+  });
 }

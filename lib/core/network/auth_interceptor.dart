@@ -10,9 +10,11 @@ class AuthInterceptor extends Interceptor {
 
   final dio = Dio(
     BaseOptions(
-      baseUrl: "backend url",
+      baseUrl: "http://89.223.126.116:3003/api/v1/",
     ),
   );
+
+
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
@@ -63,7 +65,7 @@ class AuthInterceptor extends Interceptor {
     await secureStorage.delete(key: "token");
     await secureStorage.delete(key: "username");
     await secureStorage.delete(key: "password");
-    router.go(Routes.login);
+    router.go(Routes.home);
     return;
   }
 }

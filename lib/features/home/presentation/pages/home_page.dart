@@ -50,6 +50,30 @@ class HomePage extends StatelessWidget {
           );
           context.read<HomeBloc>().add(const HomeClearActionStatus());
         }
+        if (state.actionStatus == HomeActionStatus.authRequired) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Hisobga kirish'),
+              content: const Text(
+                  'E\'lon joylash uchun Login qilishingiz kerak'),
+              actions: [
+                TextButton(
+                  onPressed: () => context.pop(),
+                  child: const Text('Bekor qilish'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    context.pop();
+                    context.go(Routes.login);
+                  },
+                  child: const Text('Kirish'),
+                ),
+              ],
+            ),
+          );
+          context.read<HomeBloc>().add(const HomeClearActionStatus());
+        }
       },
       child: Scaffold(
         body: CustomScrollView(

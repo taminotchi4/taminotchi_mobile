@@ -2,12 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/routing/routes.dart';
+import '../../domain/usecases/check_phone_usecase.dart';
+import '../../domain/usecases/request_otp_usecase.dart';
+import '../../domain/usecases/verify_otp_usecase.dart';
+import '../../domain/usecases/complete_register_usecase.dart';
+import '../../domain/usecases/login_usecase.dart';
 import '../managers/auth_bloc.dart';
 import '../managers/auth_state.dart';
 import '../widgets/phone_input_step.dart';
+import '../widgets/login_step.dart';
 import '../widgets/otp_verification_step.dart';
-import '../widgets/password_creation_step.dart';
-import '../widgets/profile_setup_step.dart';
+import '../widgets/registration_step.dart';
 
 class AuthMainPage extends StatefulWidget {
   const AuthMainPage({super.key});
@@ -31,13 +36,13 @@ class _AuthMainPageState extends State<AuthMainPage> {
       case AuthStep.phoneInput:
         page = 0;
         break;
-      case AuthStep.otpVerification:
+      case AuthStep.login:
         page = 1;
         break;
-      case AuthStep.passwordCreation:
+      case AuthStep.otpVerification:
         page = 2;
         break;
-      case AuthStep.profileSetup:
+      case AuthStep.registration:
         page = 3;
         break;
     }
@@ -51,7 +56,13 @@ class _AuthMainPageState extends State<AuthMainPage> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => AuthBloc(),
+      create: (context) => AuthBloc(
+        checkPhoneUseCase: context.read<CheckPhoneUseCase>(),
+        requestOtpUseCase: context.read<RequestOtpUseCase>(),
+        verifyOtpUseCase: context.read<VerifyOtpUseCase>(),
+        completeRegisterUseCase: context.read<CompleteRegisterUseCase>(),
+        loginUseCase: context.read<LoginUseCase>(),
+      ),
       child: BlocListener<AuthBloc, AuthState>(
         listenWhen: (previous, current) => previous.step != current.step || previous.status != current.status,
         listener: (context, state) {
@@ -67,9 +78,9 @@ class _AuthMainPageState extends State<AuthMainPage> {
               physics: const NeverScrollableScrollPhysics(),
               children: const [
                 PhoneInputStep(),
+                LoginStep(),
                 OtpVerificationStep(),
-                PasswordCreationStep(),
-                ProfileSetupStep(),
+                RegistrationStep(),
               ],
             ),
           ),

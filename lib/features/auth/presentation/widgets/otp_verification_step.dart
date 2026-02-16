@@ -19,6 +19,17 @@ class _OtpVerificationStepState extends State<OtpVerificationStep> {
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
 
   @override
+  void initState() {
+    super.initState();
+    // Auto-focus first field and show keyboard after widget is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _focusNodes[0].requestFocus();
+      }
+    });
+  }
+
+  @override
   void dispose() {
     for (var controller in _controllers) {
       controller.dispose();

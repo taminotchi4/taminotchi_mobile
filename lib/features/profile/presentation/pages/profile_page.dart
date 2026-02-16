@@ -62,10 +62,8 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
-              context.read<ClientProfileBloc>().add(
-                    const ClientProfileLogoutRequested(),
-                  );
+              context.pop();
+              context.go(Routes.auth);
             },
             child: Text(
               'Chiqish',
@@ -89,7 +87,6 @@ class _ProfilePageState extends State<ProfilePage> {
           if (state.isLoading && state.profile == null) {
             return const Center(child: CircularProgressIndicator());
           }
-
           if (state.profile == null) {
             return Center(
               child: Text(

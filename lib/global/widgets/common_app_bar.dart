@@ -40,9 +40,7 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
           ? Center(child: leading)
           : null,
       leadingWidth: 56.w,
-      actions: actions != null
-          ? actions!.map((a) => Center(child: a)).toList()
-          : null,
+      actions: actions,
       title: Text(
         title,
         maxLines: 1,

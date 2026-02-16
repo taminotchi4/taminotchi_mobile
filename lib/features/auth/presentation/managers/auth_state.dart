@@ -2,9 +2,9 @@ import 'package:equatable/equatable.dart';
 
 enum AuthStep {
   phoneInput,
+  login,
   otpVerification,
-  passwordCreation,
-  profileSetup,
+  registration,
 }
 
 enum AuthStatus {
@@ -26,6 +26,7 @@ class AuthState extends Equatable {
   final String language;
   final String? errorMessage;
   final int otpTimer; // in seconds
+  final String? serverOtpCode; // For development/debug only, not shown in UI
 
   const AuthState({
     this.step = AuthStep.phoneInput,
@@ -39,6 +40,7 @@ class AuthState extends Equatable {
     this.language = 'uz',
     this.errorMessage,
     this.otpTimer = 120,
+    this.serverOtpCode,
   });
 
   AuthState copyWith({
@@ -53,6 +55,7 @@ class AuthState extends Equatable {
     String? language,
     String? errorMessage,
     int? otpTimer,
+    String? serverOtpCode,
   }) {
     return AuthState(
       step: step ?? this.step,
@@ -66,6 +69,7 @@ class AuthState extends Equatable {
       language: language ?? this.language,
       errorMessage: errorMessage ?? this.errorMessage,
       otpTimer: otpTimer ?? this.otpTimer,
+      serverOtpCode: serverOtpCode ?? this.serverOtpCode,
     );
   }
 
@@ -82,6 +86,7 @@ class AuthState extends Equatable {
         language,
         errorMessage,
         otpTimer,
+        serverOtpCode,
       ];
 }
 
@@ -110,12 +115,14 @@ class AuthPasswordSubmitted extends AuthEvent {
 class AuthProfileSubmitted extends AuthEvent {
   final String fullName;
   final String? username;
+  final String password;
   final String? profilePhotoPath;
   final String language;
 
   const AuthProfileSubmitted({
     required this.fullName,
     this.username,
+    required this.password,
     this.profilePhotoPath,
     required this.language,
   });

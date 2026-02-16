@@ -1,5 +1,6 @@
 import 'post_category_entity.dart';
 import 'post_image_entity.dart';
+import 'post_status.dart';
 
 class PostEntity {
   final String id;
@@ -11,6 +12,7 @@ class PostEntity {
   final PostCategoryEntity category;
   final DateTime createdAt;
   final int privateReplyCount;
+  final PostStatus status;
 
   const PostEntity({
     required this.id,
@@ -22,5 +24,7 @@ class PostEntity {
     required this.category,
     required this.createdAt,
     required this.privateReplyCount,
+    this.status = PostStatus.active,
   });
 }
+

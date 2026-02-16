@@ -1,7 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:taminotchi_app/core/routing/routes.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../features/home/data/datasources/home_local_data_source.dart';
+import '../../features/home/data/datasources/category_remote_data_source.dart';
 import '../../features/home/data/datasources/home_media_picker.dart';
 import '../../features/home/data/repositories/home_repository_impl.dart';
 import '../../features/home/domain/usecases/create_post_usecase.dart';
@@ -12,7 +14,10 @@ import '../../features/home/domain/usecases/get_current_user_id_usecase.dart';
 import '../../features/home/domain/usecases/get_current_user_role_usecase.dart';
 import '../../features/home/domain/usecases/get_post_by_id_usecase.dart';
 import '../../features/home/domain/usecases/get_all_posts_usecase.dart';
+import '../../features/home/domain/usecases/get_all_posts_usecase.dart';
 import '../../features/home/domain/usecases/get_my_posts_usecase.dart';
+import '../../features/home/domain/usecases/reply_to_comment_usecase.dart';
+import '../../features/home/domain/usecases/update_post_status_usecase.dart';
 import '../../features/home/presentation/managers/home_bloc.dart';
 import '../../features/home/presentation/managers/home_event.dart';
 import '../../features/home/presentation/pages/home_page.dart';
@@ -70,13 +75,28 @@ import '../../features/notifications/presentation/pages/notifications_page.dart'
 import '../../features/auth/presentation/pages/auth_main_page.dart';
 import '../../global/widgets/main_shell_page.dart';
 
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:taminotchi_app/core/network/auth_interceptor.dart';
+import 'package:taminotchi_app/core/network/client.dart';
+import 'package:taminotchi_app/features/auth/data/datasources/auth_local_data_source.dart';
+
 final router = GoRouter(
   initialLocation: Routes.auth,
 
   routes: [
     ShellRoute(
       builder: (context, state, child) {
-        final homeRepository = HomeRepositoryImpl(HomeLocalDataSource());
+        const secureStorage = FlutterSecureStorage();
+        final authInterceptor = AuthInterceptor(secureStorage: secureStorage);
+        final apiClient = ApiClient(interceptor: authInterceptor);
+        final authLocalDataSource = AuthLocalDataSourceImpl(secureStorage: secureStorage);
+        
+        final categoryRemoteDataSource = CategoryRemoteDataSourceImpl(client: apiClient);
+        final homeRepository = HomeRepositoryImpl(
+          localDataSource: HomeLocalDataSource(),
+          categoryRemoteDataSource: categoryRemoteDataSource,
+          authLocalDataSource: authLocalDataSource,
+        );
         final productsRepository = ProductsRepositoryImpl(ProductsLocalDataSource());
         final sellerRepository = SellerRepositoryImpl(SellerLocalDataSource());
         final commentsRepository =
@@ -98,6 +118,8 @@ final router = GoRouter(
                 getCurrentUserIdUseCase: GetCurrentUserIdUseCase(homeRepository),
                 getCurrentUserRoleUseCase: GetCurrentUserRoleUseCase(homeRepository),
                 mediaPicker: HomeMediaPicker(),
+                replyToCommentUseCase: ReplyToCommentUseCase(homeRepository),
+                updatePostStatusUseCase: UpdatePostStatusUseCase(homeRepository),
               )..add(const HomeStarted()),
             ),
             BlocProvider(

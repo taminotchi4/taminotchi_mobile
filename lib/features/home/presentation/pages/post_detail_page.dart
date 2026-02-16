@@ -13,6 +13,7 @@ import '../managers/home_state.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/routing/routes.dart';
 import '../widgets/comment_tile.dart';
+import '../../domain/entities/post_status.dart';
 import '../widgets/post_card.dart';
 
 // Mock Reply Data for "Javoblar" tab
@@ -88,7 +89,92 @@ class _PostDetailPageState extends State<PostDetailPage>
           appBar: CommonAppBar(
             title: 'Post',
             leading: const AppBackButton(),
-            actions: null,
+            actions: [
+              if (isOwner)
+                PopupMenuButton<String>(
+                  onSelected: (value) {
+                    if (value == 'edit') {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text('Edit functionality coming soon')),
+                      );
+                    } else if (value == 'delete') {
+                      _showDeleteDialog();
+                    } else if (value == 'toggle_status') {
+                      final newStatus = post.status == PostStatus.active
+                          ? PostStatus.archived
+                          : PostStatus.active;
+                      context.read<HomeBloc>().add(
+                            HomeUpdatePostStatus(
+                              postId: post.id,
+                              status: newStatus,
+                            ),
+                          );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            newStatus == PostStatus.active
+                                ? 'E\'lon faollashtirildi'
+                                : 'E\'lon kelishilgan deb belgilandi',
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  icon: Icon(
+                    Icons.more_vert,
+                    size: 24.sp,
+                    color: Theme.of(context).appBarTheme.iconTheme?.color ??
+                        Theme.of(context).iconTheme.color,
+                  ),
+                  itemBuilder: (BuildContext context) =>
+                      <PopupMenuEntry<String>>[
+                    PopupMenuItem<String>(
+                      value: 'toggle_status',
+                      child: Row(
+                        children: [
+                          Icon(
+                            post.status == PostStatus.active
+                                ? Icons.check_circle_outline
+                                : Icons.fiber_manual_record,
+                            color: post.status == PostStatus.active
+                                ? Colors.grey
+                                : Colors.green,
+                          ),
+                          SizedBox(width: 8.w),
+                          Text(
+                            post.status == PostStatus.active
+                                ? 'Kelishilgan deb belgilash'
+                                : 'Qayta faollashtirish',
+                          ),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem<String>(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit_outlined,
+                              color: Theme.of(context).primaryColor),
+                          SizedBox(width: 8.w),
+                          const Text('Tahrirlash'),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem<String>(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.delete_outline_rounded,
+                              color: Colors.red),
+                          SizedBox(width: 8.w),
+                          const Text('O\'chirish'),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+            ],
           ),
           body: Column(
             children: [
@@ -103,60 +189,6 @@ class _PostDetailPageState extends State<PostDetailPage>
                             post: post,
                             commentCount: state.activeComments.length,
                             showFullText: true,
-                            trailing: isOwner
-                                ? PopupMenuButton<String>(
-                                    onSelected: (value) {
-                                      if (value == 'edit') {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(
-                                              content: Text(
-                                                  'Edit functionality coming soon')),
-                                        );
-                                      } else if (value == 'delete') {
-                                        _showDeleteDialog();
-                                      }
-                                    },
-                                    itemBuilder: (BuildContext context) =>
-                                        <PopupMenuEntry<String>>[
-                                      PopupMenuItem<String>(
-                                        value: 'edit',
-                                        child: Row(
-                                          children: [
-                                            Icon(Icons.edit_outlined,
-                                                color: Theme.of(context)
-                                                    .primaryColor),
-                                            SizedBox(width: 8.w),
-                                            const Text('Tahrirlash'),
-                                          ],
-                                        ),
-                                      ),
-                                      PopupMenuItem<String>(
-                                        value: 'delete',
-                                        child: Row(
-                                          children: [
-                                            const Icon(
-                                                Icons.delete_outline_rounded,
-                                                color: Colors.red),
-                                            SizedBox(width: 8.w),
-                                            const Text('O\'chirish'),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                    child: Container(
-                                      padding: EdgeInsets.all(4.w),
-                                      decoration: BoxDecoration(
-                                        color: Theme.of(context).cardColor,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Icon(Icons.more_vert,
-                                          size: 24.sp,
-                                          color: Theme.of(context)
-                                              .iconTheme
-                                              .color),
-                                    ),
-                                  )
-                                : null,
                           ),
                         ),
                       ),
@@ -234,11 +266,9 @@ class _PostDetailPageState extends State<PostDetailPage>
             comment: state.activeComments[commentIndex],
             // In real app, check comment ownership
             isMine: false, // TODO: Add userId to CommentEntity to check ownership
-            onReply: isOwner
-                ? () {
-                    _showReplyDialog(context);
-                  }
-                : null,
+            onReply: () {
+              _showReplyDialog(context, state.activeComments[commentIndex].id);
+            },
           ),
         );
       },
@@ -376,7 +406,7 @@ class _PostDetailPageState extends State<PostDetailPage>
           TextButton(
             onPressed: () {
               Navigator.pop(context); // Close dialog
-              Navigator.pop(context); // Close page (simulate delete)
+              Navigator.of(context).pop(); // Close page (simulate delete)
               // TODO: Dispatch delete event to bloc
             },
             child: const Text(
@@ -389,7 +419,7 @@ class _PostDetailPageState extends State<PostDetailPage>
     );
   }
 
-  void _showReplyDialog(BuildContext context) {
+  void _showReplyDialog(BuildContext context, String commentId) {
     final controller = TextEditingController();
     showModalBottomSheet(
       context: context,
@@ -497,6 +527,13 @@ class _PostDetailPageState extends State<PostDetailPage>
                   InkWell(
                     onTap: () {
                       if (controller.text.trim().isNotEmpty) {
+                        context.read<HomeBloc>().add(
+                              HomeReplyToComment(
+                                postId: widget.postId,
+                                parentCommentId: commentId,
+                                content: controller.text.trim(),
+                              ),
+                            );
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Javob yuborildi')),
