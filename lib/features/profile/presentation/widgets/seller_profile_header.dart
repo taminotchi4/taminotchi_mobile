@@ -147,7 +147,7 @@ class SellerProfileHeader extends StatelessWidget {
         ),
         child: Center(
           child: Text(
-            seller.isFollowing ? 'Following' : 'Follow',
+            seller.isFollowing ? context.l10n.following : context.l10n.follow,
             style: AppStyles.bodyMedium.copyWith(
               color: seller.isFollowing
                   ? Theme.of(context).textTheme.bodyMedium?.color

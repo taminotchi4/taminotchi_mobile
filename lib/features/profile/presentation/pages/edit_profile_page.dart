@@ -82,7 +82,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   size: AppDimens.iconLg,
                 ),
                 title: Text(
-                  'Galereyadan tanlash',
+                  context.l10n.gallery,
                   style: AppStyles.bodyMedium,
                 ),
                 onTap: () {
@@ -96,7 +96,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   size: AppDimens.iconLg.r,
                 ),
                 title: Text(
-                  'Kamera',
+                  context.l10n.camera,
                   style: AppStyles.bodyMedium,
                 ),
                 onTap: () {
@@ -129,9 +129,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CommonAppBar(
-        title: 'Profilni tahrirlash',
-        leading: AppBackButton(),
+      appBar: CommonAppBar(
+        title: context.l10n.edit,
+        leading: const AppBackButton(),
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(AppDimens.lg.r),
@@ -200,19 +200,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
             AppDimens.xl.height,
             _buildTextField(
               controller: _nameController,
-              label: 'Ism',
-              hint: 'Ismingizni kiriting',
+              label: context.l10n.fullName,
+              hint: context.l10n.fullNameExample,
             ),
             AppDimens.lg.height,
             _buildTextField(
               controller: _usernameController,
-              label: 'Username',
-              hint: '@username',
+              label: context.l10n.username,
+              hint: context.l10n.usernameExample,
             ),
             AppDimens.lg.height,
             _buildTextField(
               controller: _phoneController,
-              label: 'Telefon',
+              label: context.l10n.phoneNumberLabel,
               hint: '+998 90 123 45 67',
             ),
             AppDimens.lg.height,
@@ -231,7 +231,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   elevation: 0,
                 ),
                 child: Text(
-                  'Saqlash',
+                  context.l10n.save,
                   style: AppStyles.bodyMedium.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
@@ -309,7 +309,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Til',
+          context.l10n.language,
           style: AppStyles.bodyMedium.copyWith(
             fontWeight: FontWeight.w600,
             color: Theme.of(context).textTheme.titleMedium?.color,
@@ -334,10 +334,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
               style: AppStyles.bodyMedium.copyWith(
                 color: Theme.of(context).textTheme.bodyMedium?.color,
               ),
-              items: const [
-                DropdownMenuItem(value: 'uz', child: Text('O\'zbekcha')),
-                DropdownMenuItem(value: 'ru', child: Text('Русский')),
-                DropdownMenuItem(value: 'en', child: Text('English')),
+              items: [
+                DropdownMenuItem(value: 'uz', child: Text(context.l10n.uzbek)),
+                DropdownMenuItem(value: 'ru', child: Text(context.l10n.russian)),
               ],
               onChanged: (value) {
                 setState(() {

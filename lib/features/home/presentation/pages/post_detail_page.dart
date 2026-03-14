@@ -14,7 +14,12 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/routing/routes.dart';
 import '../widgets/comment_tile.dart';
 import '../../domain/entities/post_status.dart';
+import '../../domain/entities/comment_entity.dart';
 import '../widgets/post_card.dart';
+import '../../../chat/presentation/managers/comment_bloc.dart';
+import '../../../chat/data/models/message_model.dart';
+import '../../../auth/domain/repositories/auth_repository.dart';
+import 'dart:async';
 
 // Mock Reply Data for "Javoblar" tab
 final _mockReplies = [
@@ -45,6 +50,10 @@ class _PostDetailPageState extends State<PostDetailPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _commentController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
+  CommentBloc? _commentBloc;
+  MessageModel? _replyingTo;
+  bool _isJoining = false;
 
   @override
   void initState() {
@@ -55,9 +64,29 @@ class _PostDetailPageState extends State<PostDetailPage>
 
   @override
   void dispose() {
+    if (_commentBloc != null) {
+      if (_commentBloc!.state.comments.isNotEmpty) {
+        // Find commentId from some local state or the bloc itself if needed, or simply let the socket disconnect handle it when it drops
+      }
+      _commentBloc!.close(); // Better to properly close the local Bloc instance when disposing the page
+    }
     _tabController.dispose();
     _commentController.dispose();
+    _focusNode.dispose();
     super.dispose();
+  }
+
+  Future<void> _initCommentBloc(String? commentId) async {
+    if (commentId == null || _isJoining) return;
+    _isJoining = true;
+    
+    final token = await context.read<AuthRepository>().getToken();
+    if (!mounted) return;
+    
+    setState(() {
+      _commentBloc = CommentBloc(token: token ?? '');
+      _commentBloc!.add(CommentJoin(commentId));
+    });
   }
 
   @override
@@ -71,10 +100,10 @@ class _PostDetailPageState extends State<PostDetailPage>
         final post = state.activePost;
         if (post == null) {
           return Scaffold(
-            appBar: const CommonAppBar(title: 'Post', leading: AppBackButton()),
+            appBar: CommonAppBar(title: context.l10n.post, leading: const AppBackButton()),
             body: Center(
               child: Text(
-                'Post topilmadi',
+                context.l10n.postNotFound,
                 style: AppStyles.bodyRegular.copyWith(
                   color: Theme.of(context).textTheme.bodySmall?.color,
                 ),
@@ -83,11 +112,16 @@ class _PostDetailPageState extends State<PostDetailPage>
           );
         }
 
+        // Initialize WebSocket if not already done
+        if (post.commentId != null && _commentBloc == null) {
+          _initCommentBloc(post.commentId);
+        }
+
         final isOwner = post.authorId == state.currentUserId;
 
-        return Scaffold(
+        final scaffold = Scaffold(
           appBar: CommonAppBar(
-            title: 'Post',
+            title: context.l10n.post,
             leading: const AppBackButton(),
             actions: [
               if (isOwner)
@@ -95,8 +129,8 @@ class _PostDetailPageState extends State<PostDetailPage>
                   onSelected: (value) {
                     if (value == 'edit') {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('Edit functionality coming soon')),
+                        SnackBar(
+                            content: Text(context.l10n.editComingSoon)),
                       );
                     } else if (value == 'delete') {
                       _showDeleteDialog();
@@ -114,8 +148,8 @@ class _PostDetailPageState extends State<PostDetailPage>
                         SnackBar(
                           content: Text(
                             newStatus == PostStatus.active
-                                ? 'E\'lon faollashtirildi'
-                                : 'E\'lon kelishilgan deb belgilandi',
+                                ? context.l10n.postActivated
+                                : context.l10n.postArchivedAgreed,
                           ),
                         ),
                       );
@@ -144,8 +178,8 @@ class _PostDetailPageState extends State<PostDetailPage>
                           SizedBox(width: 8.w),
                           Text(
                             post.status == PostStatus.active
-                                ? 'Kelishilgan deb belgilash'
-                                : 'Qayta faollashtirish',
+                                ? context.l10n.markAsAgreed
+                                : context.l10n.reactivate,
                           ),
                         ],
                       ),
@@ -157,7 +191,7 @@ class _PostDetailPageState extends State<PostDetailPage>
                           Icon(Icons.edit_outlined,
                               color: Theme.of(context).primaryColor),
                           SizedBox(width: 8.w),
-                          const Text('Tahrirlash'),
+                          Text(context.l10n.edit),
                         ],
                       ),
                     ),
@@ -168,7 +202,7 @@ class _PostDetailPageState extends State<PostDetailPage>
                           const Icon(Icons.delete_outline_rounded,
                               color: Colors.red),
                           SizedBox(width: 8.w),
-                          const Text('O\'chirish'),
+                          Text(context.l10n.delete),
                         ],
                       ),
                     ),
@@ -184,11 +218,29 @@ class _PostDetailPageState extends State<PostDetailPage>
                     return [
                       SliverToBoxAdapter(
                         child: Padding(
-                          padding: EdgeInsets.all(AppDimens.lg.w),
-                          child: PostCard(
-                            post: post,
-                            commentCount: state.activeComments.length,
-                            showFullText: true,
+                          padding: EdgeInsets.symmetric(horizontal: AppDimens.lg.w),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (_commentBloc != null)
+                                BlocBuilder<CommentBloc, CommentState>(
+                                  bloc: _commentBloc,
+                                  builder: (context, commentState) {
+                                    return PostCard(
+                                      post: post,
+                                      commentCount: commentState.comments.length,
+                                      showFullText: true,
+                                    );
+                                  },
+                                )
+                              else
+                                PostCard(
+                                  post: post,
+                                  commentCount: state.activeComments.length,
+                                  showFullText: true,
+                                ),
+                              AppDimens.lg.height,
+                            ],
                           ),
                         ),
                       ),
@@ -201,9 +253,9 @@ class _PostDetailPageState extends State<PostDetailPage>
                               unselectedLabelColor:
                                   Theme.of(context).textTheme.bodySmall?.color,
                               indicatorColor: Theme.of(context).primaryColor,
-                              tabs: const [
-                                Tab(text: 'Izohlar'),
-                                Tab(text: 'Javoblar'), // Private Chats
+                              tabs: [
+                                Tab(text: context.l10n.comments),
+                                Tab(text: context.l10n.privateReplies), // Private Chats
                               ],
                             ),
                           ),
@@ -222,21 +274,129 @@ class _PostDetailPageState extends State<PostDetailPage>
                       : _buildCommentsList(context, state, isOwner: false),
                 ),
               ),
+              if (post.commentId != null && _commentBloc != null)
+                _buildInputBar(context, post.commentId!),
             ],
           ),
         );
+
+        return _commentBloc == null
+            ? scaffold
+            : BlocProvider<CommentBloc>.value(
+                value: _commentBloc!,
+                child: scaffold,
+              );
       },
     );
   }
 
+Widget _buildInputBar(BuildContext context, String commentId) {
+final theme = Theme.of(context);
+return Container(
+padding: EdgeInsets.fromLTRB(
+  AppDimens.md.w,
+  AppDimens.sm.h,
+  AppDimens.md.w,
+  MediaQuery.of(context).padding.bottom + AppDimens.sm.h),
+decoration: BoxDecoration(
+color: theme.cardColor,
+border: Border(top: BorderSide(color: theme.dividerColor.withOpacity(0.1))),
+),
+child: Column(
+mainAxisSize: MainAxisSize.min,
+children: [
+  if (_replyingTo != null)
+    Container(
+      padding: EdgeInsets.all(8.r),
+      margin: EdgeInsets.only(bottom: 8.h),
+      decoration: BoxDecoration(
+        color: theme.primaryColor.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(8.r),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              'Javob berilmoqda: ${_replyingTo!.senderName}',
+              style: AppStyles.bodySmall.copyWith(color: theme.primaryColor),
+            ),
+          ),
+          IconButton(
+            icon: Icon(Icons.close, size: 16.r),
+            onPressed: () => setState(() => _replyingTo = null),
+          ),
+        ],
+      ),
+    ),
+  Row(
+    crossAxisAlignment: CrossAxisAlignment.end,
+    children: [
+      Expanded(
+        child: TextField(
+          controller: _commentController,
+          focusNode: _focusNode,
+          maxLines: 4,
+          minLines: 1,
+          style: AppStyles.bodySmall.copyWith(fontSize: 13.sp),
+          decoration: InputDecoration(
+            hintText: 'Sharh yozing...',
+            hintStyle: AppStyles.bodySmall.copyWith(color: Colors.grey, fontSize: 13.sp),
+            filled: true,
+            fillColor: theme.scaffoldBackgroundColor,
+            isDense: true,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(15.r),
+              borderSide: BorderSide(color: theme.dividerColor.withOpacity(0.2)),
+            ),
+            contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+          ),
+          onChanged: (text) {
+            if (text.isNotEmpty) {
+              _commentBloc?.add(CommentTyping(commentId));
+            }
+          },
+        ),
+      ),
+      SizedBox(width: 8.w),
+      GestureDetector(
+        onTap: () {
+          final text = _commentController.text.trim();
+          if (text.isNotEmpty && _commentBloc != null) {
+            _commentBloc!.add(CommentSendMessage(
+              commentId: commentId,
+              text: text,
+              replyToId: _replyingTo?.id,
+            ));
+            _commentController.clear();
+            setState(() => _replyingTo = null);
+            _focusNode.unfocus();
+          }
+        },
+        child: Container(
+          width: 40.r,
+          height: 40.r,
+          decoration: BoxDecoration(
+            color: theme.primaryColor,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(Icons.send_rounded, color: Colors.white, size: 18.r),
+        ),
+      ),
+    ],
+  ),
+],
+),
+);
+}
+
   Widget _buildCommentsList(BuildContext context, HomeState state,
       {required bool isOwner}) {
-    if (state.activeComments.isEmpty) {
+    if (state.activePost?.commentId == null || _commentBloc == null) {
       return Center(
         child: Padding(
           padding: EdgeInsets.only(top: AppDimens.xxl.h),
           child: Text(
-            'Izohlar hozircha yo\'q',
+            context.l10n.noComments,
             style: AppStyles.bodyRegular.copyWith(
               color: Theme.of(context).textTheme.bodySmall?.color,
             ),
@@ -244,32 +404,81 @@ class _PostDetailPageState extends State<PostDetailPage>
         ),
       );
     }
-    return ListView.builder(
-      padding: EdgeInsets.symmetric(horizontal: AppDimens.lg.w),
-      itemCount: state.activeComments.length + (!isOwner ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (!isOwner && index == 0) {
-          return Padding(
-            padding: EdgeInsets.symmetric(vertical: AppDimens.md.h),
-            child: Text(
-              'Izohlar',
-              style: AppStyles.h4Bold.copyWith(
-                color: Theme.of(context).textTheme.titleMedium?.color,
-              ),
-            ),
-          );
+
+    return BlocBuilder<CommentBloc, CommentState>(
+      bloc: _commentBloc,
+      builder: (context, commentState) {
+        if (commentState.isLoading) {
+          return const Center(child: CircularProgressIndicator());
         }
-        final commentIndex = !isOwner ? index - 1 : index;
-        return Padding(
-          padding: EdgeInsets.only(bottom: AppDimens.md.h),
-          child: CommentTile(
-            comment: state.activeComments[commentIndex],
-            // In real app, check comment ownership
-            isMine: false, // TODO: Add userId to CommentEntity to check ownership
-            onReply: () {
-              _showReplyDialog(context, state.activeComments[commentIndex].id);
-            },
-          ),
+
+        final flatComments = commentState.comments;
+        final rootComments = flatComments.where((c) => c.replyToId == null).toList();
+        final Map<String, List<MessageModel>> repliesMap = {};
+        for (var c in flatComments) {
+          if (c.replyToId != null) {
+            repliesMap.putIfAbsent(c.replyToId!, () => []).add(c);
+          }
+        }
+
+        return ListView.builder(
+          padding: EdgeInsets.symmetric(horizontal: AppDimens.lg.w),
+          itemCount: rootComments.length + (!isOwner ? 1 : 0) + (commentState.typingUserIds.isNotEmpty ? 1 : 0),
+          itemBuilder: (context, index) {
+            if (!isOwner && index == 0) {
+              return Padding(
+                padding: EdgeInsets.symmetric(vertical: AppDimens.md.h),
+                child: Text(
+                  context.l10n.comments,
+                  style: AppStyles.h4Bold.copyWith(
+                    color: Theme.of(context).textTheme.titleMedium?.color,
+                  ),
+                ),
+              );
+            }
+            
+            final actualIndex = !isOwner ? index - 1 : index;
+            
+            if (actualIndex >= rootComments.length) {
+              // Typing indicator
+              return Padding(
+                padding: EdgeInsets.symmetric(vertical: 8.h),
+                child: Row(
+                  children: [
+                    SizedBox(width: 20.w, height: 20.w, child: const CircularProgressIndicator(strokeWidth: 1)),
+                    SizedBox(width: 8.w),
+                    Text("Kimdir yozmoqda...", style: AppStyles.bodySmall.copyWith(fontStyle: FontStyle.italic)),
+                  ],
+                ),
+              );
+            }
+
+            final rootComment = rootComments[actualIndex];
+            final commentReplies = repliesMap[rootComment.id] ?? [];
+            
+            final commentEntity = rootComment.toCommentEntity(widget.postId);
+            final mappedReplies = commentReplies.map((r) => r.toCommentEntity(widget.postId)).toList();
+
+            return Padding(
+              padding: EdgeInsets.only(bottom: AppDimens.md.h),
+              child: CommentTile(
+                comment: CommentEntity(
+                  id: commentEntity.id,
+                  postId: commentEntity.postId,
+                  userName: commentEntity.userName,
+                  userAvatarPath: commentEntity.userAvatarPath,
+                  content: commentEntity.content,
+                  createdAt: commentEntity.createdAt,
+                  replies: mappedReplies,
+                ),
+                isMine: rootComment.senderId == state.currentUserId,
+                onReply: () {
+                  setState(() => _replyingTo = rootComment);
+                  _focusNode.requestFocus();
+                },
+              ),
+            );
+          },
         );
       },
     );
@@ -279,7 +488,7 @@ class _PostDetailPageState extends State<PostDetailPage>
     if (_mockReplies.isEmpty) {
       return Center(
         child: Text(
-          'Javoblar hozircha yo\'q',
+          context.l10n.noReplies,
           style: AppStyles.bodyRegular.copyWith(
             color: Theme.of(context).textTheme.bodySmall?.color,
           ),
@@ -388,7 +597,7 @@ class _PostDetailPageState extends State<PostDetailPage>
           ),
         ),
         content: Text(
-          'Postni o\'chirmoqchimisiz?',
+          context.l10n.deleteConfirmContent,
           style: AppStyles.bodyRegular.copyWith(
             color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
@@ -397,7 +606,7 @@ class _PostDetailPageState extends State<PostDetailPage>
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              'Bekor qilish',
+              context.l10n.cancel,
               style: TextStyle(
                 color: Theme.of(context).textTheme.bodyMedium?.color,
               ),
@@ -409,159 +618,13 @@ class _PostDetailPageState extends State<PostDetailPage>
               Navigator.of(context).pop(); // Close page (simulate delete)
               // TODO: Dispatch delete event to bloc
             },
-            child: const Text(
-              'O\'chirish',
+            child: Text(
+              context.l10n.delete,
               style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
             ),
           ),
         ],
       ),
-    );
-  }
-
-  void _showReplyDialog(BuildContext context, String commentId) {
-    final controller = TextEditingController();
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Theme.of(context).cardColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppDimens.cardRadius.r),
-        ),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            left: AppDimens.lg.w,
-            right: AppDimens.lg.w,
-            bottom: MediaQuery.of(context).viewInsets.bottom + AppDimens.lg.h,
-            top: AppDimens.lg.h,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Javob yozish',
-                      style: AppStyles.h4Bold.copyWith(
-                        color: Theme.of(context).textTheme.titleMedium?.color,
-                      ),
-                    ),
-                  ),
-                  InkWell(
-                    onTap: () {
-                      Navigator.of(context).pop();
-                    },
-                    borderRadius: BorderRadius.circular(
-                      AppDimens.imageRadius.r,
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.all(AppDimens.sm.r),
-                      child: Icon(
-                        Icons.close_rounded,
-                        size: AppDimens.iconMd.r,
-                        color: Theme.of(context).iconTheme.color,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              AppDimens.md.height,
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: controller,
-                      maxLines: 3,
-                      minLines: 1,
-                      style: AppStyles.bodyRegular.copyWith(
-                        color: Theme.of(context).textTheme.bodyMedium?.color,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: 'Javobingizni yozing...',
-                        hintStyle: AppStyles.bodyRegular.copyWith(
-                          color: Theme.of(context).hintColor,
-                        ),
-                        filled: true,
-                        fillColor: Theme.of(context).scaffoldBackgroundColor,
-                        isDense: true,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(
-                            AppDimens.imageRadius.r,
-                          ),
-                          borderSide: BorderSide(
-                            color: Theme.of(context).dividerColor,
-                            width: AppDimens.borderWidth.w,
-                          ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(
-                            AppDimens.imageRadius.r,
-                          ),
-                          borderSide: BorderSide(
-                            color: Theme.of(context).dividerColor,
-                            width: AppDimens.borderWidth.w,
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(
-                            AppDimens.imageRadius.r,
-                          ),
-                          borderSide: BorderSide(
-                            color: Theme.of(context).primaryColor,
-                            width: AppDimens.borderWidth.w,
-                          ),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(
-                          vertical: AppDimens.sm.h,
-                          horizontal: AppDimens.md.w,
-                        ),
-                      ),
-                    ),
-                  ),
-                  AppDimens.sm.width,
-                  InkWell(
-                    onTap: () {
-                      if (controller.text.trim().isNotEmpty) {
-                        context.read<HomeBloc>().add(
-                              HomeReplyToComment(
-                                postId: widget.postId,
-                                parentCommentId: commentId,
-                                content: controller.text.trim(),
-                              ),
-                            );
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Javob yuborildi')),
-                        );
-                      }
-                    },
-                    borderRadius: BorderRadius.circular(AppDimens.imageRadius.r),
-                    child: Container(
-                      padding: EdgeInsets.all(AppDimens.sm.r),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor,
-                        borderRadius: BorderRadius.circular(
-                          AppDimens.imageRadius.r,
-                        ),
-                      ),
-                      child: Icon(
-                        Icons.send_rounded,
-                        size: AppDimens.iconMd.r,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 }
@@ -590,6 +653,3 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
     return false;
   }
 }
-
-
-

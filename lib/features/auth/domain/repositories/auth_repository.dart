@@ -26,4 +26,6 @@ abstract class AuthRepository {
     required String phoneNumber,
     required String password,
   });
+
+  Future<String?> getToken();
 }

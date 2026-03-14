@@ -88,3 +88,32 @@ class HomeUpdatePostStatus extends HomeEvent {
     required this.status,
   });
 }
+
+class HomeUpdatePrice extends HomeEvent {
+  final String price;
+  const HomeUpdatePrice(this.price);
+}
+
+class HomeUpdateAddress extends HomeEvent {
+  final String address;
+  const HomeUpdateAddress(this.address);
+}
+
+class HomeFetchPostsByGroup extends HomeEvent {
+  final String groupId;
+  const HomeFetchPostsByGroup(this.groupId);
+}
+
+class HomeFetchGroupsByCategory extends HomeEvent {
+  final String categoryId;
+  const HomeFetchGroupsByCategory(this.categoryId);
+}
+
+class HomeFetchPostsByCategory extends HomeEvent {
+  final String categoryId;
+  const HomeFetchPostsByCategory(this.categoryId);
+}
+
+class HomeRefresh extends HomeEvent {
+  const HomeRefresh();
+}

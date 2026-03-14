@@ -8,64 +8,85 @@ class AuthInterceptor extends Interceptor {
 
   AuthInterceptor({required this.secureStorage});
 
-  final dio = Dio(
+  final _refreshDio = Dio(
     BaseOptions(
       baseUrl: "http://89.223.126.116:3003/api/v1/",
     ),
   );
 
-
+  // Re-login in progress flag to avoid multiple simultaneous attempts
+  bool _isRefreshing = false;
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
-    var token = await secureStorage.read(key: 'token');
-
+    final token = await secureStorage.read(key: 'token');
     if (token != null) {
-      // options.headers['Authorization'] = token;
       options.headers['Authorization'] = 'Bearer $token';
     }
     super.onRequest(options, handler);
   }
 
   @override
-  void onResponse(Response response, ResponseInterceptorHandler handler) async {
-    if (response.statusCode == 401) {
-      var username = await secureStorage.read(key: 'username');
-      var password = await secureStorage.read(key: 'password');
-
-      if (username == null || password == null) await logout();
-
-      var result = await dio.post('/auth/login', data: {'username': username, 'password': password});
-      String? token = result.data['token'];
-
-      if (result.statusCode != 200 || token == null) await logout();
-
-      await secureStorage.write(key: "token", value: token);
-      final headers = response.requestOptions.headers;
-      headers["Authorization"] = "$token";
-
-      var retry = await dio.fetch(
-        RequestOptions(
-          baseUrl: response.requestOptions.baseUrl,
-          path: response.requestOptions.path,
-          method: response.requestOptions.method,
-          data: response.requestOptions.data,
-          headers: headers,
-        ),
-      );
-      if (retry.statusCode != 200) await logout();
-      super.onResponse(response, handler);
-    } else {
-      super.onResponse(response, handler);
-    }
-
+  void onResponse(Response response, ResponseInterceptorHandler handler) {
+    // NOTE: Since ApiClient uses validateStatus: (s) => true,
+    // 401 comes here, not onError. ApiClient calls handleUnauthorized() directly.
+    super.onResponse(response, handler);
   }
 
-  Future<void> logout() async {
-    await secureStorage.delete(key: "token");
-    await secureStorage.delete(key: "username");
-    await secureStorage.delete(key: "password");
-    router.go(Routes.home);
-    return;
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) async {
+    // This handles 401 for cases where validateStatus is NOT set to true
+    if (err.response?.statusCode == 401) {
+      await handleUnauthorized();
+    }
+    super.onError(err, handler);
+  }
+
+  /// Called by ApiClient when a 401 response is detected.
+  /// Attempts to re-login using stored credentials.
+  /// If re-login fails or no credentials are stored, performs logout.
+  Future<void> handleUnauthorized() async {
+    if (_isRefreshing) return;
+    _isRefreshing = true;
+
+    try {
+      final username = await secureStorage.read(key: 'username');
+      final password = await secureStorage.read(key: 'password');
+
+      if (username != null && password != null) {
+        try {
+          final result = await _refreshDio.post('client/login', data: {
+            'phoneNumber': username,
+            'password': password,
+          });
+
+          final data = result.data['data'];
+          final String? newToken = data?['accessToken'];
+
+          if (newToken != null) {
+            await secureStorage.write(key: 'token', value: newToken);
+            _isRefreshing = false;
+            return; // Token yangilandi, keyingi so'rovlar yangi token bilan ketadi
+          } else {
+            await _logout();
+          }
+        } catch (e) {
+          print('❌ Re-login failed: $e');
+          await _logout();
+        }
+      } else {
+        // Credentials mavjud emas — to'g'ridan-to'g'ri logout
+        await _logout();
+      }
+    } finally {
+      _isRefreshing = false;
+    }
+  }
+
+  Future<void> _logout() async {
+    await secureStorage.delete(key: 'token');
+    await secureStorage.delete(key: 'username');
+    await secureStorage.delete(key: 'password');
+    router.go(Routes.auth);
   }
 }

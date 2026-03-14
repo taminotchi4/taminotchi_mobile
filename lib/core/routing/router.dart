@@ -1,11 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:taminotchi_app/core/routing/routes.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../../features/home/data/datasources/home_local_data_source.dart';
-import '../../features/home/data/datasources/category_remote_data_source.dart';
+import '../../features/auth/domain/repositories/auth_repository.dart';
+import '../../features/chat/domain/repositories/chat_repository.dart';
 import '../../features/home/data/datasources/home_media_picker.dart';
-import '../../features/home/data/repositories/home_repository_impl.dart';
 import '../../features/home/domain/usecases/create_post_usecase.dart';
 import '../../features/home/domain/usecases/get_categories_usecase.dart';
 import '../../features/home/domain/usecases/get_comment_counts_usecase.dart';
@@ -14,10 +12,12 @@ import '../../features/home/domain/usecases/get_current_user_id_usecase.dart';
 import '../../features/home/domain/usecases/get_current_user_role_usecase.dart';
 import '../../features/home/domain/usecases/get_post_by_id_usecase.dart';
 import '../../features/home/domain/usecases/get_all_posts_usecase.dart';
-import '../../features/home/domain/usecases/get_all_posts_usecase.dart';
 import '../../features/home/domain/usecases/get_my_posts_usecase.dart';
+import '../../features/home/domain/usecases/get_posts_by_category_usecase.dart';
 import '../../features/home/domain/usecases/reply_to_comment_usecase.dart';
 import '../../features/home/domain/usecases/update_post_status_usecase.dart';
+import '../../features/home/domain/usecases/get_groups_by_category_usecase.dart';
+import '../../features/home/domain/usecases/get_posts_by_group_usecase.dart';
 import '../../features/home/presentation/managers/home_bloc.dart';
 import '../../features/home/presentation/managers/home_event.dart';
 import '../../features/home/presentation/pages/home_page.dart';
@@ -41,6 +41,7 @@ import '../../features/products/presentation/managers/product_comments_bloc.dart
 import '../../features/products/presentation/managers/product_details_bloc.dart';
 import '../../features/products/presentation/pages/all_products_page.dart';
 import '../../features/products/presentation/pages/product_detail_page.dart';
+import '../../features/profile/presentation/managers/client_profile_event.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/profile/presentation/pages/seller_profile_page.dart';
 import '../../features/profile/presentation/pages/followers_page.dart';
@@ -52,8 +53,6 @@ import '../../features/profile/domain/usecases/toggle_follow_usecase.dart';
 import '../../features/profile/domain/usecases/get_current_user_profile_usecase.dart';
 import '../../features/profile/data/datasources/seller_local_data_source.dart';
 import '../../features/profile/data/repositories/seller_repository_impl.dart';
-import '../../features/chat/data/datasources/chat_local_data_source.dart';
-import '../../features/chat/data/repositories/chat_repository_impl.dart';
 import '../../features/chat/data/services/audio_recorder_service.dart';
 import '../../features/chat/data/services/audio_player_service.dart';
 import '../../features/chat/data/services/gallery_service.dart';
@@ -61,123 +60,128 @@ import '../../features/chat/domain/usecases/get_or_create_chat_usecase.dart';
 import '../../features/chat/domain/usecases/get_messages_usecase.dart';
 import '../../features/chat/domain/usecases/send_message_usecase.dart';
 import '../../features/chat/presentation/managers/chat_bloc.dart';
+import '../../features/chat/presentation/managers/private_chat_bloc.dart';
+import '../../features/chat/presentation/managers/private_chat_list_bloc.dart';
+import '../../features/chat/presentation/managers/group_chat_bloc.dart';
+import '../../features/chat/presentation/managers/notification_proxy_bloc.dart';
 import '../../features/chat/presentation/pages/chat_page.dart';
 import '../../features/chat/presentation/pages/chats_home_page.dart';
-import '../../features/profile/data/datasources/client_profile_local_data_source.dart';
-import '../../features/profile/data/repositories/client_profile_repository_impl.dart';
+import '../../features/chat/presentation/pages/private_chat_page.dart';
+import '../../features/chat/presentation/pages/group_chat_page.dart';
 import '../../features/profile/domain/usecases/get_client_profile_usecase.dart';
 import '../../features/profile/domain/usecases/update_client_profile_usecase.dart';
 import '../../features/profile/domain/usecases/upload_profile_photo_usecase.dart';
-import '../../features/profile/domain/usecases/logout_usecase.dart';
+import '../../features/profile/domain/usecases/logout_usecase.dart' as profile_logout;
 import '../../features/profile/presentation/managers/client_profile_bloc.dart';
 import '../../features/category_feed/presentation/pages/category_feed_page.dart';
+import '../../features/notifications/data/repositories/notification_repository_impl.dart';
 import '../../features/notifications/presentation/pages/notifications_page.dart';
+import '../../features/profile/presentation/pages/become_seller_page.dart';
 import '../../features/auth/presentation/pages/auth_main_page.dart';
 import '../../global/widgets/main_shell_page.dart';
-
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:taminotchi_app/core/network/auth_interceptor.dart';
-import 'package:taminotchi_app/core/network/client.dart';
-import 'package:taminotchi_app/features/auth/data/datasources/auth_local_data_source.dart';
+import '../../features/splash/presentation/pages/splash_page.dart';
 
 final router = GoRouter(
-  initialLocation: Routes.auth,
+  initialLocation: Routes.splash,
 
   routes: [
+    GoRoute(
+      path: Routes.splash,
+      builder: (context, state) => const SplashPage(),
+    ),
+    GoRoute(
+      path: Routes.auth,
+      builder: (context, state) => const AuthMainPage(),
+    ),
     ShellRoute(
       builder: (context, state, child) {
-        const secureStorage = FlutterSecureStorage();
-        final authInterceptor = AuthInterceptor(secureStorage: secureStorage);
-        final apiClient = ApiClient(interceptor: authInterceptor);
-        final authLocalDataSource = AuthLocalDataSourceImpl(secureStorage: secureStorage);
-        
-        final categoryRemoteDataSource = CategoryRemoteDataSourceImpl(client: apiClient);
-        final homeRepository = HomeRepositoryImpl(
-          localDataSource: HomeLocalDataSource(),
-          categoryRemoteDataSource: categoryRemoteDataSource,
-          authLocalDataSource: authLocalDataSource,
-        );
-        final productsRepository = ProductsRepositoryImpl(ProductsLocalDataSource());
-        final sellerRepository = SellerRepositoryImpl(SellerLocalDataSource());
-        final commentsRepository =
-            ProductCommentsRepositoryImpl(ProductCommentsLocalDataSource());
-        final chatRepository = ChatRepositoryImpl(ChatLocalDataSource());
-        final clientProfileRepository =
-            ClientProfileRepositoryImpl(ClientProfileLocalDataSource());
         return MultiBlocProvider(
           providers: [
             BlocProvider(
-              create: (_) => HomeBloc(
-                getAllPostsUseCase: GetAllPostsUseCase(homeRepository),
-                getMyPostsUseCase: GetMyPostsUseCase(homeRepository),
-                createPostUseCase: CreatePostUseCase(homeRepository),
-                getPostByIdUseCase: GetPostByIdUseCase(homeRepository),
-                getCommentsUseCase: GetCommentsUseCase(homeRepository),
-                getCommentCountsUseCase: GetCommentCountsUseCase(homeRepository),
-                getCategoriesUseCase: GetCategoriesUseCase(homeRepository),
-                getCurrentUserIdUseCase: GetCurrentUserIdUseCase(homeRepository),
-                getCurrentUserRoleUseCase: GetCurrentUserRoleUseCase(homeRepository),
+              create: (context) => HomeBloc(
+                getAllPostsUseCase: context.read<GetAllPostsUseCase>(),
+                getMyPostsUseCase: context.read<GetMyPostsUseCase>(),
+                createPostUseCase: context.read<CreatePostUseCase>(),
+                getPostByIdUseCase: context.read<GetPostByIdUseCase>(),
+                getCommentsUseCase: context.read<GetCommentsUseCase>(),
+                getCommentCountsUseCase: context.read<GetCommentCountsUseCase>(),
+                getCategoriesUseCase: context.read<GetCategoriesUseCase>(),
+                getCurrentUserIdUseCase: context.read<GetCurrentUserIdUseCase>(),
+                getCurrentUserRoleUseCase: context.read<GetCurrentUserRoleUseCase>(),
                 mediaPicker: HomeMediaPicker(),
-                replyToCommentUseCase: ReplyToCommentUseCase(homeRepository),
-                updatePostStatusUseCase: UpdatePostStatusUseCase(homeRepository),
+                replyToCommentUseCase: context.read<ReplyToCommentUseCase>(),
+                updatePostStatusUseCase: context.read<UpdatePostStatusUseCase>(),
+                getPostsByCategoryUseCase: context.read<GetPostsByCategoryUseCase>(),
+                getGroupsByCategoryUseCase: context.read<GetGroupsByCategoryUseCase>(),
+                getPostsByGroupUseCase: context.read<GetPostsByGroupUseCase>(),
               )..add(const HomeStarted()),
             ),
             BlocProvider(
-              create: (_) => ProductsBloc(
-                getProductsUseCase: GetProductsUseCase(productsRepository),
-                getProductByIdUseCase: GetProductByIdUseCase(productsRepository),
-                getCategoriesUseCase: GetProductCategoriesUseCase(productsRepository),
+              create: (context) => ProductsBloc(
+                getProductsUseCase: GetProductsUseCase(ProductsRepositoryImpl(ProductsLocalDataSource())),
+                getProductByIdUseCase: GetProductByIdUseCase(ProductsRepositoryImpl(ProductsLocalDataSource())),
+                getCategoriesUseCase: GetProductCategoriesUseCase(ProductsRepositoryImpl(ProductsLocalDataSource())),
               )..add(const ProductsStarted()),
             ),
             BlocProvider(
-              create: (_) => SellerProfileBloc(
+              create: (context) => SellerProfileBloc(
                 getSellerProfileUseCase:
-                    GetSellerProfileUseCase(sellerRepository),
-                getFollowersUseCase: GetFollowersUseCase(sellerRepository),
-                toggleFollowUseCase: ToggleFollowUseCase(sellerRepository),
+                    GetSellerProfileUseCase(SellerRepositoryImpl(SellerLocalDataSource())),
+                getFollowersUseCase: GetFollowersUseCase(SellerRepositoryImpl(SellerLocalDataSource())),
+                toggleFollowUseCase: ToggleFollowUseCase(SellerRepositoryImpl(SellerLocalDataSource())),
                 getCurrentUserProfileUseCase:
-                    GetCurrentUserProfileUseCase(sellerRepository),
-                getProductsUseCase: GetProductsUseCase(productsRepository),
+                    GetCurrentUserProfileUseCase(SellerRepositoryImpl(SellerLocalDataSource())),
+                getProductsUseCase: GetProductsUseCase(ProductsRepositoryImpl(ProductsLocalDataSource())),
               ),
             ),
             BlocProvider(
-              create: (_) => FollowersBloc(
-                getFollowersUseCase: GetFollowersUseCase(sellerRepository),
+              create: (context) => FollowersBloc(
+                getFollowersUseCase: GetFollowersUseCase(SellerRepositoryImpl(SellerLocalDataSource())),
               ),
             ),
+            BlocProvider(create: (_) => ProductDetailsBloc()),
             BlocProvider(
-              create: (_) => ProductDetailsBloc(),
-            ),
-            BlocProvider(
-              create: (_) => ProductCommentsBloc(
+              create: (context) => ProductCommentsBloc(
                 getCommentsUseCase:
-                    GetProductCommentsUseCase(commentsRepository),
-                addCommentUseCase: AddProductCommentUseCase(commentsRepository),
+                    GetProductCommentsUseCase(ProductCommentsRepositoryImpl(ProductCommentsLocalDataSource())),
+                addCommentUseCase: AddProductCommentUseCase(ProductCommentsRepositoryImpl(ProductCommentsLocalDataSource())),
                 updateCommentUseCase:
-                    UpdateProductCommentUseCase(commentsRepository),
+                    UpdateProductCommentUseCase(ProductCommentsRepositoryImpl(ProductCommentsLocalDataSource())),
                 deleteCommentUseCase:
-                    DeleteProductCommentUseCase(commentsRepository),
+                    DeleteProductCommentUseCase(ProductCommentsRepositoryImpl(ProductCommentsLocalDataSource())),
               ),
             ),
             BlocProvider(
-              create: (_) => ChatBloc(
+              create: (context) => ChatBloc(
                 getOrCreateChatUseCase:
-                    GetOrCreateChatUseCase(chatRepository),
-                getMessagesUseCase: GetMessagesUseCase(chatRepository),
-                sendMessageUseCase: SendMessageUseCase(chatRepository),
+                    GetOrCreateChatUseCase(context.read<ChatRepository>()),
+                getMessagesUseCase: GetMessagesUseCase(context.read<ChatRepository>()),
+                sendMessageUseCase: SendMessageUseCase(context.read<ChatRepository>()),
                 audioRecorder: AudioRecorderService(),
                 audioPlayer: AudioPlayerService(),
                 galleryService: GalleryService(),
               ),
             ),
             BlocProvider(
-              create: (_) => ClientProfileBloc(
-                getProfileUseCase: GetClientProfileUseCase(clientProfileRepository),
-                updateProfileUseCase:
-                    UpdateClientProfileUseCase(clientProfileRepository),
-                uploadPhotoUseCase:
-                    UploadProfilePhotoUseCase(clientProfileRepository),
-                logoutUseCase: LogoutUseCase(clientProfileRepository),
+              create: (context) => ClientProfileBloc(
+                getProfileUseCase: context.read<GetClientProfileUseCase>(),
+                updateProfileUseCase: context.read<UpdateClientProfileUseCase>(),
+                uploadPhotoUseCase: context.read<UploadProfilePhotoUseCase>(),
+                logoutUseCase: context.read<profile_logout.LogoutUseCase>(),
+              )..add(const ClientProfileStarted()),
+            ),
+            // --- New BLoCs ---
+            BlocProvider(
+              create: (context) => PrivateChatListBloc(
+                repository: context.read<ChatRepository>(),
+                authRepository: context.read<AuthRepository>(),
+              )..add(PrivateChatListLoad()),
+            ),
+            BlocProvider(
+              lazy: false,
+              create: (context) => NotificationProxyBloc(
+                repository: context.read<NotificationRepositoryImpl>(),
+                authRepository: context.read<AuthRepository>(),
               ),
             ),
           ],
@@ -188,10 +192,6 @@ final router = GoRouter(
         );
       },
       routes: [
-        GoRoute(
-          path: Routes.auth,
-          builder: (context, state) => const AuthMainPage(),
-        ),
         GoRoute(path: Routes.home, builder: (context, state) => const HomePage()),
         GoRoute(
           path: Routes.myPosts,
@@ -254,6 +254,39 @@ final router = GoRouter(
             );
           },
         ),
+        // Private chat
+        GoRoute(
+          path: Routes.privateChat,
+          builder: (context, state) {
+            final chatId = state.pathParameters['chatId'] ?? '';
+            final extra = state.extra as Map<String, dynamic>? ?? {};
+            return BlocProvider(
+              create: (_) => PrivateChatBloc(
+                repository: context.read<ChatRepository>(),
+                authRepository: context.read<AuthRepository>(),
+              ),
+              child: PrivateChatPage(
+                receiverId: extra['receiverId'] as String? ?? chatId,
+                receiverRole: extra['receiverRole'] as String? ?? 'market',
+                receiverName: extra['name'] as String?,
+              ),
+            );
+          },
+        ),
+        // Group chat
+        GoRoute(
+          path: Routes.groupChat,
+          builder: (context, state) {
+            final groupId = state.pathParameters['groupId'] ?? '';
+            return BlocProvider(
+              create: (_) => GroupChatBloc(
+                repository: context.read<ChatRepository>(),
+                authRepository: context.read<AuthRepository>(),
+              ),
+              child: GroupChatPage(groupId: groupId),
+            );
+          },
+        ),
         GoRoute(
           path: Routes.categoryFeed,
           builder: (context, state) {
@@ -268,6 +301,10 @@ final router = GoRouter(
         GoRoute(
           path: Routes.notifications,
           builder: (context, state) => const NotificationsPage(),
+        ),
+        GoRoute(
+          path: Routes.becomeSeller,
+          builder: (context, state) => const BecomeSellerPage(),
         ),
       ],
     ),

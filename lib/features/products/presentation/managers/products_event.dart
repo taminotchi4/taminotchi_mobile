@@ -29,3 +29,7 @@ class ProductsLoadDetail extends ProductsEvent {
 
   const ProductsLoadDetail(this.productId);
 }
+
+class ProductsRefresh extends ProductsEvent {
+  const ProductsRefresh();
+}

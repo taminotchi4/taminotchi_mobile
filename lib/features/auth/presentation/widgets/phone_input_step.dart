@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/dimens.dart';
 import '../../../../core/utils/colors.dart';
+import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/styles.dart';
 import '../managers/auth_bloc.dart';
 import '../managers/auth_state.dart';
@@ -32,12 +33,12 @@ class _PhoneInputStepState extends State<PhoneInputStep> {
         children: [
           SizedBox(height: 40.h),
           Text(
-            "Xush kelibsiz!",
+            context.l10n.welcomeTitle,
             style: AppStyles.h1Bold.copyWith(color: Theme.of(context).primaryColor),
           ),
           SizedBox(height: 8.h),
           Text(
-            "Tizimga kirish uchun telefon raqamingizni kiriting",
+            context.l10n.welcomeSubtitle,
             style: AppStyles.bodyRegular.copyWith(
               color: Theme.of(context).textTheme.bodySmall?.color,
             ),
@@ -46,9 +47,12 @@ class _PhoneInputStepState extends State<PhoneInputStep> {
           TextField(
             controller: _controller,
             keyboardType: TextInputType.phone,
-            style: AppStyles.h4Bold.copyWith(letterSpacing: 1.2),
+            style: AppStyles.h4Bold.copyWith(
+              letterSpacing: 1.2,
+              color: Theme.of(context).textTheme.bodyLarge?.color,
+            ),
             decoration: InputDecoration(
-              labelText: "Telefon raqam",
+              labelText: context.l10n.phoneNumberLabel,
               hintText: "+998 90 123 45 67",
               prefixIcon: Icon(Icons.phone_android_rounded, color: AppColors.mainBlue),
               contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
@@ -118,7 +122,7 @@ class _PhoneInputStepState extends State<PhoneInputStep> {
                   ),
                   child: state.status == AuthStatus.loading
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : Text("Davom etish", 
+                      : Text(context.l10n.continueButton, 
                             style: AppStyles.h4Bold.copyWith(color: Colors.white)),
                 ),
               );

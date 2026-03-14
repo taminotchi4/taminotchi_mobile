@@ -121,7 +121,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         password: event.password,
       );
 
-      // TODO: Save access token and user data to local storage
+      // Token is saved at repository level
       emit(state.copyWith(
         status: AuthStatus.success,
         password: event.password,
@@ -148,7 +148,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         language: event.language,
       );
 
-      // TODO: Save user data to local storage if needed
+      // Token is saved at repository level
       emit(state.copyWith(
         status: AuthStatus.success,
         fullName: event.fullName,

@@ -41,7 +41,7 @@ class _SellerProfilePageState extends State<SellerProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CommonAppBar(
-        title: 'Sotuvchi',
+        title: context.l10n.seller,
         leading: const AppBackButton(),
         actions: [
           InkWell(
@@ -69,7 +69,7 @@ class _SellerProfilePageState extends State<SellerProfilePage> {
           if (seller == null) {
             return Center(
               child: Text(
-                'Sotuvchi topilmadi',
+                context.l10n.sellerNotFound,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppStyles.bodySmall.copyWith(
@@ -90,8 +90,8 @@ class _SellerProfilePageState extends State<SellerProfilePage> {
                 TabBar(
                   labelColor: Theme.of(context).textTheme.titleMedium?.color,
                   indicatorColor: Theme.of(context).primaryColor,
-                  tabs: const [
-                    Tab(text: 'Products'),
+                  tabs: [
+                    Tab(text: context.l10n.products),
                   ],
                 ),
                 AppDimens.md.height,

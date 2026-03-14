@@ -5,13 +5,17 @@ import '../models/request_otp_model.dart';
 import '../models/verify_otp_model.dart';
 import '../models/complete_register_model.dart';
 import '../models/login_model.dart';
+import '../datasources/auth_local_data_source.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource _remoteDataSource;
+  final AuthLocalDataSource _localDataSource;
 
   AuthRepositoryImpl({
     required AuthRemoteDataSource remoteDataSource,
-  }) : _remoteDataSource = remoteDataSource;
+    required AuthLocalDataSource localDataSource,
+  })  : _remoteDataSource = remoteDataSource,
+        _localDataSource = localDataSource;
 
   @override
   Future<CheckPhoneResponse> checkPhone(String phoneNumber) async {
@@ -63,7 +67,17 @@ class AuthRepositoryImpl implements AuthRepository {
     );
     return result.fold(
       (error) => throw error,
-      (response) => response,
+      (response) async {
+        if (response.accessToken != null) {
+          await _localDataSource.saveToken(response.accessToken!);
+          // Save for AuthInterceptor
+          await _localDataSource.saveUserData(
+            username: response.user.username,
+            password: password,
+          );
+        }
+        return response;
+      },
     );
   }
 
@@ -78,7 +92,20 @@ class AuthRepositoryImpl implements AuthRepository {
     );
     return result.fold(
       (error) => throw error,
-      (response) => response,
+      (response) async {
+        await _localDataSource.saveToken(response.accessToken);
+        // Save these for AuthInterceptor's auto-refresh logic
+        await _localDataSource.saveUserData(
+          username: response.username,
+          password: password,
+        );
+        return response;
+      },
     );
+  }
+
+  @override
+  Future<String?> getToken() async {
+    return await _localDataSource.getToken();
   }
 }

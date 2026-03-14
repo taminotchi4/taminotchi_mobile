@@ -71,7 +71,7 @@ class _PostCreationBottomSheetState extends State<PostCreationBottomSheet> {
           Navigator.of(context).pop();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('E\'lon muvaffaqiyatli joylandi'),
+              content: Text(context.l10n.postCreatedSuccess),
               backgroundColor: Theme.of(context).primaryColor,
             ),
           );
@@ -105,6 +105,8 @@ class _PostCreationBottomSheetState extends State<PostCreationBottomSheet> {
                       _buildCategorySection(context, state),
                       AppDimens.lg.height,
                       _buildTextField(context, state),
+                      AppDimens.sm.height,
+                      _buildCharacterCount(context),
                       AppDimens.lg.height,
                       _buildImageSection(context, state),
                       AppDimens.xl.height,
@@ -125,7 +127,7 @@ class _PostCreationBottomSheetState extends State<PostCreationBottomSheet> {
       children: [
         Expanded(
           child: Text(
-            'E\'lon joylash',
+            context.l10n.createPost,
             style: AppStyles.h4Bold.copyWith(
               color: Theme.of(context).textTheme.titleLarge?.color,
             ),
@@ -203,7 +205,7 @@ class _PostCreationBottomSheetState extends State<PostCreationBottomSheet> {
             AppDimens.sm.width,
             Expanded(
               child: Text(
-                _selectedCategory?.name ?? 'Kategoriyani tanlang',
+                _selectedCategory?.name ?? context.l10n.selectCategory,
                 style: AppStyles.bodyMedium.copyWith(
                   color: _selectedCategory == null
                       ? Theme.of(context).textTheme.bodySmall?.color
@@ -283,16 +285,19 @@ class _PostCreationBottomSheetState extends State<PostCreationBottomSheet> {
           controller: _controller,
           maxLines: 5,
           decoration: InputDecoration(
-            hintText: 'Qidirayotgan maxsulotingiz haqida yozing...',
+            hintText: context.l10n.postDescriptionHint,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppDimens.imageRadius.r),
             ),
           ),
           onChanged: (value) {
+            setState(() {}); // Refresh character count
             if (value.length >= 2 && state.contentError != null) {
               context.read<HomeBloc>().add(const HomeClearContentError());
             }
           },
+          maxLength: 5094,
+          buildCounter: (context, {required currentLength, required isFocused, maxLength}) => null,
         ),
         if (state.contentError != null) ...[
           AppDimens.xs.height,
@@ -308,16 +313,53 @@ class _PostCreationBottomSheetState extends State<PostCreationBottomSheet> {
     );
   }
 
+  Widget _buildCharacterCount(BuildContext context) {
+    final length = _controller.text.length;
+    final isLimitReached = length >= 5094;
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Text(
+        '$length / 5094',
+        style: AppStyles.bodySmall.copyWith(
+          fontSize: 10.sp,
+          color: isLimitReached ? AppColors.red : Theme.of(context).textTheme.bodySmall?.color,
+        ),
+      ),
+    );
+  }
+
   Widget _buildImageSection(BuildContext context, HomeState state) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              context.l10n.imagesMax8,
+              style: AppStyles.bodySmall.copyWith(
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+              ),
+            ),
+            Text(
+              '${state.selectedImages.length} / 8',
+              style: AppStyles.bodySmall.copyWith(
+                fontSize: 11.sp,
+                color: state.selectedImages.length >= 8 
+                    ? AppColors.red 
+                    : Theme.of(context).textTheme.bodySmall?.color,
+              ),
+            ),
+          ],
+        ),
+        AppDimens.sm.height,
+        Row(
           children: [
             Expanded(
               child: _uploadButton(
                 context,
-                label: 'Galereya',
+                label: context.l10n.gallery,
                 icon: AppIcons.gallery,
                 onTap: () => context.read<HomeBloc>().add(const HomeAddImagesFromGallery()),
               ),
@@ -326,7 +368,7 @@ class _PostCreationBottomSheetState extends State<PostCreationBottomSheet> {
             Expanded(
               child: _uploadButton(
                 context,
-                label: 'Kamera',
+                label: context.l10n.camera,
                 icon: Icons.camera_alt,
                 onTap: () => context.read<HomeBloc>().add(const HomeAddImageFromCamera()),
               ),
@@ -478,7 +520,7 @@ class _PostCreationBottomSheetState extends State<PostCreationBottomSheet> {
                 ),
               )
             : Text(
-                'E\'lon joylash',
+                context.l10n.createPost,
                 style: AppStyles.bodyMedium.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,

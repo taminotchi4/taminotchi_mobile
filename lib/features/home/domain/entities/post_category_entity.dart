@@ -4,6 +4,7 @@ class PostCategoryEntity {
   final String iconPath;
   final List<PostCategoryEntity>? subcategories;
   final String? parentId;
+  final String? hintText;
 
   const PostCategoryEntity({
     required this.id,
@@ -11,6 +12,7 @@ class PostCategoryEntity {
     required this.iconPath,
     this.subcategories,
     this.parentId,
+    this.hintText,
   });
 
   bool get hasSubcategories => subcategories != null && subcategories!.isNotEmpty;

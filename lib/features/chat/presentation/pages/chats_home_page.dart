@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../core/constants/dimens.dart';
 import '../../../../core/routing/routes.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/styles.dart';
 import '../../../../global/widgets/common_app_bar.dart';
+import '../../data/models/private_chat_model.dart';
+import '../managers/private_chat_list_bloc.dart';
 
 class ChatsHomePage extends StatefulWidget {
   const ChatsHomePage({super.key});
@@ -19,32 +23,11 @@ class _ChatsHomePageState extends State<ChatsHomePage> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
-  final List<Map<String, dynamic>> _allChats = [
-    {
-      'sellerId': 'seller_1',
-      'name': 'Tech Store',
-      'lastMessage': 'Mahsulot haqida ma\'lumot',
-      'unreadCount': 2,
-      'time': '10:30',
-      'role': 'Market',
-    },
-    {
-      'sellerId': 'seller_2',
-      'name': 'Fashion Shop',
-      'lastMessage': 'Buyurtma qabul qilindi',
-      'unreadCount': 0,
-      'time': 'Kecha',
-      'role': 'Market',
-    },
-    {
-      'sellerId': 'seller_3',
-      'name': 'Ali Valiyev',
-      'lastMessage': 'Yetkazib berish haqida',
-      'unreadCount': 1,
-      'time': '15:45',
-      'role': 'User',
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    context.read<PrivateChatListBloc>().add(PrivateChatListLoad());
+  }
 
   @override
   void dispose() {
@@ -52,139 +35,143 @@ class _ChatsHomePageState extends State<ChatsHomePage> {
     super.dispose();
   }
 
-  List<Map<String, dynamic>> get _filteredChats {
-    if (_searchQuery.isEmpty) return _allChats;
-    return _allChats.where((chat) {
-      final name = (chat['name'] as String).toLowerCase();
-      final message = (chat['lastMessage'] as String).toLowerCase();
-      final query = _searchQuery.toLowerCase();
-      return name.contains(query) || message.contains(query);
-    }).toList();
-  }
-
   @override
   Widget build(BuildContext context) {
-    final chats = _filteredChats;
-
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-      appBar: const CommonAppBar(title: 'Chatlar'),
-      body: Column(
-        children: [
-          Padding(
-            padding: EdgeInsets.fromLTRB(
-              AppDimens.lg.w,
-              AppDimens.sm.h,
-              AppDimens.lg.w,
-              AppDimens.sm.h,
-            ),
-            child: SizedBox(
-              height: 40.h,
-              child: TextField(
-                controller: _searchController,
-                onChanged: (value) => setState(() => _searchQuery = value),
-                style: AppStyles.bodySmall.copyWith(
-                  fontSize: 13.sp,
-                  color: Theme.of(context).textTheme.bodyMedium?.color,
-                ),
-                decoration: InputDecoration(
-                  hintText: 'Qidirish...',
-                  hintStyle: AppStyles.bodySmall.copyWith(
-                    color: Theme.of(context).hintColor,
+        appBar: CommonAppBar(title: context.l10n.chats),
+        body: Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                AppDimens.lg.w,
+                AppDimens.sm.h,
+                AppDimens.lg.w,
+                AppDimens.sm.h,
+              ),
+              child: SizedBox(
+                height: 40.h,
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: (value) => setState(() => _searchQuery = value),
+                  style: AppStyles.bodySmall.copyWith(
                     fontSize: 13.sp,
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
                   ),
-                  prefixIcon: Icon(Icons.search, size: 18.r),
-                  suffixIcon: _searchQuery.isNotEmpty
-                      ? IconButton(
-                          icon: Icon(Icons.clear, size: 18.r),
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() => _searchQuery = '');
-                          },
-                        )
-                      : null,
-                  filled: true,
-                  fillColor: Theme.of(context).cardColor,
-                  contentPadding: EdgeInsets.zero,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20.r),
-                    borderSide: BorderSide(color: Theme.of(context).dividerColor),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20.r),
-                    borderSide: BorderSide(color: Theme.of(context).dividerColor),
+                  decoration: InputDecoration(
+                    hintText: context.l10n.search,
+                    hintStyle: AppStyles.bodySmall.copyWith(
+                      color: Theme.of(context).hintColor,
+                      fontSize: 13.sp,
+                    ),
+                    prefixIcon: Icon(Icons.search, size: 18.r),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: Icon(Icons.clear, size: 18.r),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() => _searchQuery = '');
+                            },
+                          )
+                        : null,
+                    filled: true,
+                    fillColor: Theme.of(context).cardColor,
+                    contentPadding: EdgeInsets.zero,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20.r),
+                      borderSide: BorderSide(color: Theme.of(context).dividerColor),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20.r),
+                      borderSide: BorderSide(color: Theme.of(context).dividerColor),
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-          Expanded(
-            child: chats.isEmpty
-                ? Center(
-                    child: Text(
-                      _searchQuery.isEmpty ? 'Chatlar yo\'q' : 'Natija topilmadi',
-                      style: AppStyles.bodySmall.copyWith(
-                        color: Theme.of(context).textTheme.bodySmall?.color,
+            Expanded(
+              child: BlocBuilder<PrivateChatListBloc, PrivateChatListState>(
+                builder: (context, state) {
+                  if (state.isLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  final chats = state.chats.where((c) {
+                    if (_searchQuery.isEmpty) return true;
+                    final q = _searchQuery.toLowerCase();
+                    final peerName = _getPeerName(c).toLowerCase();
+                    final preview = c.lastMessage?.text?.toLowerCase() ?? '';
+                    return peerName.contains(q) || preview.contains(q);
+                  }).toList();
+
+                  if (chats.isEmpty) {
+                    return Center(
+                      child: Text(
+                        _searchQuery.isEmpty ? context.l10n.noChats : context.l10n.resultNotFound,
+                        style: AppStyles.bodySmall.copyWith(
+                          color: Theme.of(context).textTheme.bodySmall?.color,
+                        ),
                       ),
-                    ),
-                  )
-                : NotificationListener<ScrollNotification>(
-                    onNotification: (notification) {
-                      if (notification is ScrollStartNotification) {
-                        FocusScope.of(context).unfocus();
-                      }
+                    );
+                  }
+
+                  return NotificationListener<ScrollNotification>(
+                    onNotification: (n) {
+                      if (n is ScrollStartNotification) FocusScope.of(context).unfocus();
                       return false;
                     },
                     child: ListView.separated(
-                        padding: EdgeInsets.all(AppDimens.lg.r),
-                        itemCount: chats.length,
-                        separatorBuilder: (context, index) => AppDimens.md.height,
-                        itemBuilder: (context, index) {
-                          final chat = chats[index];
-                          return _ChatItem(
-                            sellerId: chat['sellerId'] as String,
-                            name: chat['name'] as String,
-                            lastMessage: chat['lastMessage'] as String,
-                            unreadCount: chat['unreadCount'] as int,
-                            time: chat['time'] as String,
-                            role: chat['role'] as String,
-                          );
-                        },
-                      ),
-                  ),
-          ),
-        ],
-      ),
+                      padding: EdgeInsets.all(AppDimens.lg.r),
+                      itemCount: chats.length,
+                      separatorBuilder: (_, __) => AppDimens.md.height,
+                      itemBuilder: (context, index) {
+                        return _ChatItem(chat: chats[index]);
+                      },
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
+  }
+
+  String _getPeerName(PrivateChatModel chat) {
+    final market = chat.market;
+    if (market is Map) return market['name'] as String? ?? 'Market';
+    return 'Chat';
   }
 }
 
 class _ChatItem extends StatelessWidget {
-  final String sellerId;
-  final String name;
-  final String lastMessage;
-  final int unreadCount;
-  final String time;
-  final String role;
+  final PrivateChatModel chat;
 
-  const _ChatItem({
-    required this.sellerId,
-    required this.name,
-    required this.lastMessage,
-    required this.unreadCount,
-    required this.time,
-    required this.role,
-  });
+  const _ChatItem({required this.chat});
+
+  String get _peerName {
+    final market = chat.market;
+    if (market is Map) return market['name'] as String? ?? 'Market';
+    return 'Market';
+  }
 
   @override
   Widget build(BuildContext context) {
+    final lastMsg = chat.lastMessage;
+    final timeStr = lastMsg != null
+        ? DateFormat('HH:mm').format(lastMsg.createdAt.toLocal())
+        : '';
+
     return InkWell(
-      onTap: () => context.push(
-        Routes.getSellerChat(sellerId),
-        extra: {'name': name, 'role': role},
-      ),
+      onTap: () {
+        context.read<PrivateChatListBloc>().add(PrivateChatListMarkRead(chat.id));
+        context.push(
+          Routes.getPrivateChat(chat.id),
+          extra: {'name': _peerName},
+        );
+      },
       borderRadius: BorderRadius.circular(AppDimens.cardRadius.r),
       child: Container(
         padding: EdgeInsets.all(AppDimens.md.r),
@@ -206,7 +193,7 @@ class _ChatItem extends StatelessWidget {
                 gradient: LinearGradient(
                   colors: [
                     Theme.of(context).primaryColor,
-                    Theme.of(context).primaryColor.withOpacity(0.7),
+                    Theme.of(context).primaryColor.withValues(alpha: 0.7),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -214,10 +201,8 @@ class _ChatItem extends StatelessWidget {
               ),
               alignment: Alignment.center,
               child: Text(
-                name.isNotEmpty ? name[0].toUpperCase() : '?',
-                style: AppStyles.h4Bold.copyWith(
-                  color: Colors.white,
-                ),
+                _peerName.isNotEmpty ? _peerName[0].toUpperCase() : '?',
+                style: AppStyles.h4Bold.copyWith(color: Colors.white),
               ),
             ),
             AppDimens.md.width,
@@ -228,48 +213,18 @@ class _ChatItem extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: AppStyles.bodyMedium.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: Theme.of(context).textTheme.titleMedium?.color,
-                                ),
-                              ),
-                            ),
-                            AppDimens.xs.width,
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 6.w,
-                                vertical: 2.h,
-                              ),
-                              decoration: BoxDecoration(
-                                color: role == 'Market'
-                                    ? Theme.of(context).primaryColor.withOpacity(0.1)
-                                    : Theme.of(context).dividerColor.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(4.r),
-                              ),
-                              child: Text(
-                                role,
-                                style: AppStyles.bodySmall.copyWith(
-                                  fontSize: 10.sp,
-                                  color: role == 'Market'
-                                      ? Theme.of(context).primaryColor
-                                      : Theme.of(context).textTheme.bodySmall?.color,
-                                  fontWeight: FontWeight.w500,
-                                  // role format
-                                ),
-                              ),
-                            ),
-                          ],
+                        child: Text(
+                          _peerName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppStyles.bodyMedium.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: Theme.of(context).textTheme.titleMedium?.color,
+                          ),
                         ),
                       ),
                       Text(
-                        time,
+                        timeStr,
                         style: AppStyles.bodySmall.copyWith(
                           fontSize: 11.sp,
                           color: Theme.of(context).textTheme.bodySmall?.color,
@@ -282,7 +237,7 @@ class _ChatItem extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          lastMessage,
+                          lastMsg?.text ?? '',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppStyles.bodySmall.copyWith(
@@ -290,27 +245,22 @@ class _ChatItem extends StatelessWidget {
                           ),
                         ),
                       ),
-                      if (unreadCount > 0) ...[
-                        AppDimens.sm.width,
+                      if (chat.unreadCount > 0)
                         Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 8.w,
-                            vertical: 2.h,
-                          ),
+                          padding: EdgeInsets.all(6.r),
                           decoration: BoxDecoration(
                             color: Theme.of(context).primaryColor,
-                            borderRadius: BorderRadius.circular(10.r),
+                            shape: BoxShape.circle,
                           ),
                           child: Text(
-                            unreadCount.toString(),
-                            style: AppStyles.bodySmall.copyWith(
+                            chat.unreadCount.toString(),
+                            style: TextStyle(
                               color: Colors.white,
-                              fontSize: 11.sp,
-                              fontWeight: FontWeight.w600,
+                              fontSize: 10.sp,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
-                      ],
                     ],
                   ),
                 ],

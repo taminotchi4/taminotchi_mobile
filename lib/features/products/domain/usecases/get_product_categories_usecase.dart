@@ -7,6 +7,6 @@ class GetProductCategoriesUseCase {
 
   const GetProductCategoriesUseCase(this.repository);
 
-  Future<Result<List<ProductCategoryEntity>>> call() =>
-      repository.getCategories();
+  Future<Result<List<ProductCategoryEntity>>> call({bool forceRefresh = false}) =>
+      repository.getCategories(forceRefresh: forceRefresh);
 }

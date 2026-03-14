@@ -13,11 +13,17 @@ class CreatePostUseCase {
     required String content,
     required List<PostImageEntity> images,
     required PostCategoryEntity category,
+    String? price,
+    String? adressname,
+    String? supCategoryId,
   }) {
     return repository.createPost(
       content: content,
       images: images,
       category: category,
+      price: price,
+      adressname: adressname,
+      supCategoryId: supCategoryId,
     );
   }
 }

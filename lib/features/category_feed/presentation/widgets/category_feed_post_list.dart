@@ -22,7 +22,7 @@ class CategoryFeedPostList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final categoryPosts = state.posts
-        .where((post) => post.category.id == categoryId || post.category.parentId == categoryId)
+        .where((post) => post.category.id == categoryId || post.category.parentId == categoryId || post.groups.any((group) => group.id == categoryId))
         .toList();
 
     if (categoryPosts.isEmpty) {
@@ -30,7 +30,7 @@ class CategoryFeedPostList extends StatelessWidget {
         child: Padding(
           padding: EdgeInsets.all(AppDimens.lg.r),
           child: Text(
-            'Bu kategoriyada hozircha e\'lonlar yo\'q',
+            context.l10n.noPostsInCategory,
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/dimens.dart';
 import '../../../../core/utils/colors.dart';
+import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/styles.dart';
 import '../managers/auth_bloc.dart';
 import '../managers/auth_state.dart';
@@ -35,12 +36,12 @@ class _LoginStepState extends State<LoginStep> {
             children: [
               SizedBox(height: 40.h),
               Text(
-                "Tizimga kirish",
+                context.l10n.login,
                 style: AppStyles.h1Bold.copyWith(color: Theme.of(context).primaryColor),
               ),
               SizedBox(height: 8.h),
               Text(
-                "Parolingizni kiriting",
+                context.l10n.enterPassword,
                 style: AppStyles.bodyRegular.copyWith(
                   color: Theme.of(context).textTheme.bodySmall?.color,
                 ),
@@ -55,7 +56,7 @@ class _LoginStepState extends State<LoginStep> {
                   color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6),
                 ),
                 decoration: InputDecoration(
-                  labelText: "Telefon raqam",
+                  labelText: context.l10n.phoneNumberLabel,
                   prefixIcon: Icon(Icons.phone_android_rounded, color: Colors.grey),
                   contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
                   border: OutlineInputBorder(
@@ -76,7 +77,7 @@ class _LoginStepState extends State<LoginStep> {
                   context.read<AuthBloc>().add(const AuthStepChanged(AuthStep.phoneInput));
                 },
                 child: Text(
-                  "O'zgartirish",
+                  context.l10n.change,
                   style: AppStyles.bodySmall.copyWith(
                     color: AppColors.mainBlue,
                     decoration: TextDecoration.underline,
@@ -88,10 +89,12 @@ class _LoginStepState extends State<LoginStep> {
               TextField(
                 controller: _passwordController,
                 obscureText: _obscurePassword,
-                style: AppStyles.h4Bold,
+                style: AppStyles.h4Bold.copyWith(
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                ),
                 decoration: InputDecoration(
-                  labelText: "Parol",
-                  hintText: "Parolingizni kiriting",
+                  labelText: context.l10n.password,
+                  hintText: context.l10n.enterPassword,
                   prefixIcon: Icon(Icons.lock_outline, color: AppColors.mainBlue),
                   suffixIcon: IconButton(
                     icon: Icon(
@@ -145,7 +148,7 @@ class _LoginStepState extends State<LoginStep> {
                   ),
                   child: state.status == AuthStatus.loading
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : Text("Kirish",
+                      : Text(context.l10n.login,
                             style: AppStyles.h4Bold.copyWith(color: Colors.white)),
                 ),
               ),

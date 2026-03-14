@@ -65,12 +65,21 @@ class UserData {
 
 class CompleteRegisterResponse {
   final UserData user;
+  final String? accessToken;
 
-  const CompleteRegisterResponse({required this.user});
+  const CompleteRegisterResponse({required this.user, this.accessToken});
 
   factory CompleteRegisterResponse.fromJson(Map<String, dynamic> json) {
+    print('🔍 Complete Register Response JSON: $json');
+    final data = json['data'];
+    print('🔍 Register data field: $data');
+    print('🔍 Register data type: ${data.runtimeType}');
+
+    final Map<String, dynamic> userData = data is Map ? Map<String, dynamic>.from(data) : {};
+
     return CompleteRegisterResponse(
-      user: UserData.fromJson(json['data']),
+      user: UserData.fromJson(userData),
+      accessToken: userData['accessToken']?.toString(),
     );
   }
 }

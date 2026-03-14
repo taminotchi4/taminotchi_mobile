@@ -64,13 +64,17 @@ class LoginResponse {
   });
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
+    print('🔍 Login Response JSON: $json');
     final data = json['data'];
+    print('🔍 Login data field: $data');
+    print('🔍 Login data type: ${data.runtimeType}');
+    
     return LoginResponse(
-      accessToken: data['accessToken'] as String,
-      role: data['role'] as String,
-      user: LoginUserData.fromJson(data['user']),
-      username: data['username'] as String,
-      phoneNumber: data['phoneNumber'] as String,
+      accessToken: data['accessToken']?.toString() ?? '',
+      role: data['role']?.toString() ?? '',
+      user: LoginUserData.fromJson(data['user'] as Map<String, dynamic>),
+      username: data['username']?.toString() ?? '',
+      phoneNumber: data['phoneNumber']?.toString() ?? '',
     );
   }
 }

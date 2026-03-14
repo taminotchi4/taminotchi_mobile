@@ -29,18 +29,18 @@ class CommentTile extends StatefulWidget {
 class _CommentTileState extends State<CommentTile> {
   bool _isRepliesExpanded = false;
 
-  String _formatCommentTime(DateTime dateTime) {
+  String _formatCommentTime(DateTime dateTime, BuildContext context) {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
 
     if (difference.inDays > 0) {
-      return '${difference.inDays}d';
+      return context.l10n.daysAgo(difference.inDays);
     } else if (difference.inHours > 0) {
-      return '${difference.inHours}h';
+      return context.l10n.hoursAgo(difference.inHours);
     } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes}m';
+      return context.l10n.minutesAgo(difference.inMinutes);
     } else {
-      return 'Just now';
+      return context.l10n.justNow;
     }
   }
 
@@ -137,7 +137,7 @@ class _CommentTileState extends State<CommentTile> {
                 ),
               ),
               Text(
-                _formatCommentTime(widget.comment.createdAt),
+                _formatCommentTime(widget.comment.createdAt, context),
                 style: AppStyles.bodySmall.copyWith(
                   fontSize: 10.sp,
                   color: Theme.of(context).textTheme.bodySmall?.color,
@@ -174,7 +174,7 @@ class _CommentTileState extends State<CommentTile> {
                           ),
                           8.horizontalSpace,
                           Text(
-                            'Edit',
+                            context.l10n.edit,
                             style: AppStyles.bodySmall.copyWith(
                               color: Theme.of(context).primaryColor,
                             ),
@@ -193,7 +193,7 @@ class _CommentTileState extends State<CommentTile> {
                           ),
                           8.horizontalSpace,
                           Text(
-                            'Delete',
+                            context.l10n.delete,
                             style: AppStyles.bodySmall.copyWith(
                               color: Colors.red,
                             ),
@@ -236,7 +236,7 @@ class _CommentTileState extends State<CommentTile> {
                       ),
                       SizedBox(width: 4.w),
                       Text(
-                        'Javob berish',
+                        context.l10n.reply,
                         style: AppStyles.bodySmall.copyWith(
                           color: Theme.of(context).primaryColor,
                           fontWeight: FontWeight.w600,
@@ -270,8 +270,8 @@ class _CommentTileState extends State<CommentTile> {
                     SizedBox(width: 12.w),
                     Text(
                       _isRepliesExpanded 
-                        ? 'Javoblarni yashirish' 
-                        : 'Javoblarni ko\'rish (${widget.comment.replies!.length})',
+                        ? context.l10n.hideReplies 
+                        : context.l10n.viewReplies(widget.comment.replies!.length),
                       style: AppStyles.bodySmall.copyWith(
                         color: Theme.of(context).hintColor,
                         fontWeight: FontWeight.w600,
@@ -361,7 +361,7 @@ class _CommentTileState extends State<CommentTile> {
                                   ),
                                 const Spacer(),
                                 Text(
-                                  _formatCommentTime(reply.createdAt),
+                                  _formatCommentTime(reply.createdAt, context),
                                   style: AppStyles.bodySmall.copyWith(
                                     fontSize: 10.sp,
                                     color: Theme.of(context)

@@ -10,7 +10,7 @@ class ProductsRepositoryImpl implements ProductsRepository {
   const ProductsRepositoryImpl(this.localDataSource);
 
   @override
-  Future<Result<List<ProductEntity>>> getProducts() async {
+  Future<Result<List<ProductEntity>>> getProducts({bool forceRefresh = false}) async {
     try {
       final products =
           localDataSource.getProducts().map((e) => e.toEntity()).toList();
@@ -31,7 +31,7 @@ class ProductsRepositoryImpl implements ProductsRepository {
   }
 
   @override
-  Future<Result<List<ProductCategoryEntity>>> getCategories() async {
+  Future<Result<List<ProductCategoryEntity>>> getCategories({bool forceRefresh = false}) async {
     try {
       final categories =
           localDataSource.getCategories().map((e) => e.toEntity()).toList();

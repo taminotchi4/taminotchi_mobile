@@ -33,7 +33,7 @@ class ProductAttributes extends StatelessWidget {
         if (colors.isNotEmpty) ...[
           AppDimens.lg.height,
           Text(
-            'Ranglar',
+            context.l10n.colors,
             style: AppStyles.bodyMedium.copyWith(
               fontWeight: FontWeight.bold,
               color: Theme.of(context).textTheme.bodyMedium?.color,
@@ -78,7 +78,7 @@ class ProductAttributes extends StatelessWidget {
         if (sizes.isNotEmpty) ...[
           AppDimens.lg.height,
           Text(
-            'O\'lchamlar',
+            context.l10n.sizes,
             style: AppStyles.bodyMedium.copyWith(
               fontWeight: FontWeight.bold,
               color: Theme.of(context).textTheme.bodyMedium?.color,

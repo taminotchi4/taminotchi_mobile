@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/dimens.dart';
 import '../../../../core/routing/routes.dart';
 import '../../../../core/utils/colors.dart';
+import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/styles.dart';
 import '../../../products/presentation/managers/products_bloc.dart';
 import '../../../products/presentation/managers/products_event.dart';
@@ -33,7 +35,7 @@ class HomePage extends StatelessWidget {
             SnackBar(
               behavior: SnackBarBehavior.floating,
               backgroundColor: AppColors.mainBlue,
-              content: const Text('Post yaratildi'),
+              content: Text(context.l10n.postCreated),
             ),
           );
           context.read<HomeBloc>().add(const HomeClearActionStatus());
@@ -54,20 +56,20 @@ class HomePage extends StatelessWidget {
           showDialog(
             context: context,
             builder: (context) => AlertDialog(
-              title: const Text('Hisobga kirish'),
-              content: const Text(
-                  'E\'lon joylash uchun Login qilishingiz kerak'),
+              title: Text(context.l10n.loginRequiredTitle),
+              content: Text(
+                  context.l10n.loginRequiredContent),
               actions: [
                 TextButton(
                   onPressed: () => context.pop(),
-                  child: const Text('Bekor qilish'),
+                  child: Text(context.l10n.cancel),
                 ),
                 TextButton(
                   onPressed: () {
                     context.pop();
-                    context.go(Routes.login);
+                    context.go(Routes.auth);
                   },
-                  child: const Text('Kirish'),
+                  child: Text(context.l10n.login),
                 ),
               ],
             ),
@@ -77,7 +79,18 @@ class HomePage extends StatelessWidget {
       },
       child: Scaffold(
         body: CustomScrollView(
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
           slivers: [
+            CupertinoSliverRefreshControl(
+              onRefresh: () async {
+                context.read<HomeBloc>().add(const HomeRefresh());
+                context.read<ProductsBloc>().add(const ProductsRefresh());
+                // Small delay to make it feel better and allow blocs to start loading
+                await Future.delayed(const Duration(milliseconds: 800));
+              },
+            ),
             HomeSliverAppBar(
               onRightTap: () => context.push(Routes.notifications),
             ),
@@ -96,7 +109,7 @@ class HomePage extends StatelessWidget {
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: AppDimens.lg.w),
                 child: Text(
-                  "E'lonlar",
+                  context.l10n.posts,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppStyles.h5Bold.copyWith(
@@ -118,6 +131,7 @@ class HomePage extends StatelessWidget {
                     return UserPostsCarousel(
                       posts: state.carouselPosts,
                       commentCounts: state.commentCounts,
+                      isLoading: state.isLoadingPosts && state.carouselPosts.isEmpty,
                     );
                   },
                 ),
@@ -131,7 +145,10 @@ class HomePage extends StatelessWidget {
                 ),
                 child: BlocBuilder<HomeBloc, HomeState>(
                   builder: (context, state) {
-                    return CategorySection(categories: state.categories);
+                    return CategorySection(
+                      categories: state.categories,
+                      isLoading: state.isLoadingCategories && state.categories.isEmpty,
+                    );
                   },
                 ),
               ),
@@ -160,7 +177,7 @@ class HomePage extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        'Mahsulotlar',
+                        context.l10n.products,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppStyles.h5Bold.copyWith(
@@ -171,7 +188,7 @@ class HomePage extends StatelessWidget {
                     InkWell(
                       onTap: () => context.push(Routes.allProducts),
                       child: Text(
-                        'Barchasi',
+                        context.l10n.all,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppStyles.bodySmall.copyWith(
@@ -195,7 +212,7 @@ class HomePage extends StatelessWidget {
                 child: BlocBuilder<ProductsBloc, ProductsState>(
                   builder: (context, state) {
                     if (state.isLoading && state.visibleProducts.isEmpty) {
-                      return const Center(child: CircularProgressIndicator());
+                      return ProductsGrid.skeleton(context);
                     }
                     return ProductsGrid(
                       products: state.visibleProducts,

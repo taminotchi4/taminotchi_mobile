@@ -19,5 +19,178 @@
   "noPostsYet": "У вас пока нет объявлений",
   "comments": "Комментарии",
   "privateReplies": "Личные ответы",
-  "all": "Все"
+  "all": "Все",
+  "nightMode": "Ночной режим",
+  "language": "Язык",
+  "notifications": "Уведомления",
+  "privacy": "Конфиденциальность",
+  "other": "Прочее",
+  "myOrders": "Мои заказы",
+  "help": "Помощь",
+  "faq": "Часто задаваемые вопросы (FAQs)",
+  "logout": "Выход",
+  "logoutConfirm": "Вы действительно хотите выйти?",
+  "noProfileData": "Данные профиля не найдены",
+  "faqQ1": "Как разместить объявление?",
+  "faqA1": "Нажмите кнопку '+ Разместить' на главной странице, введите необходимые данные и отправьте.",
+  "faqQ2": "Как вернуть купленный товар?",
+  "faqA2": "Условия возврата товара согласовываются с продавцом. Для связи con админом используйте кнопку 'Помощь'.",
+  "faqQ3": "Как изменить данные профиля?",
+  "faqA3": "Нажмите на значок редактирования на странице профиля.",
+  "posts": "Объявления",
+  "products": "Продукты",
+  "postCreated": "Пост создан",
+  "loginRequiredTitle": "Вход в аккаунт",
+  "loginRequiredContent": "Чтобы разместить объявление, необходимо войти в аккаунт",
+  "login": "Вход",
+  "productsNotFound": "Продукты не найдены",
+  "loadMore": "Загрузить больше",
+  "product": "Продукт",
+  "selectSizeError": "Выберите подходящий размер",
+  "colors": "Цвета",
+  "sizes": "Размеры",
+  "description": "Описание",
+  "aboutProduct": "О продукте",
+  "justNow": "Только что",
+  "daysAgo": "{days} дн. назад",
+  "@daysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{hours} ч. назад",
+  "@hoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "minutesAgo": "{minutes} мин. назад",
+  "@minutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "edit": "Редактировать",
+  "delete": "Удалить",
+  "noCommentsYet": "Комментариев пока нет",
+  "showLess": "Свернуть",
+  "showMore": "...ещё",
+  "reply": "Ответить",
+  "replyingTo": "Вы отвечаете {name}",
+  "@replyingTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "writeReply": "Напишите ответ...",
+  "writeComment": "Напишите комментарий...",
+  "editComment": "Редактировать комментарий...",
+  "ratingHint": "Проведите слева направо, чтобы заполнить звезды.",
+  "ratingError": "Выберите рейтинг не менее 1 звезды",
+  "addToCart": "Добавить в корзину",
+  "noOrdersYet": "Заказов пока нет",
+  "search": "Поиск...",
+  "tapToPost": "Нажмите на кнопку, чтобы разместить объявление",
+  "addPost": "+ Разместить",
+  "postCreationHint": "Вы не ищете товар! Напишите, что вам нужно, и продавцы сами вас найдут",
+  "uploadImageHint": "Загрузите примерное фото товара (необязательно)",
+  "selectCategory": "Выберите категорию",
+  "gallery": "Галерея",
+  "camera": "Камера",
+  "postDescriptionHint": "Введите подробности искомого товара...",
+  "userOnlyPost": "Создание постов доступно только пользователям",
+  "imagesMax8": "Картинки (максимум 8 шт)",
+  "welcomeTitle": "Добро пожаловать!",
+  "welcomeSubtitle": "Введите номер телефона для входа в систему",
+  "phoneNumberLabel": "Номер телефона",
+  "enterPassword": "Введите пароль",
+  "change": "Изменить",
+  "password": "Пароль",
+  "verify": "Подтверждение",
+  "enterOtp": "Введите 6-значный код, отправленный на номер {phone}",
+  "@enterOtp": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "resendCode": "Отправить код повторно",
+  "resendCodeIn": "Повторная отправка через {seconds} сек",
+  "register": "Регистрация",
+  "fillProfileInfo": "Заполните данные вашего профиля",
+  "fullName": "Полное имя",
+  "fullNameExample": "Иванов Иван",
+  "username": "Имя пользователя",
+  "usernameExample": "ivan",
+  "createPasswordHint": "Придумайте пароль...",
+  "uzbek": "Узбекский",
+  "russian": "Русский",
+  "priceLabel": "Цена:",
+  "addressLabel": "Адрес:",
+  "statusAgreed": "Договорено",
+  "statusActive": "Активно",
+  "leaveComment": "Оставьте комментарий",
+  "izohlarCount": "{count} комментариев",
+  "@izohlarCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hideReplies": "Скрыть ответы",
+  "viewReplies": "Посмотреть ответы ({count})",
+  "@viewReplies": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "post": "Пост",
+  "postNotFound": "Пост не найден",
+  "editComingSoon": "Функция редактирования скоро появится",
+  "postActivated": "Объявление активировано",
+  "postArchivedAgreed": "Объявление помечено как договеренное",
+  "markAsAgreed": "Пометить как догoворено",
+  "reactivate": "Активировать снова",
+  "deleteConfirmTitle": "Удалить",
+  "deleteConfirmContent": "Вы хотите удалить пост?",
+  "noComments": "Комментариев пока нет",
+  "noReplies": "Ответов пока нет",
+  "writeReplyTitle": "Написать ответ",
+  "writeReplyHint": "Напишите ваш ответ...",
+  "replySent": "Ответ отправлен",
+  "category": "Категория",
+  "noPostsInCategory": "В этой категории пока нет объявлений",
+  "aboutUs": "О нас",
+  "contactSupport": "Служба поддержки",
+  "privacyPolicy": "Политика конфиденциальности",
+  "termsOfUse": "Условия использования",
+  "following": "Вы подписаны",
+  "follow": "Подписаться",
+  "followers": "Подписчики",
+  "filter": "Фильтр",
+  "mostSold": "Самые продаваемые",
+  "highestRating": "Высокий рейтинг",
+  "sortDefault": "По умолчанию",
+  "allCategories": "Все",
+  "seller": "Продавец",
+  "sellerNotFound": "Продавец не найден",
+  "chats": "Чаты",
+  "noChats": "Чатов нет",
+  "resultNotFound": "Результатов не найдено",
+  "clickPostToDelete": "Нажмите на объявление, чтобы удалить",
+  "market": "Маркет",
+  "user": "Пользователь",
+  "notificationsNone": "Уведомлений нет"
 }

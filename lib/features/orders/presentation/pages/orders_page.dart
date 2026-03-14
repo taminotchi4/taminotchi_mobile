@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/styles.dart';
 import '../../../../global/widgets/common_app_bar.dart';
 
@@ -8,10 +9,10 @@ class OrdersPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CommonAppBar(title: 'Buyurtmalar'),
+      appBar: CommonAppBar(title: context.l10n.myOrders),
       body: Center(
         child: Text(
-          'Buyurtmalar hozircha mavjud emas',
+          context.l10n.noOrdersYet,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: AppStyles.bodySmall.copyWith(

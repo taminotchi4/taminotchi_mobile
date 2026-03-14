@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/dimens.dart';
 import '../../../../core/utils/colors.dart';
+import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/styles.dart';
 import '../managers/auth_bloc.dart';
 import '../managers/auth_state.dart';
@@ -84,12 +85,12 @@ class _OtpVerificationStepState extends State<OtpVerificationStep> {
                     ),
                     SizedBox(height: 20.h),
                     Text(
-                      "Tasdiqlash",
+                      context.l10n.verify,
                       style: AppStyles.h1Bold.copyWith(color: Theme.of(context).primaryColor),
                     ),
                     SizedBox(height: 8.h),
                     Text(
-                      "${state.phoneNumber} raqamiga yuborilgan 6 xonali kodni kiriting",
+                      context.l10n.enterOtp(state.phoneNumber),
                       style: AppStyles.bodyRegular.copyWith(
                         color: Theme.of(context).textTheme.bodySmall?.color,
                       ),
@@ -148,7 +149,7 @@ class _OtpVerificationStepState extends State<OtpVerificationStep> {
                                 ? () => context.read<AuthBloc>().add(AuthResendOtpRequested())
                                 : null,
                             child: Text(
-                              "Kodni qayta yuborish",
+                              context.l10n.resendCode,
                               style: AppStyles.bodyMedium.copyWith(
                                 color: state.otpTimer == 0 ? AppColors.mainBlue : Colors.grey,
                                 fontWeight: FontWeight.w600,
@@ -176,7 +177,7 @@ class _OtpVerificationStepState extends State<OtpVerificationStep> {
                         ),
                         child: state.status == AuthStatus.loading
                             ? const CircularProgressIndicator(color: Colors.white)
-                            : Text("Tasdiqlash", 
+                            : Text(context.l10n.verify, 
                                   style: AppStyles.h4Bold.copyWith(color: Colors.white)),
                       ),
                     ),

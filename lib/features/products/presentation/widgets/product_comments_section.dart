@@ -33,18 +33,18 @@ class _ProductCommentsSectionState extends State<ProductCommentsSection> {
   double _commentRating = 0.0;
   String? _ratingError;
 
-  String _formatCommentTime(DateTime dateTime) {
+  String _formatCommentTime(DateTime dateTime, BuildContext context) {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
 
     if (difference.inDays > 0) {
-      return '${difference.inDays}d ago';
+      return context.l10n.daysAgo(difference.inDays);
     } else if (difference.inHours > 0) {
-      return '${difference.inHours}h ago';
+      return context.l10n.hoursAgo(difference.inHours);
     } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes}m ago';
+      return context.l10n.minutesAgo(difference.inMinutes);
     } else {
-      return 'Just now';
+      return context.l10n.justNow;
     }
   }
 
@@ -64,7 +64,7 @@ class _ProductCommentsSectionState extends State<ProductCommentsSection> {
     return Row(
       children: [
         Text(
-          'Comments',
+          context.l10n.comments,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: AppStyles.h5Bold.copyWith(
@@ -100,7 +100,7 @@ class _ProductCommentsSectionState extends State<ProductCommentsSection> {
         }
         if (state.comments.isEmpty) {
           return Text(
-            'Izohlar yoq',
+            context.l10n.noCommentsYet,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: AppStyles.bodySmall.copyWith(
@@ -170,7 +170,7 @@ class _ProductCommentsSectionState extends State<ProductCommentsSection> {
                         ),
                       ),
                       Text(
-                        _formatCommentTime(comment.createdAt),
+                        _formatCommentTime(comment.createdAt, context),
                         style: AppStyles.bodySmall.copyWith(
                           fontSize: 10.sp,
                           color: Theme.of(context).textTheme.bodySmall?.color,
@@ -209,7 +209,7 @@ class _ProductCommentsSectionState extends State<ProductCommentsSection> {
                                   ),
                                   8.horizontalSpace,
                                   Text(
-                                    'Edit',
+                                    context.l10n.edit,
                                     style: AppStyles.bodySmall.copyWith(
                                       color: Theme.of(context).primaryColor,
                                     ),
@@ -228,7 +228,7 @@ class _ProductCommentsSectionState extends State<ProductCommentsSection> {
                                   ),
                                   8.horizontalSpace,
                                   Text(
-                                    'Delete',
+                                    context.l10n.delete,
                                     style: AppStyles.bodySmall.copyWith(
                                       color: Colors.red,
                                     ),
@@ -311,7 +311,7 @@ class _ProductCommentsSectionState extends State<ProductCommentsSection> {
               });
             },
             child: Text(
-              isExpanded ? 'Show less' : '...more',
+              isExpanded ? context.l10n.showLess : context.l10n.showMore,
               style: AppStyles.bodySmall.copyWith(
                 color: Theme.of(context).primaryColor,
                 fontWeight: FontWeight.w500,
@@ -334,7 +334,7 @@ class _ProductCommentsSectionState extends State<ProductCommentsSection> {
               ),
               4.horizontalSpace,
               Text(
-                'Reply',
+                context.l10n.reply,
                 style: AppStyles.bodySmall.copyWith(
                   color: Theme.of(context).textTheme.bodySmall?.color,
                   fontWeight: FontWeight.w500,
@@ -352,7 +352,7 @@ class _ProductCommentsSectionState extends State<ProductCommentsSection> {
     ProductCommentEntity? replyTo,
   }) {
     setState(() {
-      _commentRating = 0.0;
+      _commentRating = 1.0;
       _ratingError = null;
     });
     final controller = TextEditingController();
@@ -406,7 +406,7 @@ class _ProductCommentsSectionState extends State<ProductCommentsSection> {
               if (replyTo == null) ...[
                 AppDimens.xs.height,
                 Text(
-                  "Yulduzchalarni to'ldirish uchun chapdan o'ngga suring.",
+                  context.l10n.ratingHint,
                   style: AppStyles.bodySmall.copyWith(
                     color: Theme.of(context).textTheme.bodySmall?.color,
                   ),
@@ -432,7 +432,7 @@ class _ProductCommentsSectionState extends State<ProductCommentsSection> {
                       4.horizontalSpace,
                       Expanded(
                         child: Text(
-                          'Replying to ${replyTo.userName}',
+                          context.l10n.replyingTo(replyTo.userName),
                           style: AppStyles.bodySmall.copyWith(
                             color: Theme.of(context).primaryColor,
                             fontWeight: FontWeight.w500,
@@ -455,7 +455,7 @@ class _ProductCommentsSectionState extends State<ProductCommentsSection> {
                         color: Theme.of(context).textTheme.bodyMedium?.color,
                       ),
                       decoration: InputDecoration(
-                        hintText: replyTo != null ? 'Write a reply...' : 'Izoh yozing...',
+                        hintText: replyTo != null ? context.l10n.writeReply : context.l10n.writeComment,
                         hintStyle: AppStyles.bodyRegular.copyWith(
                           color: Theme.of(context).hintColor,
                         ),
@@ -482,7 +482,7 @@ class _ProductCommentsSectionState extends State<ProductCommentsSection> {
 
                       if (replyTo == null && _commentRating < 1.0) {
                         setState(() {
-                          _ratingError = "Kamida 1 yulduzgacha ratingni tanlang";
+                          _ratingError = context.l10n.ratingError;
                         });
                         return;
                       }
@@ -510,7 +510,7 @@ class _ProductCommentsSectionState extends State<ProductCommentsSection> {
                       // Yes, it works.
                       
                       setState(() {
-                        _commentRating = 0.0;
+                        _commentRating = 1.0;
                         _ratingError = null;
                       });
                       Navigator.of(context).pop();
@@ -563,15 +563,10 @@ class _ProductCommentsSectionState extends State<ProductCommentsSection> {
                       final localPosition = details.localPosition;
                       final width = box.size.width;
 
-                      double newRating = (localPosition.dx / width * 5.0).clamp(0.0, 5.0);
+                      double newRating = (localPosition.dx / width * 5.0).clamp(1.0, 5.0);
 
                       // Round to nearest 0.1
                       newRating = (newRating * 10).round() / 10;
-
-                      // Auto jump to 1.0 if dragged from 0.0
-                      if (_commentRating == 0.0 && newRating > 0.0 && newRating < 1.0) {
-                        newRating = 1.0;
-                      }
 
                       setSheetState(() {
                         _commentRating = newRating;
@@ -586,12 +581,8 @@ class _ProductCommentsSectionState extends State<ProductCommentsSection> {
                       final localPosition = details.localPosition;
                       final width = box.size.width;
 
-                      double newRating = (localPosition.dx / width * 5.0).clamp(0.0, 5.0);
+                      double newRating = (localPosition.dx / width * 5.0).clamp(1.0, 5.0);
                       newRating = (newRating * 10).round() / 10;
-
-                      if (_commentRating == 0.0 && newRating > 0.0 && newRating < 1.0) {
-                        newRating = 1.0;
-                      }
 
                       setSheetState(() {
                         _commentRating = newRating;
@@ -672,7 +663,7 @@ class _ProductCommentsSectionState extends State<ProductCommentsSection> {
                     color: Theme.of(context).textTheme.bodyMedium?.color,
                   ),
                   decoration: InputDecoration(
-                    hintText: 'Izohni tahrirlash...',
+                    hintText: context.l10n.editComment,
                     filled: true,
                     fillColor: Theme.of(context).scaffoldBackgroundColor,
                     border: OutlineInputBorder(

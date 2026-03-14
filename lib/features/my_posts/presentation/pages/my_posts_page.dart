@@ -21,7 +21,7 @@ class MyPostsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CommonAppBar(title: 'Mening postlarim'),
+      appBar: CommonAppBar(title: context.l10n.myPosts),
       body: BlocBuilder<HomeBloc, HomeState>(
         builder: (context, state) {
           if (state.myPosts.isEmpty) {
@@ -32,7 +32,7 @@ class MyPostsPage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'E\'lonlar yo\'q',
+                      context.l10n.noPostsYet,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppStyles.bodyRegular.copyWith(
@@ -78,14 +78,16 @@ class MyPostsPage extends StatelessWidget {
                         onSelected: (value) {
                           if (value == 'edit') {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('Edit functionality coming soon')),
+                              SnackBar(
+                                content: Text(context.l10n.editComingSoon),
+                              ),
                             );
                           } else if (value == 'delete') {
                             // TODO: Implement delete in MyPostsPage if needed or redirect to detail
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('O\'chirish uchun e\'lon ustiga bosing')),
+                              SnackBar(
+                                content: Text(context.l10n.clickPostToDelete),
+                              ),
                             );
                           } else if (value == 'toggle_status') {
                             final newStatus = post.status == PostStatus.active
@@ -101,8 +103,8 @@ class MyPostsPage extends StatelessWidget {
                               SnackBar(
                                 content: Text(
                                   newStatus == PostStatus.active
-                                      ? 'E\'lon faollashtirildi'
-                                      : 'E\'lon kelishilgan deb belgilandi',
+                                      ? context.l10n.postActivated
+                                      : context.l10n.postArchivedAgreed,
                                 ),
                               ),
                             );
@@ -124,8 +126,8 @@ class MyPostsPage extends StatelessWidget {
                                 SizedBox(width: 8.w),
                                 Text(
                                   post.status == PostStatus.active
-                                      ? 'Kelishilgan'
-                                      : 'Faollashtirish',
+                                      ? context.l10n.statusAgreed
+                                      : context.l10n.reactivate,
                                 ),
                               ],
                             ),
@@ -137,7 +139,7 @@ class MyPostsPage extends StatelessWidget {
                                 Icon(Icons.edit_outlined,
                                     color: Theme.of(context).primaryColor),
                                 SizedBox(width: 8.w),
-                                const Text('Tahrirlash'),
+                                Text(context.l10n.edit),
                               ],
                             ),
                           ),
@@ -148,7 +150,7 @@ class MyPostsPage extends StatelessWidget {
                                 const Icon(Icons.delete_outline_rounded,
                                     color: Colors.red),
                                 SizedBox(width: 8.w),
-                                const Text('O\'chirish'),
+                                Text(context.l10n.delete),
                               ],
                             ),
                           ),

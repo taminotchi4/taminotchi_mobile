@@ -20,7 +20,7 @@ class ProductDescriptionSection extends StatelessWidget {
       children: [
         AppDimens.lg.height,
         Text(
-          'Tavsif',
+          context.l10n.description,
           style: AppStyles.bodyMedium.copyWith(
             fontWeight: FontWeight.bold,
             color: Theme.of(context).textTheme.bodyMedium?.color,
@@ -41,7 +41,7 @@ class ProductDescriptionSection extends StatelessWidget {
           InkWell(
             onTap: () => _showFullDescription(context),
             child: Text(
-              'Mahsulot haqida',
+              context.l10n.aboutProduct,
               style: AppStyles.bodySmall.copyWith(
                 color: Theme.of(context).primaryColor,
                 fontWeight: FontWeight.bold,
@@ -81,7 +81,7 @@ class ProductDescriptionSection extends StatelessWidget {
             Padding(
               padding: EdgeInsets.symmetric(horizontal: AppDimens.lg.r),
               child: Text(
-                'Mahsulot haqida',
+                context.l10n.aboutProduct,
                 style: AppStyles.h4Bold.copyWith(
                   color: Theme.of(context).textTheme.titleLarge?.color,
                 ),

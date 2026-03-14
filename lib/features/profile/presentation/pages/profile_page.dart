@@ -39,13 +39,13 @@ class _ProfilePageState extends State<ProfilePage> {
           borderRadius: BorderRadius.circular(AppDimens.cardRadius.r),
         ),
         title: Text(
-          'Chiqish',
+          context.l10n.logout,
           style: AppStyles.h4Bold.copyWith(
             color: Theme.of(context).textTheme.titleMedium?.color,
           ),
         ),
         content: Text(
-          'Haqiqatan ham chiqmoqchimisiz?',
+          context.l10n.logoutConfirm,
           style: AppStyles.bodyRegular.copyWith(
             color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
@@ -54,7 +54,7 @@ class _ProfilePageState extends State<ProfilePage> {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              'Bekor qilish',
+              context.l10n.cancel,
               style: AppStyles.bodyMedium.copyWith(
                 color: Theme.of(context).textTheme.bodyMedium?.color,
               ),
@@ -66,7 +66,7 @@ class _ProfilePageState extends State<ProfilePage> {
               context.go(Routes.auth);
             },
             child: Text(
-              'Chiqish',
+              context.l10n.logout,
               style: AppStyles.bodyMedium.copyWith(
                 color: Colors.red,
                 fontWeight: FontWeight.w600,
@@ -81,7 +81,7 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CommonAppBar(title: 'Profil'),
+      appBar: CommonAppBar(title: context.l10n.profile),
       body: BlocBuilder<ClientProfileBloc, ClientProfileState>(
         builder: (context, state) {
           if (state.isLoading && state.profile == null) {
@@ -90,7 +90,7 @@ class _ProfilePageState extends State<ProfilePage> {
           if (state.profile == null) {
             return Center(
               child: Text(
-                'Profil ma\'lumotlari topilmadi',
+                context.l10n.noProfileData,
                 style: AppStyles.bodySmall.copyWith(
                   color: Theme.of(context).textTheme.bodySmall?.color,
                 ),
@@ -103,7 +103,7 @@ class _ProfilePageState extends State<ProfilePage> {
               children: [
                 ProfileHeader(profile: state.profile!),
                 AppDimens.xl.height,
-                _buildSectionTitle('Sozlamalar'),
+                _buildSectionTitle(context.l10n.settings),
                 AppDimens.md.height,
                 _buildSettingsCard(
                   children: [
@@ -111,7 +111,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       builder: (context, themeMode) {
                         return ProfileMenuItem(
                           icon: Icons.brightness_6_outlined,
-                          title: 'Tungi rejim',
+                          title: context.l10n.nightMode,
                           trailing: Switch(
                             value: themeMode == ThemeMode.dark,
                             onChanged: (value) {
@@ -127,7 +127,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       builder: (context, locale) {
                         return ProfileMenuItem(
                           icon: Icons.language_outlined,
-                          title: 'Til',
+                          title: context.l10n.language,
                           trailing: DropdownButton<String>(
                             value: locale.languageCode,
                             underline: const SizedBox(),
@@ -135,18 +135,14 @@ class _ProfilePageState extends State<ProfilePage> {
                             style: AppStyles.bodyMedium.copyWith(
                               color: Theme.of(context).textTheme.bodyMedium?.color,
                             ),
-                            items: const [
+                            items: [
                               DropdownMenuItem(
                                 value: 'uz',
-                                child: Text('O\'zbekcha'),
+                                child: Text(context.l10n.uzbek),
                               ),
                               DropdownMenuItem(
                                 value: 'ru',
-                                child: Text('Русский'),
-                              ),
-                              DropdownMenuItem(
-                                value: 'en',
-                                child: Text('English'),
+                                child: Text(context.l10n.russian),
                               ),
                             ],
                             onChanged: (value) {
@@ -154,6 +150,15 @@ class _ProfilePageState extends State<ProfilePage> {
                                 context
                                     .read<LocalizationCubit>()
                                     .changeLocale(localeCode: value);
+                                
+                                final profileState = context.read<ClientProfileBloc>().state;
+                                if (profileState.profile != null) {
+                                  context.read<ClientProfileBloc>().add(
+                                    ClientProfileUpdated(
+                                      profileState.profile!.copyWith(language: value),
+                                    ),
+                                  );
+                                }
                               }
                             },
                           ),
@@ -163,7 +168,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     _buildDivider(),
                     ProfileMenuItem(
                       icon: Icons.notifications_outlined,
-                      title: 'Bildirishnomalar',
+                      title: context.l10n.notifications,
                       trailing: Icon(
                         Icons.chevron_right_rounded,
                         color: Theme.of(context).iconTheme.color,
@@ -173,7 +178,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     _buildDivider(),
                     ProfileMenuItem(
                       icon: Icons.lock_outline_rounded,
-                      title: 'Maxfiylik',
+                      title: context.l10n.privacy,
                       trailing: Icon(
                         Icons.chevron_right_rounded,
                         color: Theme.of(context).iconTheme.color,
@@ -183,13 +188,13 @@ class _ProfilePageState extends State<ProfilePage> {
                   ],
                 ),
                 AppDimens.xl.height,
-                _buildSectionTitle('Boshqa'),
+                _buildSectionTitle(context.l10n.other),
                 AppDimens.md.height,
                 _buildSettingsCard(
                   children: [
                     ProfileMenuItem(
                       icon: Icons.shopping_bag_outlined,
-                      title: 'Buyurtmalarim',
+                      title: context.l10n.myOrders,
                       trailing: Icon(
                         Icons.chevron_right_rounded,
                         color: Theme.of(context).iconTheme.color,
@@ -199,7 +204,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     _buildDivider(),
                     ProfileMenuItem(
                       icon: Icons.support_agent_rounded,
-                      title: 'Yordam',
+                      title: context.l10n.help,
                       trailing: Icon(
                         Icons.chevron_right_rounded,
                         color: Theme.of(context).iconTheme.color,
@@ -212,7 +217,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     _buildDivider(),
                     ProfileMenuItem(
                       icon: Icons.help_outline_rounded,
-                      title: 'Ko\'p beriladigan savollar (FAQs)',
+                      title: context.l10n.faq,
                       trailing: Icon(
                         Icons.chevron_right_rounded,
                         color: Theme.of(context).iconTheme.color,
@@ -224,8 +229,42 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                     _buildDivider(),
                     ProfileMenuItem(
+                      icon: Icons.store_mall_directory_outlined,
+                      title: 'Sotuvchi bo\'lish',
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 8.w,
+                              vertical: 3.h,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(6.r),
+                            ),
+                            child: Text(
+                              'Yangi',
+                              style: AppStyles.bodySmall.copyWith(
+                                fontSize: 10.sp,
+                                color: Theme.of(context).primaryColor,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 6.w),
+                          Icon(
+                            Icons.chevron_right_rounded,
+                            color: Theme.of(context).iconTheme.color,
+                          ),
+                        ],
+                      ),
+                      onTap: () => context.push(Routes.becomeSeller),
+                    ),
+                    _buildDivider(),
+                    ProfileMenuItem(
                       icon: Icons.logout_rounded,
-                      title: 'Chiqish',
+                      title: context.l10n.logout,
                       titleColor: Colors.red,
                       onTap: _showLogoutDialog,
                     ),
@@ -298,7 +337,7 @@ class _ProfilePageState extends State<ProfilePage> {
             Padding(
               padding: EdgeInsets.all(20.r),
               child: Text(
-                'Ko\'p beriladigan savollar',
+                context.l10n.faq,
                 style: AppStyles.h4Bold,
               ),
             ),
@@ -308,18 +347,18 @@ class _ProfilePageState extends State<ProfilePage> {
                 children: [
                   _buildFAQItem(
                     context,
-                    'Qanday qilib e\'lon joylashtirish mumkin?',
-                    'Asosiy sahifadagi "+ Elon joylash" tugmasini bosing, kerakli ma\'lumotlarni kiriting va yuboring.',
+                    context.l10n.faqQ1,
+                    context.l10n.faqA1,
                   ),
                   _buildFAQItem(
                     context,
-                    'Xarid qilgan mahsulotimni qanday qaytaraman?',
-                    'Mahsulotni qaytarish shartlari sotuvchi bilan kelishiladi. Admin bilan bog\'lanish uchun "Yordam" tugmasidan foydalaning.',
+                    context.l10n.faqQ2,
+                    context.l10n.faqA2,
                   ),
                   _buildFAQItem(
                     context,
-                    'Profil ma\'lumotlarini qanday o\'zgartiraman?',
-                    'Profil sahifasidagi tahrirlash belgisini bosing.',
+                    context.l10n.faqQ3,
+                    context.l10n.faqA3,
                   ),
                 ],
               ),

@@ -146,7 +146,6 @@ class _UnifiedChatInputBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final showPreview = editingMessage != null || replyingMessage != null;
 
     return SafeArea(
       top: false,

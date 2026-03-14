@@ -3,6 +3,7 @@ import '../../domain/entities/post_category_entity.dart';
 import '../../domain/entities/post_entity.dart';
 import '../../domain/entities/post_image_entity.dart';
 import '../../domain/entities/user_role.dart';
+import '../../domain/entities/group_entity.dart';
 
 enum HomeActionStatus { initial, postCreated, error, authRequired }
 
@@ -28,6 +29,14 @@ class HomeState {
   final String? contentError;
   final PostCategoryEntity? selectedSubcategory;
   final String? subcategoryError;
+  final String price;
+  final String adressname;
+  final List<GroupEntity> groups;
+  final bool isLoadingGroups;
+  final String? groupError;
+  final Map<String, List<GroupEntity>> categoryGroups;
+  final bool isLoadingPosts;
+  final bool isLoadingCategories;
 
   const HomeState({
     required this.posts,
@@ -50,32 +59,48 @@ class HomeState {
     this.contentError,
     this.selectedSubcategory,
     this.subcategoryError,
+    this.price = '',
+    this.adressname = '',
+    required this.groups,
+    required this.isLoadingGroups,
+    this.groupError,
+    required this.categoryGroups,
+    required this.isLoadingPosts,
+    required this.isLoadingCategories,
   });
 
   bool get canCreatePost => true;
 
   factory HomeState.initial() => const HomeState(
-    posts: [],
-    myPosts: [],
-    carouselPosts: [],
-    categories: [],
-    selectedCategory: null,
-    isComposerExpanded: false,
-    selectedImages: [],
-    isSubmitting: false,
-    actionStatus: HomeActionStatus.initial,
-    errorMessage: null,
-    isLoadingDetails: false,
-    activePost: null,
-    activeComments: [],
-    commentCounts: {},
-    currentUserId: '',
-    currentUserRole: UserRole.user,
-    categoryError: null,
-    contentError: null,
-    selectedSubcategory: null,
-    subcategoryError: null,
-  );
+        posts: [],
+        myPosts: [],
+        carouselPosts: [],
+        categories: [],
+        selectedCategory: null,
+        isComposerExpanded: false,
+        selectedImages: [],
+        isSubmitting: false,
+        actionStatus: HomeActionStatus.initial,
+        errorMessage: null,
+        isLoadingDetails: false,
+        activePost: null,
+        activeComments: [],
+        commentCounts: {},
+        currentUserId: '',
+        currentUserRole: UserRole.guest,
+        categoryError: null,
+        contentError: null,
+        selectedSubcategory: null,
+        subcategoryError: null,
+        price: '',
+        adressname: '',
+        groups: [],
+        isLoadingGroups: false,
+        groupError: null,
+        categoryGroups: {},
+        isLoadingPosts: false,
+        isLoadingCategories: false,
+      );
 
   HomeState copyWith({
     List<PostEntity>? posts,
@@ -98,6 +123,14 @@ class HomeState {
     Object? contentError = _unset,
     Object? selectedSubcategory = _unset,
     Object? subcategoryError = _unset,
+    String? price,
+    String? adressname,
+    List<GroupEntity>? groups,
+    bool? isLoadingGroups,
+    Object? groupError = _unset,
+    Map<String, List<GroupEntity>>? categoryGroups,
+    bool? isLoadingPosts,
+    bool? isLoadingCategories,
   }) {
     return HomeState(
       posts: posts ?? this.posts,
@@ -122,6 +155,14 @@ class HomeState {
       contentError: contentError == _unset ? this.contentError : contentError as String?,
       selectedSubcategory: selectedSubcategory == _unset ? this.selectedSubcategory : selectedSubcategory as PostCategoryEntity?,
       subcategoryError: subcategoryError == _unset ? this.subcategoryError : subcategoryError as String?,
+      price: price ?? this.price,
+      adressname: adressname ?? this.adressname,
+      groups: groups ?? this.groups,
+      isLoadingGroups: isLoadingGroups ?? this.isLoadingGroups,
+      groupError: groupError == _unset ? this.groupError : groupError as String?,
+      categoryGroups: categoryGroups ?? this.categoryGroups,
+      isLoadingPosts: isLoadingPosts ?? this.isLoadingPosts,
+      isLoadingCategories: isLoadingCategories ?? this.isLoadingCategories,
     );
   }
 }

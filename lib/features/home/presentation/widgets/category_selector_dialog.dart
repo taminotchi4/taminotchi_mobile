@@ -31,7 +31,7 @@ class CategorySelectorDialog extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Kategoriyani tanlang',
+              context.l10n.selectCategory,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: AppStyles.h5Bold.copyWith(

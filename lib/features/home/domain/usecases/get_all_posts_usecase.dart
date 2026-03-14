@@ -7,5 +7,6 @@ class GetAllPostsUseCase {
 
   const GetAllPostsUseCase(this.repository);
 
-  Future<Result<List<PostEntity>>> call() => repository.getAllPosts();
+  Future<Result<List<PostEntity>>> call({bool forceRefresh = false}) =>
+      repository.getAllPosts(forceRefresh: forceRefresh);
 }

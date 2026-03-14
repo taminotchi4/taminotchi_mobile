@@ -4,7 +4,7 @@
   "continueButton": "Davom etish",
   "home": "Asosiy",
   "profile": "Profil",
-  "settings": "Sozlamalar",
+  "settings": "Sozalamalar",
   "save": "Saqlash",
   "cancel": "Bekor qilish",
   "error": "Xatolik",
@@ -15,9 +15,181 @@
   "send": "Yuborish",
   "success": "Muvaffaqiyatli",
   "postCreatedSuccess": "Elon muvaffaqiyatli joylandi",
-  "myPosts": "Mening elonlarim",
+  "myPosts": "Mening e-lonlarim",
   "noPostsYet": "Sizning postlaringiz hozircha yoq",
   "comments": "Izohlar",
   "privateReplies": "Shaxsiy javoblar",
-  "all": "Barchasi"
+  "all": "Barchasi",
+  "nightMode": "Tungi rejim",
+  "language": "Til",
+  "notifications": "Bildirishnomalar",
+  "privacy": "Maxfiylik",
+  "other": "Boshqa",
+  "myOrders": "Buyurtmalarim",
+  "help": "Yordam",
+  "faq": "Ko'p beriladigan savollar (FAQs)",
+  "logout": "Chiqish",
+  "logoutConfirm": "Haqiqatan ham chiqmoqchimisiz?",
+  "noProfileData": "Profil ma'lumotlari topilmadi",
+  "faqQ1": "Qanday qilib e'lon joylashtirish mumkin?",
+  "faqA1": "Asosiy sahifadagi '+ Elon joylash' tugmasini bosing, kerakli ma'lumotlarni kiriting va yuboring.",
+  "faqQ2": "Xarid qilgan mahsulotimni qanday qaytaraman?",
+  "faqA2": "Mahsulotni qaytarish shartlari sotuvchi bilan kelishiladi. Admin bilan bog'lanish uchun 'Yordam' tugmasidan foydalaning.",
+  "faqQ3": "Profil ma'lumotlarini qanday o'zgartiraman?",
+  "faqA3": "Profil sahifasidagi tahrirlash belgisini bosing.",
+  "posts": "E'lonlar",
+  "products": "Mahsulotlar",
+  "postCreated": "Post yaratildi",
+  "loginRequiredTitle": "Hisobga kirish",
+  "loginRequiredContent": "E'lon joylash uchun Login qilishingiz kerak",
+  "login": "Kirish",
+  "productsNotFound": "Mahsulotlar topilmadi",
+  "loadMore": "Ko'proq yuklash",
+  "product": "Mahsulot",
+  "selectSizeError": "Mos o'lchamni tanlang",
+  "colors": "Ranglar",
+  "sizes": "O'lchamlar",
+  "description": "Tavsif",
+  "aboutProduct": "Mahsulot haqida",
+  "justNow": "Hozirgina",
+  "daysAgo": "{days} kun oldin",
+  "@daysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{hours} soat oldin",
+  "@hoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "minutesAgo": "{minutes} daqiqa oldin",
+  "@minutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "edit": "Tahrirlash",
+  "delete": "O'chirish",
+  "noCommentsYet": "Izohlar yo'q",
+  "showLess": "Kamroq ko'rsatish",
+  "showMore": "...ko'proq",
+  "reply": "Javob berish",
+  "replyingTo": "{name}ga javob yozilmoqda",
+  "@replyingTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "writeReply": "Javob yozing...",
+  "writeComment": "Izoh yozing...",
+  "editComment": "Izohni tahrirlash...",
+  "ratingHint": "Yulduzchalarni to'llidirsh uchun chapdan o'ngga suring.",
+  "ratingError": "Kamida 1 yulduzgacha ratingni tanlang",
+  "addToCart": "Savatga qo'shish",
+  "noOrdersYet": "Buyurtmalar hozircha mavjud emas",
+  "search": "Qidirish...",
+  "tapToPost": "E'lon joylash uchun tugmani bosing",
+  "addPost": "+ Elon joylash",
+  "postCreationHint": "Siz maxsulot qidirmaysiz! Nima kerak ekanligini yozing, sotuvchilar o'zi sizni topishadi",
+  "uploadImageHint": "Maxsulotning taxminiy rasmi bo'lsa yuklang(ixtiyoriy)",
+  "selectCategory": "Kategoriyani tanlang",
+  "gallery": "Galereya",
+  "camera": "Kamera",
+  "postDescriptionHint": "Qidirayotgan maxsulotingizning tafsilotlarini kiriting...",
+  "userOnlyPost": "Post yaratish faqat foydalanuvchilar uchun",
+  "imagesMax8": "Rasmlar (maksimum 8 ta)",
+  "welcomeTitle": "Xush kelibsiz!",
+  "welcomeSubtitle": "Tizimga kirish uchun telefon raqamingizni kiriting",
+  "phoneNumberLabel": "Telefon raqam",
+  "enterPassword": "Parolingizni kiriting",
+  "change": "O'zgartirish",
+  "password": "Parol",
+  "verify": "Tasdiqlash",
+  "enterOtp": "{phone} raqamiga yuborilgan 6 xonali kodni kiriting",
+  "@enterOtp": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "resendCode": "Kodni qayta yuborish",
+  "register": "Ro'yxatdan o'tish",
+  "fillProfileInfo": "Ma'lumotlaringizni to'ldiring",
+  "fullName": "To'liq ism",
+  "fullNameExample": "Isroilov Abdulloh",
+  "username": "Username",
+  "usernameExample": "ali",
+  "createPasswordHint": "Parol yarating...",
+  "uzbek": "O'zbekcha",
+  "russian": "Русский",
+  "priceLabel": "Narxi:",
+  "addressLabel": "Manzil:",
+  "statusAgreed": "Kelishilgan",
+  "statusActive": "Active",
+  "leaveComment": "Izoh qoldiring",
+  "izohlarCount": "{count} izoh",
+  "@izohlarCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hideReplies": "Javoblarni yashirish",
+  "viewReplies": "Javoblarni ko'rish ({count})",
+  "@viewReplies": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "post": "Post",
+  "postNotFound": "Post topilmadi",
+  "editComingSoon": "Tahrirlash funksiyasi yaqin orada qo'shiladi",
+  "postActivated": "E'lon faollashtirildi",
+  "postArchivedAgreed": "E'lon kelishilgan deb belgilandi",
+  "markAsAgreed": "Kelishilgan deb belgilash",
+  "reactivate": "Qayta faollashtirish",
+  "deleteConfirmTitle": "O'chirish",
+  "deleteConfirmContent": "Postni o'chirmoqchimisiz?",
+  "noComments": "Izohlar hozircha yo'q",
+  "noReplies": "Javoblar hozircha yo'q",
+  "writeReplyTitle": "Javob yozish",
+  "writeReplyHint": "Javobingizni yozing...",
+  "replySent": "Javob yuborildi",
+  "category": "Kategoriya",
+  "noPostsInCategory": "Bu kategoriyada hozircha e'lonlar yo'q",
+  "aboutUs": "Biz haqimizda",
+  "contactSupport": "Qo'llab-quvvatlash xizmati",
+  "privacyPolicy": "Maxfiylik siyosati",
+  "termsOfUse": "Foydalanish shartlari",
+  "following": "Kuzatilmoqda",
+  "follow": "Kuzatish",
+  "followers": "Kuzatuvchilar",
+  "filter": "Saralash",
+  "mostSold": "Ko'p sotilgan",
+  "highestRating": "Yuqori reyting",
+  "sortDefault": "Default",
+  "allCategories": "Barchasi",
+  "seller": "Sotuvchi",
+  "sellerNotFound": "Sotuvchi topilmadi",
+  "chats": "Chatlar",
+  "noChats": "Chatlar yo'q",
+  "resultNotFound": "Natija topilmadi",
+  "clickPostToDelete": "O'chirish uchun e'lon ustiga bosing",
+  "market": "Market",
+  "user": "Foydalanuvchi",
+  "notificationsNone": "Bildirishnomalar yo'q"
 }

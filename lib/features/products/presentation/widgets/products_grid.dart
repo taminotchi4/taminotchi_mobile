@@ -5,6 +5,7 @@ import '../../../../core/constants/dimens.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../domain/entities/product_entity.dart';
 import 'product_card.dart';
+import '../../../../global/widgets/shimmer_skeleton.dart';
 
 class ProductsGrid extends StatelessWidget {
   final List<ProductEntity> products;
@@ -23,7 +24,7 @@ class ProductsGrid extends StatelessWidget {
     if (products.isEmpty) {
       return Center(
         child: Text(
-          'Mahsulotlar topilmadi',
+          context.l10n.productsNotFound,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.bodySmall,
@@ -65,7 +66,7 @@ class ProductsGrid extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  'Ko\'proq yuklash',
+                  context.l10n.loadMore,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodyMedium,
@@ -75,6 +76,26 @@ class ProductsGrid extends StatelessWidget {
           ),
         ],
       ],
+    );
+  }
+
+  static Widget skeleton(BuildContext context) {
+    return GridView.builder(
+      padding: EdgeInsets.zero,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: 4,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: AppDimens.lg.h,
+        crossAxisSpacing: AppDimens.md.w,
+        childAspectRatio: AppDimens.productCardAspectRatio,
+      ),
+      itemBuilder: (context, index) => const ShimmerSkeleton(
+        height: double.infinity,
+        width: double.infinity,
+        borderRadius: AppDimens.cardRadius,
+      ),
     );
   }
 }

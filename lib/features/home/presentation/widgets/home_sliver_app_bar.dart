@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../../core/constants/dimens.dart';
 import '../../../../core/utils/icons.dart';
+import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/styles.dart';
 import '../../../../global/widgets/app_svg_icon.dart';
 
@@ -62,7 +63,7 @@ class HomeSliverAppBar extends StatelessWidget {
                       Expanded(
                         child: Center(
                           child: Text(
-                            'Home',
+                            context.l10n.home,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                               style: AppStyles.h4Bold.copyWith(

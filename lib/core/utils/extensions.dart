@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../l10n/app_localizations.dart';
 
 extension SizeExtension on num {
   Widget get height => SizedBox(height: toDouble().h);
@@ -22,4 +23,8 @@ extension PaddingExtension on Widget {
     padding: EdgeInsets.only(left: left.w, right: right.w, top: top.h, bottom: bottom.h),
     child: this,
   );
+}
+
+extension L10nExtension on BuildContext {
+  MyLocalizations get l10n => MyLocalizations.of(this)!;
 }

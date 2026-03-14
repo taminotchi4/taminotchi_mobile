@@ -7,7 +7,6 @@ class GetMyPostsUseCase {
 
   const GetMyPostsUseCase(this.repository);
 
-  Future<Result<List<PostEntity>>> call(String userId) {
-    return repository.getMyPosts(userId);
-  }
+  Future<Result<List<PostEntity>>> call({bool forceRefresh = false}) =>
+      repository.getMyPosts(forceRefresh: forceRefresh);
 }

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../../core/constants/dimens.dart';
+import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/styles.dart';
 
 import '../../../../global/widgets/app_back_button.dart';
@@ -55,8 +56,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CommonAppBar(
-        title: 'Mahsulot',
+      appBar: CommonAppBar(
+        title: context.l10n.product,
         leading: AppBackButton(),
       ),
       body: BlocBuilder<ProductsBloc, ProductsState>(
@@ -73,7 +74,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           if (product == null) {
             return Center(
               child: Text(
-                'Mahsulot topilmadi',
+                context.l10n.productsNotFound,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppStyles.bodySmall.copyWith(
@@ -137,7 +138,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 onAddToCart: () {
                   if (product!.sizes.isNotEmpty && _selectedSize == null) {
                     setState(() {
-                      _sizeError = "Mos o'lchamni tanlang";
+                      _sizeError = context.l10n.selectSizeError;
                     });
                   } else {
                     setState(() {

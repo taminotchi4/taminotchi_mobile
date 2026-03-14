@@ -91,6 +91,6 @@ class _MainShellPageState extends State<MainShellPage> {
       Routes.chats,
       Routes.profile,
     ];
-    return topLevelRoutes.contains(location) || location == '/';
+    return topLevelRoutes.contains(location);
   }
 }

@@ -24,7 +24,7 @@ class SellerProductFilter extends StatelessWidget {
       children: [
         Expanded(
           child: Text(
-            'Mahsulotlar',
+            context.l10n.products,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: AppStyles.h5Bold.copyWith(
@@ -49,7 +49,7 @@ class SellerProductFilter extends StatelessWidget {
   }
 
   void _openFilterDialog(BuildContext context, SellerProfileState state) {
-    final categories = _uniqueCategories(state.sellerProducts);
+    final categories = _uniqueCategories(context, state.sellerProducts);
     showDialog(
       context: context,
       builder: (context) {
@@ -65,7 +65,7 @@ class SellerProductFilter extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Filter',
+                  context.l10n.filter,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppStyles.h5Bold.copyWith(
@@ -140,7 +140,7 @@ class SellerProductFilter extends StatelessWidget {
                   children: [
                     _sortChip(
                       context,
-                      label: 'Most sold',
+                      label: context.l10n.mostSold,
                       selected: state.sort == SellerProductSort.mostSold,
                       onTap: () => _applySort(
                         context,
@@ -149,7 +149,7 @@ class SellerProductFilter extends StatelessWidget {
                     ),
                     _sortChip(
                       context,
-                      label: 'Highest rating',
+                      label: context.l10n.highestRating,
                       selected: state.sort == SellerProductSort.highestRating,
                       onTap: () => _applySort(
                         context,
@@ -158,7 +158,7 @@ class SellerProductFilter extends StatelessWidget {
                     ),
                     _sortChip(
                       context,
-                      label: 'Default',
+                      label: context.l10n.sortDefault,
                       selected: state.sort == SellerProductSort.none,
                       onTap: () => _applySort(
                         context,
@@ -220,11 +220,12 @@ class SellerProductFilter extends StatelessWidget {
     context.read<SellerProfileBloc>().add(SellerProfileSortChanged(sort));
   }
 
-  List<ProductCategoryEntity> _uniqueCategories(List<ProductEntity> products) {
+  List<ProductCategoryEntity> _uniqueCategories(
+      BuildContext context, List<ProductEntity> products) {
     final map = <String, ProductCategoryEntity>{};
-    map['all'] = const ProductCategoryEntity(
+    map['all'] = ProductCategoryEntity(
       id: 'all',
-      name: 'Barchasi',
+      name: context.l10n.allCategories,
       iconPath: AppIcons.category,
     );
     for (final product in products) {

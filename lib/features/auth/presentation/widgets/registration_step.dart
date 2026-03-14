@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/dimens.dart';
 import '../../../../core/utils/colors.dart';
+import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/styles.dart';
 import '../managers/auth_bloc.dart';
 import '../managers/auth_state.dart';
@@ -41,12 +42,12 @@ class _RegistrationStepState extends State<RegistrationStep> {
               children: [
                 SizedBox(height: 40.h),
                 Text(
-                  "Ro'yxatdan o'tish",
+                  context.l10n.register,
                   style: AppStyles.h1Bold.copyWith(color: Theme.of(context).primaryColor),
                 ),
                 SizedBox(height: 8.h),
                 Text(
-                  "Ma'lumotlaringizni to'ldiring",
+                  context.l10n.fillProfileInfo,
                   style: AppStyles.bodyRegular.copyWith(
                     color: Theme.of(context).textTheme.bodySmall?.color,
                   ),
@@ -61,7 +62,7 @@ class _RegistrationStepState extends State<RegistrationStep> {
                     color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6),
                   ),
                   decoration: InputDecoration(
-                    labelText: "Telefon raqam",
+                    labelText: context.l10n.phoneNumberLabel,
                     prefixIcon: Icon(Icons.phone_android_rounded, color: Colors.grey),
                     contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
                     border: OutlineInputBorder(
@@ -79,10 +80,12 @@ class _RegistrationStepState extends State<RegistrationStep> {
                 // Full Name
                 TextField(
                   controller: _fullNameController,
-                  style: AppStyles.h5Bold,
+                  style: AppStyles.h5Bold.copyWith(
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                  ),
                   decoration: InputDecoration(
-                    labelText: "To'liq ism",
-                    hintText: "Isroilov Abdulloh",
+                    labelText: context.l10n.fullName,
+                    hintText: context.l10n.fullNameExample,
                     prefixIcon: Icon(Icons.person_outline, color: AppColors.mainBlue),
                     contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
                     border: OutlineInputBorder(
@@ -98,10 +101,12 @@ class _RegistrationStepState extends State<RegistrationStep> {
                 // Username
                 TextField(
                   controller: _usernameController,
-                  style: AppStyles.h5Bold,
+                  style: AppStyles.h5Bold.copyWith(
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                  ),
                   decoration: InputDecoration(
-                    labelText: "Username",
-                    hintText: "ali",
+                    labelText: context.l10n.username,
+                    hintText: context.l10n.usernameExample,
                     prefixIcon: Icon(Icons.alternate_email, color: AppColors.mainBlue),
                     contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
                     border: OutlineInputBorder(
@@ -118,10 +123,12 @@ class _RegistrationStepState extends State<RegistrationStep> {
                 TextField(
                   controller: _passwordController,
                   obscureText: _obscurePassword,
-                  style: AppStyles.h5Bold,
+                  style: AppStyles.h5Bold.copyWith(
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                  ),
                   decoration: InputDecoration(
-                    labelText: "Parol",
-                    hintText: "Parol yarating...",
+                    labelText: context.l10n.password,
+                    hintText: context.l10n.createPasswordHint,
                     prefixIcon: Icon(Icons.lock_outline, color: AppColors.mainBlue),
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -149,7 +156,7 @@ class _RegistrationStepState extends State<RegistrationStep> {
                 DropdownButtonFormField<String>(
                   value: _selectedLanguage,
                   decoration: InputDecoration(
-                    labelText: "Til",
+                    labelText: context.l10n.language,
                     prefixIcon: Icon(Icons.language, color: AppColors.mainBlue),
                     contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
                     border: OutlineInputBorder(
@@ -160,16 +167,17 @@ class _RegistrationStepState extends State<RegistrationStep> {
                       borderSide: BorderSide(color: AppColors.mainBlue, width: 2),
                     ),
                   ),
-                  items: const [
-                    DropdownMenuItem(value: 'uz', child: Text('O\'zbekcha')),
-                    DropdownMenuItem(value: 'ru', child: Text('Русский')),
-                    DropdownMenuItem(value: 'en', child: Text('English')),
+                  items: [
+                    DropdownMenuItem(value: 'uz', child: Text(context.l10n.uzbek)),
+                    DropdownMenuItem(value: 'ru', child: Text(context.l10n.russian)),
                   ],
                   onChanged: (value) {
                     if (value != null) {
                       setState(() {
                         _selectedLanguage = value;
                       });
+                      // Optional: update locale immediately if desired, 
+                      // but here it's part of registration flow
                     }
                   },
                 ),
@@ -213,7 +221,7 @@ class _RegistrationStepState extends State<RegistrationStep> {
                     ),
                     child: state.status == AuthStatus.loading
                         ? const CircularProgressIndicator(color: Colors.white)
-                        : Text("Ro'yxatdan o'tish",
+                        : Text(context.l10n.register,
                               style: AppStyles.h4Bold.copyWith(color: Colors.white)),
                   ),
                 ),

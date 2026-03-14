@@ -56,6 +56,12 @@ dependencies:
   photo_manager: ^3.5.2
   path_provider: ^2.1.5
   equatable: ^2.0.8
+  shimmer: ^3.0.0
+  socket_io_client: ^3.1.4
+  url_launcher: ^6.3.1
+  sqflite: ^2.3.0
+  path: ^1.9.0
+  change_app_package_name: ^1.5.0
 
 dependency_overrides:
   record_linux: ^1.0.1

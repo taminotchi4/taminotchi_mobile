@@ -9,34 +9,47 @@ import '../../../../core/utils/styles.dart';
 import '../../../../global/widgets/app_svg_icon.dart';
 import '../../domain/entities/post_category_entity.dart';
 
+import '../../../../global/widgets/shimmer_skeleton.dart';
+
 class CategorySection extends StatelessWidget {
   final List<PostCategoryEntity> categories;
+  final bool isLoading;
 
   const CategorySection({
     super.key,
     required this.categories,
+    this.isLoading = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) return _buildSkeleton(context);
     if (categories.isEmpty) return const SizedBox.shrink();
 
-    final halfCount = (categories.length / 2).ceil();
-    final firstRow = categories.take(halfCount).toList();
-    final secondRow = categories.skip(halfCount).toList();
+    if (categories.length <= 8) {
+      return SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.symmetric(horizontal: AppDimens.lg.w),
+        child: _buildCategoryRow(context, categories),
+      );
+    } else {
+      final halfCount = (categories.length / 2).ceil();
+      final firstRow = categories.take(halfCount).toList();
+      final secondRow = categories.skip(halfCount).toList();
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: EdgeInsets.symmetric(horizontal: AppDimens.lg.w),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildCategoryRow(context, firstRow),
-          AppDimens.md.height,
-          _buildCategoryRow(context, secondRow),
-        ],
-      ),
-    );
+      return SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.symmetric(horizontal: AppDimens.lg.w),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildCategoryRow(context, firstRow),
+            AppDimens.md.height,
+            _buildCategoryRow(context, secondRow),
+          ],
+        ),
+      );
+    }
   }
 
   Widget _buildCategoryRow(BuildContext context, List<PostCategoryEntity> items) {
@@ -55,7 +68,7 @@ class CategorySection extends StatelessWidget {
       onTap: () => context.push(Routes.getCategoryFeed(category.id)),
       borderRadius: BorderRadius.circular(AppDimens.circleRadius.r),
       child: SizedBox(
-        width: 70.w,
+        width: 75.w,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           mainAxisSize: MainAxisSize.min,
@@ -93,6 +106,30 @@ class CategorySection extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSkeleton(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: EdgeInsets.symmetric(horizontal: AppDimens.lg.w),
+      child: Row(
+        children: List.generate(6, (index) {
+          return Padding(
+            padding: EdgeInsets.only(right: AppDimens.lg.w),
+            child: SizedBox(
+              width: 75.w,
+              child: Column(
+                children: [
+                   const ShimmerSkeleton.circular(size: 56),
+                   AppDimens.xs.height,
+                   const ShimmerSkeleton(height: 12, width: 60),
+                ],
+              ),
+            ),
+          );
+        }),
       ),
     );
   }

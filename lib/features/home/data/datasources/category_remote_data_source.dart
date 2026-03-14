@@ -1,10 +1,12 @@
 import '../models/post_category_model.dart';
+import '../models/group_model.dart';
 import 'package:flutter/foundation.dart';
 import '../../../../core/network/client.dart';
 
 abstract class CategoryRemoteDataSource {
   Future<List<PostCategoryModel>> getCategories();
   Future<List<PostCategoryModel>> getSubCategories();
+  Future<List<GroupModel>> getGroupsByCategory(String categoryId);
 }
 
 class CategoryRemoteDataSourceImpl implements CategoryRemoteDataSource {
@@ -44,6 +46,25 @@ class CategoryRemoteDataSourceImpl implements CategoryRemoteDataSource {
         if (data['data'] != null) {
           final list = data['data'] as List;
           return list.map((e) => PostCategoryModel.fromJson(e)).toList();
+        }
+        return [];
+      },
+    );
+  }
+
+  @override
+  Future<List<GroupModel>> getGroupsByCategory(String categoryId) async {
+    final result = await client.get<Map<String, dynamic>>('group/by-category/$categoryId');
+
+    return result.fold(
+      (error) {
+        debugPrint('Error fetching groups: $error');
+        throw Exception('Failed to load groups: $error');
+      },
+      (data) {
+        if (data['data'] != null) {
+          final list = data['data'] as List;
+          return list.map((e) => GroupModel.fromJson(e)).toList();
         }
         return [];
       },

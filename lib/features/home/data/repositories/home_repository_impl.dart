@@ -8,42 +8,122 @@ import '../../domain/entities/user_role.dart';
 import '../../domain/repositories/home_repository.dart';
 import '../datasources/home_local_data_source.dart';
 import '../datasources/category_remote_data_source.dart';
+import '../datasources/elon_remote_datasource.dart';
 import '../models/comment_model.dart';
-import '../models/post_model.dart';
 import '../models/post_category_model.dart';
-import '../../../../core/network/auth_interceptor.dart';
+import '../../domain/entities/group_entity.dart';
 import '../../../auth/data/datasources/auth_local_data_source.dart';
+
+import '../datasources/home_sql_data_source.dart';
 
 class HomeRepositoryImpl implements HomeRepository {
   final HomeLocalDataSource localDataSource;
+  final HomeSqlDataSource sqlDataSource;
   final CategoryRemoteDataSource categoryRemoteDataSource;
   final AuthLocalDataSource authLocalDataSource;
+  final ElonRemoteDataSource elonRemoteDataSource;
 
   const HomeRepositoryImpl({
     required this.localDataSource,
+    required this.sqlDataSource,
     required this.categoryRemoteDataSource,
     required this.authLocalDataSource,
+    required this.elonRemoteDataSource,
   });
 
   @override
-  Future<Result<List<PostEntity>>> getAllPosts() async {
+  Future<Result<List<PostEntity>>> getAllPosts({bool forceRefresh = false}) async {
     try {
-      final posts =
-          localDataSource.getAllPosts().map((e) => e.toEntity()).toList();
-      return Result.ok(posts);
+      if (!forceRefresh) {
+        final cached = await sqlDataSource.getPosts();
+        if (cached.isNotEmpty) {
+          return Result.ok(cached.map((e) => e.toEntity()).toList());
+        }
+      }
+
+      final result = await elonRemoteDataSource.getElons();
+      return result.fold(
+        (error) => Result.error(error),
+        (models) async {
+          await sqlDataSource.savePosts(models);
+          return Result.ok(models.map((e) => e.toEntity()).toList());
+        },
+      );
     } catch (e) {
-      return Result.error(Exception('Failed to load posts'));
+      final cached = await sqlDataSource.getPosts();
+      if (cached.isNotEmpty) return Result.ok(cached.map((e) => e.toEntity()).toList());
+      return Result.error(Exception('Failed to load posts: $e'));
     }
   }
 
   @override
-  Future<Result<List<PostEntity>>> getMyPosts(String userId) async {
+  Future<Result<List<PostEntity>>> getPostsByGroup(String groupId, {bool forceRefresh = false}) async {
     try {
-      final posts =
-          localDataSource.getMyPosts(userId).map((e) => e.toEntity()).toList();
-      return Result.ok(posts);
+      final result = await elonRemoteDataSource.getElonsByGroup(groupId: groupId);
+      return result.fold(
+        (error) => Result.error(error),
+        (models) => Result.ok(models.map((e) => e.toEntity()).toList()),
+      );
     } catch (e) {
-      return Result.error(Exception('Failed to load posts'));
+      return Result.error(Exception('Failed to load posts by group: $e'));
+    }
+  }
+
+  @override
+  Future<Result<List<PostEntity>>> getPostsByCategory(String categoryId, {bool forceRefresh = false}) async {
+    try {
+      if (!forceRefresh) {
+        final cached = await sqlDataSource.getPosts(categoryId: categoryId);
+        if (cached.isNotEmpty) {
+          return Result.ok(cached.map((e) => e.toEntity()).toList());
+        }
+      }
+
+      final result = await elonRemoteDataSource.getElonsByCategory(categoryId: categoryId);
+      return result.fold(
+        (error) => Result.error(error),
+        (models) async {
+          await sqlDataSource.savePosts(models);
+          return Result.ok(models.map((e) => e.toEntity()).toList());
+        },
+      );
+    } catch (e) {
+      final cached = await sqlDataSource.getPosts(categoryId: categoryId);
+      if (cached.isNotEmpty) return Result.ok(cached.map((e) => e.toEntity()).toList());
+      return Result.error(Exception('Failed to load posts by category: $e'));
+    }
+  }
+
+  @override
+  Future<Result<List<GroupEntity>>> getGroupsByCategory(String categoryId, {bool forceRefresh = false}) async {
+    try {
+      if (!forceRefresh) {
+        final cached = await sqlDataSource.getGroupsByCategory(categoryId);
+        if (cached.isNotEmpty) {
+          return Result.ok(cached.map((e) => e.toEntity()).toList());
+        }
+      }
+
+      final result = await categoryRemoteDataSource.getGroupsByCategory(categoryId);
+      await sqlDataSource.saveGroups(result);
+      return Result.ok(result.map((e) => e.toEntity()).toList());
+    } catch (e) {
+      final cached = await sqlDataSource.getGroupsByCategory(categoryId);
+      if (cached.isNotEmpty) return Result.ok(cached.map((e) => e.toEntity()).toList());
+      return Result.error(Exception('Failed to load groups by category: $e'));
+    }
+  }
+
+  @override
+  Future<Result<List<PostEntity>>> getMyPosts({bool forceRefresh = false}) async {
+    try {
+      final result = await elonRemoteDataSource.getMyElons();
+      return result.fold(
+        (error) => Result.error(error),
+        (models) => Result.ok(models.map((e) => e.toEntity()).toList()),
+      );
+    } catch (e) {
+      return Result.error(Exception('Failed to load my posts: $e'));
     }
   }
 
@@ -52,30 +132,41 @@ class HomeRepositoryImpl implements HomeRepository {
     required String content,
     required List<PostImageEntity> images,
     required PostCategoryEntity category,
+    String? price,
+    String? adressname,
+    String? supCategoryId,
   }) async {
     try {
-      final imageModels = images.map(PostImageModel.fromEntity).toList();
-      final categoryModel = PostCategoryModel.fromEntity(category);
-      final post = localDataSource
-          .addPost(
-            content: content,
-            images: imageModels,
-            category: categoryModel,
-          )
-          .toEntity();
-      return Result.ok(post);
+      final photoPaths = images.where((e) => e.isLocal).map((e) => e.path).toList();
+      
+      final result = await elonRemoteDataSource.createElon(
+        text: content,
+        categoryId: category.id,
+        supCategoryId: supCategoryId ?? category.parentId,
+        price: price,
+        adressname: adressname,
+        photosPaths: photoPaths,
+      );
+
+      return result.fold(
+        (error) => Result.error(error),
+        (model) => Result.ok(model.toEntity()),
+      );
     } catch (e) {
-      return Result.error(Exception('Failed to create post'));
+      return Result.error(Exception('Failed to create post: $e'));
     }
   }
 
   @override
   Future<Result<PostEntity?>> getPostById(String id) async {
     try {
-      final post = localDataSource.getPostById(id)?.toEntity();
-      return Result.ok(post);
+      final result = await elonRemoteDataSource.getElonById(id);
+      return result.fold(
+        (error) => Result.error(error),
+        (model) => Result.ok(model.toEntity()),
+      );
     } catch (e) {
-      return Result.error(Exception('Failed to load post'));
+      return Result.error(Exception('Failed to load post by id: $e'));
     }
   }
 
@@ -102,23 +193,30 @@ class HomeRepositoryImpl implements HomeRepository {
   }
 
   @override
-  Future<Result<List<PostCategoryEntity>>> getCategories() async {
+  Future<Result<List<PostCategoryEntity>>> getCategories({bool forceRefresh = false}) async {
     try {
+      if (!forceRefresh) {
+        final cached = await sqlDataSource.getCategories();
+        if (cached.isNotEmpty) {
+          return Result.ok(cached.map((e) => e.toEntity()).toList());
+        }
+      }
+
       final categories = await categoryRemoteDataSource.getCategories();
       List<PostCategoryModel> subcategories = [];
       try {
         subcategories = await categoryRemoteDataSource.getSubCategories();
       } catch (e) {
-        // Log error but proceed with empty subcategories
         print('Error loading subcategories: $e');
       }
 
       final populatedCategories = categories.map((category) {
         final categorySubs = subcategories
             .where((sub) => sub.parentId == category.id)
+            .map((sub) => sub.toEntity())
             .toList();
 
-        return PostCategoryEntity(
+        return PostCategoryModel(
           id: category.id,
           name: category.name,
           iconPath: category.iconPath,
@@ -127,8 +225,11 @@ class HomeRepositoryImpl implements HomeRepository {
         );
       }).toList();
 
-      return Result.ok(populatedCategories);
+      await sqlDataSource.saveCategories(populatedCategories);
+      return Result.ok(populatedCategories.map((e) => e.toEntity()).toList());
     } catch (e) {
+      final cached = await sqlDataSource.getCategories();
+      if (cached.isNotEmpty) return Result.ok(cached.map((e) => e.toEntity()).toList());
       return Result.error(Exception('Failed to load categories: $e'));
     }
   }
@@ -152,12 +253,14 @@ class HomeRepositoryImpl implements HomeRepository {
   Future<Result<UserRole>> getCurrentUserRole() async {
     try {
       final token = await authLocalDataSource.getToken();
+      print('🔍 HomeRepository: Checking user role. Token exists: ${token != null && token.isNotEmpty}');
       if (token != null && token.isNotEmpty) {
         return Result.ok(UserRole.user); // Assuming standard user role for now
       }
-      return Result.error(Exception('Guest user'));
+      return Result.ok(UserRole.guest);
     } catch (e) {
-      return Result.error(Exception('Failed to load role'));
+      print('❌ HomeRepository: Error getting user role: $e');
+      return Result.ok(UserRole.guest); // Fallback to guest if something fails
     }
   }
   @override

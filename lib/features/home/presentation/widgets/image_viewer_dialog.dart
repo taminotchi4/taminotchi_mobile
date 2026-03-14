@@ -72,7 +72,39 @@ class ImageViewerDialog extends StatelessWidget {
         fit: BoxFit.contain,
       );
     }
-    if (image.path.toLowerCase().endsWith('.svg')) {
+    final isNetwork = image.path.startsWith('http');
+    final isSvg = image.path.toLowerCase().endsWith('.svg');
+
+    if (isNetwork) {
+      if (isSvg) {
+        return SvgPicture.network(
+          image.path,
+          width: 1.sw,
+          height: 1.sh,
+          fit: BoxFit.contain,
+          placeholderBuilder: (context) => const Center(
+            child: CircularProgressIndicator(color: Colors.white),
+          ),
+        );
+      }
+      return Image.network(
+        image.path,
+        width: 1.sw,
+        height: 1.sh,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) => const Center(
+          child: Icon(Icons.error_outline, color: Colors.white, size: 48),
+        ),
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return const Center(
+            child: CircularProgressIndicator(color: Colors.white),
+          );
+        },
+      );
+    }
+
+    if (isSvg) {
       return SvgPicture.asset(
         image.path,
         width: 1.sw,

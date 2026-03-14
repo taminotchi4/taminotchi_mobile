@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,7 +18,10 @@ import '../../domain/usecases/get_all_posts_usecase.dart';
 import '../../domain/usecases/get_my_posts_usecase.dart';
 import '../../domain/usecases/reply_to_comment_usecase.dart';
 import '../../domain/usecases/update_post_status_usecase.dart';
-import '../../domain/entities/post_status.dart';
+import '../../domain/usecases/get_posts_by_category_usecase.dart';
+import '../../domain/usecases/get_groups_by_category_usecase.dart';
+import '../../domain/usecases/get_posts_by_group_usecase.dart';
+import '../../domain/entities/group_entity.dart';
 import 'home_event.dart';
 import 'home_state.dart';
 
@@ -34,6 +38,9 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final GetCurrentUserRoleUseCase getCurrentUserRoleUseCase;
   final ReplyToCommentUseCase replyToCommentUseCase;
   final UpdatePostStatusUseCase updatePostStatusUseCase;
+  final GetPostsByCategoryUseCase getPostsByCategoryUseCase;
+  final GetGroupsByCategoryUseCase getGroupsByCategoryUseCase;
+  final GetPostsByGroupUseCase getPostsByGroupUseCase;
   final HomeMediaPicker mediaPicker;
   final Random _random = Random();
 
@@ -49,6 +56,9 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     required this.getCurrentUserRoleUseCase,
     required this.replyToCommentUseCase,
     required this.updatePostStatusUseCase,
+    required this.getPostsByCategoryUseCase,
+    required this.getGroupsByCategoryUseCase,
+    required this.getPostsByGroupUseCase,
     required this.mediaPicker,
   }) : super(HomeState.initial()) {
     on<HomeStarted>(_onStarted);
@@ -66,12 +76,22 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     on<HomeClearContentError>(_onClearContentError);
     on<HomeReplyToComment>(_onReplyToComment);
     on<HomeUpdatePostStatus>(_onUpdatePostStatus);
+    on<HomeUpdatePrice>(_onUpdatePrice);
+    on<HomeUpdateAddress>(_onUpdateAddress);
+    on<HomeFetchPostsByCategory>(_onFetchPostsByCategory);
+    on<HomeFetchGroupsByCategory>(_onFetchGroupsByCategory);
+    on<HomeFetchPostsByGroup>(_onFetchPostsByGroup);
+    on<HomeRefresh>(_onRefresh);
   }
 
-  Future<void> _onStarted(HomeStarted event, Emitter<HomeState> emit) async {
+  Future<void> _onRefresh(HomeRefresh event, Emitter<HomeState> emit) async {
+    await _onStarted(const HomeStarted(), emit, forceRefresh: true);
+  }
+
+  Future<void> _onStarted(HomeStarted event, Emitter<HomeState> emit, {bool forceRefresh = false}) async {
     await _loadUser(emit);
-    await _loadCategories(emit);
-    await _loadPosts(emit);
+    await _loadCategories(emit, forceRefresh: forceRefresh);
+    await _loadPosts(emit, forceRefresh: forceRefresh);
     await _loadCommentCounts(emit);
   }
 
@@ -79,54 +99,68 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     final idResult = await getCurrentUserIdUseCase();
     final roleResult = await getCurrentUserRoleUseCase();
     idResult.fold(
-      (error) => emit(state.copyWith(
-        actionStatus: HomeActionStatus.error,
-        errorMessage: error.toString(),
-      )),
-      (id) => emit(state.copyWith(currentUserId: id)),
-    );
-    roleResult.fold(
-      (error) => emit(state.copyWith(
-        actionStatus: HomeActionStatus.error,
-        errorMessage: error.toString(),
-      )),
-      (role) => emit(state.copyWith(currentUserRole: role)),
-    );
-  }
-
-  Future<void> _loadCategories(Emitter<HomeState> emit) async {
-    final result = await getCategoriesUseCase();
-    result.fold(
-      (error) => emit(state.copyWith(
-        actionStatus: HomeActionStatus.error,
-        errorMessage: error.toString(),
-      )),
-      (categories) => emit(state.copyWith(
-        categories: categories,
-        selectedCategory: categories.isEmpty ? null : categories.first,
-      )),
-    );
-  }
-
-  Future<void> _loadPosts(Emitter<HomeState> emit) async {
-    final allPostsResult = await getAllPostsUseCase();
-    final myPostsResult = await getMyPostsUseCase(state.currentUserId);
-    allPostsResult.fold(
-      (error) => emit(state.copyWith(
-        actionStatus: HomeActionStatus.error,
-        errorMessage: error.toString(),
-      )),
-      (allPosts) {
-        myPostsResult.fold(
-          (error) => emit(state.copyWith(
+          (error) =>
+          emit(state.copyWith(
             actionStatus: HomeActionStatus.error,
             errorMessage: error.toString(),
           )),
-          (myPosts) => emit(state.copyWith(
-            posts: allPosts,
-            myPosts: myPosts,
-            carouselPosts: _shufflePosts(allPosts),
+          (id) => emit(state.copyWith(currentUserId: id)),
+    );
+    roleResult.fold(
+          (error) =>
+          emit(state.copyWith(
+            actionStatus: HomeActionStatus.error,
+            errorMessage: error.toString(),
           )),
+          (role) => emit(state.copyWith(currentUserRole: role)),
+    );
+  }
+
+  Future<void> _loadCategories(Emitter<HomeState> emit, {bool forceRefresh = false}) async {
+    emit(state.copyWith(isLoadingCategories: true));
+    final result = await getCategoriesUseCase(forceRefresh: forceRefresh);
+    result.fold(
+          (error) =>
+          emit(state.copyWith(
+            actionStatus: HomeActionStatus.error,
+            errorMessage: error.toString(),
+            isLoadingCategories: false,
+          )),
+          (categories) =>
+          emit(state.copyWith(
+            categories: categories,
+            selectedCategory: categories.isEmpty ? null : categories.first,
+            isLoadingCategories: false,
+          )),
+    );
+  }
+
+  Future<void> _loadPosts(Emitter<HomeState> emit, {bool forceRefresh = false}) async {
+    emit(state.copyWith(isLoadingPosts: true));
+    final allPostsResult = await getAllPostsUseCase(forceRefresh: forceRefresh);
+    final myPostsResult = await getMyPostsUseCase(forceRefresh: forceRefresh);
+    allPostsResult.fold(
+          (error) =>
+          emit(state.copyWith(
+            actionStatus: HomeActionStatus.error,
+            errorMessage: error.toString(),
+            isLoadingPosts: false,
+          )),
+          (allPosts) {
+        myPostsResult.fold(
+              (error) =>
+              emit(state.copyWith(
+                actionStatus: HomeActionStatus.error,
+                errorMessage: error.toString(),
+                isLoadingPosts: false,
+              )),
+              (myPosts) =>
+              emit(state.copyWith(
+                posts: allPosts,
+                myPosts: myPosts,
+                carouselPosts: _shufflePosts(allPosts),
+                isLoadingPosts: false,
+              )),
         );
       },
     );
@@ -135,24 +169,20 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   Future<void> _loadCommentCounts(Emitter<HomeState> emit) async {
     final result = await getCommentCountsUseCase();
     result.fold(
-      (error) => emit(state.copyWith(
-        actionStatus: HomeActionStatus.error,
-        errorMessage: error.toString(),
-      )),
-      (counts) => emit(state.copyWith(commentCounts: counts)),
+          (error) =>
+          emit(state.copyWith(
+            actionStatus: HomeActionStatus.error,
+            errorMessage: error.toString(),
+          )),
+          (counts) => emit(state.copyWith(commentCounts: counts)),
     );
   }
 
   void _onExpandComposer(HomeExpandComposer event, Emitter<HomeState> emit) {
-    // Only reset categories if composer is currently collapsed
-    // If already expanded or categories are pre-selected, preserve them
-    // Check if user is authenticated (not a guest)
-    if (state.currentUserRole == UserRole.user) { // Assuming UserRole.user means authenticated
+    if (state.currentUserRole != UserRole.guest) {
       if (state.isComposerExpanded) {
-        // Already expanded, just ensure it stays expanded
         emit(state.copyWith(isComposerExpanded: true));
       } else {
-        // Expanding from collapsed state - reset everything
         emit(state.copyWith(
           isComposerExpanded: true,
           selectedCategory: null,
@@ -163,14 +193,14 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         ));
       }
     } else {
-      // User is guest, trigger authentication requirement
       emit(state.copyWith(
         actionStatus: HomeActionStatus.authRequired,
       ));
     }
   }
 
-  void _onCollapseComposer(HomeCollapseComposer event, Emitter<HomeState> emit) {
+  void _onCollapseComposer(HomeCollapseComposer event,
+      Emitter<HomeState> emit) {
     emit(state.copyWith(
       isComposerExpanded: false,
       selectedImages: [],
@@ -186,79 +216,92 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     ));
   }
 
-  void _onSelectSubcategory(HomeSelectSubcategory event, Emitter<HomeState> emit) {
+  void _onSelectSubcategory(HomeSelectSubcategory event,
+      Emitter<HomeState> emit) {
     emit(state.copyWith(
       selectedSubcategory: event.subcategory,
       subcategoryError: null,
     ));
   }
 
-  Future<void> _onAddImagesFromGallery(
-    HomeAddImagesFromGallery event,
-    Emitter<HomeState> emit,
-  ) async {
+  Future<void> _onAddImagesFromGallery(HomeAddImagesFromGallery event,
+      Emitter<HomeState> emit,) async {
     final images = await mediaPicker.pickFromGallery();
     _mergeImages(images, emit);
   }
 
-  Future<void> _onAddImageFromCamera(
-    HomeAddImageFromCamera event,
-    Emitter<HomeState> emit,
-  ) async {
+  Future<void> _onAddImageFromCamera(HomeAddImageFromCamera event,
+      Emitter<HomeState> emit,) async {
     final image = await mediaPicker.pickFromCamera();
     if (image != null) {
       _mergeImages([image], emit);
     }
   }
 
-  Future<void> _onAddImagesFromFiles(
-    HomeAddImagesFromFiles event,
-    Emitter<HomeState> emit,
-  ) async {
+  Future<void> _onAddImagesFromFiles(HomeAddImagesFromFiles event,
+      Emitter<HomeState> emit,) async {
     final images = await mediaPicker.pickFromFiles();
     _mergeImages(images, emit);
   }
 
   void _mergeImages(List<PostImageEntity> images, Emitter<HomeState> emit) {
     final updated = [...state.selectedImages];
+    String? sizeError;
+
     for (final image in images) {
       if (updated.length >= maxImages) break;
       if (updated.any((item) => item.path == image.path)) continue;
+
+      final file = File(image.path);
+      if (file.existsSync()) {
+        final sizeInBytes = file.lengthSync();
+        if (sizeInBytes > 5 * 1024 * 1024) {
+          sizeError = 'Rasm hajmi 5MB dan oshmasligi kerak';
+          continue;
+        }
+      }
+
       updated.add(image);
     }
-    emit(state.copyWith(selectedImages: updated));
+
+    emit(state.copyWith(
+      selectedImages: updated,
+      errorMessage: sizeError,
+      actionStatus: sizeError != null ? HomeActionStatus.error : state
+          .actionStatus,
+    ));
   }
 
   void _onRemoveImage(HomeRemoveImage event, Emitter<HomeState> emit) {
     final updated =
-        state.selectedImages.where((e) => e.path != event.path).toList();
+    state.selectedImages.where((e) => e.path != event.path).toList();
     emit(state.copyWith(selectedImages: updated));
   }
 
-  Future<void> _onCreatePost(
-    HomeCreatePost event,
-    Emitter<HomeState> emit,
-  ) async {
+  Future<void> _onCreatePost(HomeCreatePost event,
+      Emitter<HomeState> emit,) async {
     if (!state.canCreatePost) return;
     final content = event.content.trim();
     final category = state.selectedCategory;
     final subcategory = state.selectedSubcategory;
-    
+
     String? categoryError;
     String? subcategoryError;
     String? contentError;
-    
+
     if (category == null) {
       categoryError = 'Kategoriyani tanlash majburiy';
     } else if (category.hasSubcategories && subcategory == null) {
       subcategoryError = 'Ichki kategoriyani tanlash majburiy';
     }
-    
+
     if (content.length < 2) {
-      contentError = 'Qidirayotgan maxsulotingiz haqida batafsil ma\'lumot yozishingiz kerak';
+      contentError =
+      'Qidirayotgan maxsulotingiz haqida batafsil ma\'lumot yozishingiz kerak';
     }
-    
-    if (categoryError != null || subcategoryError != null || contentError != null) {
+
+    if (categoryError != null || subcategoryError != null ||
+        contentError != null) {
       emit(state.copyWith(
         categoryError: categoryError,
         subcategoryError: subcategoryError,
@@ -266,29 +309,31 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       ));
       return;
     }
-    
+
     emit(state.copyWith(isSubmitting: true));
-    // Use subcategory if selected, otherwise use parent category
-    final postCategory = subcategory ?? category!;
     final result = await createPostUseCase(
       content: content,
       images: state.selectedImages,
-      category: postCategory,
+      category: category!,
+      price: state.price,
+      adressname: state.adressname,
+      supCategoryId: subcategory?.id,
     );
     await result.fold(
-      (error) async => emit(state.copyWith(
-        isSubmitting: false,
-        actionStatus: HomeActionStatus.error,
-        errorMessage: error.toString(),
-      )),
-      (post) async {
+          (error) async =>
+          emit(state.copyWith(
+            isSubmitting: false,
+            actionStatus: HomeActionStatus.error,
+            errorMessage: error.toString(),
+          )),
+          (post) async {
         final updatedPosts = [post, ...state.posts];
         final updatedMyPosts = [post, ...state.myPosts];
         final updatedCounts = Map<String, int>.from(state.commentCounts);
         final commentResult = await getCommentsUseCase(post.id);
         commentResult.fold(
-          (_) {},
-          (comments) => updatedCounts[post.id] = comments.length,
+              (_) {},
+              (comments) => updatedCounts[post.id] = comments.length,
         );
         emit(state.copyWith(
           isSubmitting: false,
@@ -299,60 +344,57 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
           isComposerExpanded: false,
           actionStatus: HomeActionStatus.postCreated,
           commentCounts: updatedCounts,
+          price: '',
+          adressname: '',
         ));
       },
     );
   }
 
-  Future<void> _onLoadPostDetails(
-    HomeLoadPostDetails event,
-    Emitter<HomeState> emit,
-  ) async {
+  Future<void> _onLoadPostDetails(HomeLoadPostDetails event,
+      Emitter<HomeState> emit,) async {
     emit(state.copyWith(isLoadingDetails: true));
     final postResult = await getPostByIdUseCase(event.postId);
     final commentsResult = await getCommentsUseCase(event.postId);
 
     postResult.fold(
-      (error) => emit(state.copyWith(
-        isLoadingDetails: false,
-        actionStatus: HomeActionStatus.error,
-        errorMessage: error.toString(),
-      )),
-      (post) {
-        commentsResult.fold(
-          (commentError) => emit(state.copyWith(
+          (error) =>
+          emit(state.copyWith(
             isLoadingDetails: false,
             actionStatus: HomeActionStatus.error,
-            errorMessage: commentError.toString(),
+            errorMessage: error.toString(),
           )),
-          (comments) => emit(state.copyWith(
-            isLoadingDetails: false,
-            activePost: post,
-            activeComments: comments,
-          )),
+          (post) {
+        commentsResult.fold(
+              (commentError) =>
+              emit(state.copyWith(
+                isLoadingDetails: false,
+                actionStatus: HomeActionStatus.error,
+                errorMessage: commentError.toString(),
+              )),
+              (comments) =>
+              emit(state.copyWith(
+                isLoadingDetails: false,
+                activePost: post,
+                activeComments: comments,
+              )),
         );
       },
     );
   }
 
-  void _onClearActionStatus(
-    HomeClearActionStatus event,
-    Emitter<HomeState> emit,
-  ) {
+  void _onClearActionStatus(HomeClearActionStatus event,
+      Emitter<HomeState> emit,) {
     emit(state.copyWith(actionStatus: HomeActionStatus.initial));
   }
 
-  void _onClearContentError(
-    HomeClearContentError event,
-    Emitter<HomeState> emit,
-  ) {
+  void _onClearContentError(HomeClearContentError event,
+      Emitter<HomeState> emit,) {
     emit(state.copyWith(contentError: null));
   }
 
-  Future<void> _onReplyToComment(
-    HomeReplyToComment event,
-    Emitter<HomeState> emit,
-  ) async {
+  Future<void> _onReplyToComment(HomeReplyToComment event,
+      Emitter<HomeState> emit,) async {
     final result = await replyToCommentUseCase(
       postId: event.postId,
       parentCommentId: event.parentCommentId,
@@ -360,34 +402,32 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     );
 
     result.fold(
-      (error) => emit(state.copyWith(
-        actionStatus: HomeActionStatus.error,
-        errorMessage: error.toString(),
-      )),
-      (_) {
+          (error) =>
+          emit(state.copyWith(
+            actionStatus: HomeActionStatus.error,
+            errorMessage: error.toString(),
+          )),
+          (_) {
         add(HomeLoadPostDetails(event.postId));
       },
     );
   }
 
-  Future<void> _onUpdatePostStatus(
-    HomeUpdatePostStatus event,
-    Emitter<HomeState> emit,
-  ) async {
+  Future<void> _onUpdatePostStatus(HomeUpdatePostStatus event,
+      Emitter<HomeState> emit,) async {
     final result = await updatePostStatusUseCase(
       postId: event.postId,
       status: event.status,
     );
 
     result.fold(
-      (error) => emit(state.copyWith(
-        actionStatus: HomeActionStatus.error,
-        errorMessage: error.toString(),
-      )),
-      (_) {
-        // Reload all posts and my posts to reflect status change globally
+          (error) =>
+          emit(state.copyWith(
+            actionStatus: HomeActionStatus.error,
+            errorMessage: error.toString(),
+          )),
+          (_) {
         add(const HomeStarted());
-        // Also reload post details to refresh the active post
         add(HomeLoadPostDetails(event.postId));
       },
     );
@@ -402,5 +442,78 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       shuffled[j] = temp;
     }
     return shuffled;
+  }
+
+  void _onUpdatePrice(HomeUpdatePrice event, Emitter<HomeState> emit) {
+    emit(state.copyWith(price: event.price));
+  }
+
+  void _onUpdateAddress(HomeUpdateAddress event, Emitter<HomeState> emit) {
+    emit(state.copyWith(adressname: event.address));
+  }
+
+  Future<void> _onFetchPostsByCategory(HomeFetchPostsByCategory event,
+      Emitter<HomeState> emit,) async {
+    final result = await getPostsByCategoryUseCase(event.categoryId);
+    result.fold(
+          (error) =>
+          emit(state.copyWith(
+            actionStatus: HomeActionStatus.error,
+            errorMessage: error.toString(),
+          )),
+          (posts) {
+        final updatedPosts = List<PostEntity>.from(state.posts);
+        updatedPosts.removeWhere((p) =>
+        p.category.id == event.categoryId ||
+            p.category.parentId == event.categoryId
+        );
+        updatedPosts.addAll(posts);
+
+        emit(state.copyWith(posts: updatedPosts));
+      },
+    );
+    add(HomeFetchGroupsByCategory(event.categoryId));
+  }
+
+  Future<void> _onFetchGroupsByCategory(HomeFetchGroupsByCategory event,
+      Emitter<HomeState> emit,) async {
+    emit(state.copyWith(isLoadingGroups: true));
+    final result = await getGroupsByCategoryUseCase(event.categoryId);
+    result.fold(
+          (error) =>
+          emit(state.copyWith(
+            isLoadingGroups: false,
+            groupError: error.toString(),
+          )),
+          (groups) {
+        final updatedCategoryGroups = Map<String, List<GroupEntity>>.from(
+            state.categoryGroups);
+        updatedCategoryGroups[event.categoryId] = groups;
+        emit(state.copyWith(
+          isLoadingGroups: false,
+          categoryGroups: updatedCategoryGroups,
+        ));
+      },
+    );
+  }
+
+  Future<void> _onFetchPostsByGroup(HomeFetchPostsByGroup event,
+      Emitter<HomeState> emit,) async {
+    final result = await getPostsByGroupUseCase(event.groupId);
+    result.fold(
+          (error) =>
+          emit(state.copyWith(
+            actionStatus: HomeActionStatus.error,
+            errorMessage: error.toString(),
+          )),
+          (posts) {
+        final updatedPosts = List<PostEntity>.from(state.posts);
+        updatedPosts.removeWhere((p) =>
+            p.groups.any((g) => g.id == event.groupId));
+        updatedPosts.addAll(posts);
+
+        emit(state.copyWith(posts: updatedPosts));
+      },
+    );
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../../core/constants/dimens.dart';
+import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/styles.dart';
 
 class ProductBottomBar extends StatelessWidget {
@@ -43,7 +44,7 @@ class ProductBottomBar extends StatelessWidget {
                     const Icon(Icons.add_shopping_cart_rounded, color: Colors.white),
                     8.horizontalSpace,
                     Text(
-                      'Savatga qo\'shish',
+                      context.l10n.addToCart,
                       style: AppStyles.bodyMedium.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,

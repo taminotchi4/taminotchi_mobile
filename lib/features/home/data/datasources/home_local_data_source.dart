@@ -1,13 +1,23 @@
+import 'dart:convert';
 import 'dart:math';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/utils/icons.dart';
 import '../../domain/entities/user_role.dart';
 import '../../domain/entities/post_status.dart';
 import '../models/comment_model.dart';
+import '../models/group_model.dart';
 import '../models/post_category_model.dart';
 import '../models/post_model.dart';
 
 class HomeLocalDataSource {
+  final SharedPreferences prefs;
+  
+  HomeLocalDataSource({required this.prefs});
+
+  static const _categoriesKey = 'cached_categories';
+  static const _groupsPrefix = 'cached_groups_';
+
   static final List<PostModel> _posts = [];
   static final Map<String, List<CommentModel>> _comments = {};
   static bool _initialized = false;
@@ -354,6 +364,87 @@ class HomeLocalDataSource {
     return Map.unmodifiable(
       _comments.map((key, value) => MapEntry(key, value.length)),
     );
+  }
+
+  // Caching methods
+  Future<void> saveCategories(List<PostCategoryModel> categories) async {
+    final encoded = jsonEncode(categories.map((e) => e.toJson()).toList());
+    await prefs.setString(_categoriesKey, encoded);
+  }
+
+  List<PostCategoryModel>? getCachedCategories() {
+    final data = prefs.getString(_categoriesKey);
+    if (data == null) return null;
+    try {
+      final list = jsonDecode(data) as List;
+      return list.map((e) => PostCategoryModel.fromJson(e)).toList();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<void> saveGroups(String categoryId, List<GroupModel> groups) async {
+    final encoded = jsonEncode(groups.map((e) => e.toJson()).toList());
+    await prefs.setString('$_groupsPrefix$categoryId', encoded);
+  }
+
+  List<GroupModel>? getCachedGroups(String categoryId) {
+    final data = prefs.getString('$_groupsPrefix$categoryId');
+    if (data != null) {
+      try {
+        final list = jsonDecode(data) as List;
+        return list.map((e) => GroupModel.fromJson(e)).toList();
+      } catch (e) {
+        // Fall through to local generation
+      }
+    }
+
+    // Local generation as fallback
+    final category = _categories.where((c) => c.id == categoryId).firstOrNull ??
+        _categories
+            .expand((c) => c.subcategories ?? <PostCategoryModel>[])
+            .where((s) => s.id == categoryId)
+            .firstOrNull;
+
+    if (category == null) return null;
+
+    final List<GroupModel> localGroups = [];
+    
+    // Always add "Umumiy" group
+    localGroups.add(GroupModel(
+      id: '${categoryId}_general',
+      name: 'Umumiy',
+      nameUz: 'Umumiy',
+      nameRu: 'Общий',
+      categoryId: categoryId,
+      supCategoryId: null,
+      membersCount: 0,
+      isJoined: false,
+      createdAt: DateTime.now().toIso8601String(),
+      updatedAt: DateTime.now().toIso8601String(),
+      isDeleted: false,
+    ));
+
+    // Add subcategories as groups if they exist
+    if (category.subcategories != null) {
+      for (final sub in category.subcategories!) {
+        localGroups.add(GroupModel(
+          id: sub.id,
+          name: sub.name,
+          nameUz: sub.name,
+          nameRu: sub.name,
+          categoryId: categoryId,
+          supCategoryId: sub.id,
+          membersCount: 0,
+          isJoined: false,
+          createdAt: DateTime.now().toIso8601String(),
+          updatedAt: DateTime.now().toIso8601String(),
+          isDeleted: false,
+        ));
+      }
+    }
+
+    return localGroups;
   }
 
   List<CommentModel> _generateComments(String postId) {

@@ -23,7 +23,7 @@ class SellerStatsRow extends StatelessWidget {
           child: _countItem(
             context,
             count: state.followersCount.toString(),
-            label: 'Followers',
+            label: context.l10n.followers,
             icon: Icons.people_outline,
             onTap: () =>
                 context.push(Routes.getSellerFollowers(state.seller!.id)),
@@ -34,7 +34,7 @@ class SellerStatsRow extends StatelessWidget {
           child: _countItem(
             context,
             count: state.productsCount.toString(),
-            label: 'Products',
+            label: context.l10n.products,
             icon: Icons.inventory_2_outlined,
             onTap: () {},
           ),

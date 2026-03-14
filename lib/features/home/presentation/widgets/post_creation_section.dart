@@ -64,7 +64,7 @@ class _PostCreationSectionState extends State<PostCreationSection> {
     return Column(
       children: [
         Text(
-          "E'lon joylash uchun tugmani bosing",
+          context.l10n.tapToPost,
           style: AppStyles.bodySmall.copyWith(
             color: Theme.of(context).primaryColor,
             fontWeight: FontWeight.w600,
@@ -94,7 +94,7 @@ class _PostCreationSectionState extends State<PostCreationSection> {
             ),
             alignment: Alignment.center,
             child: Text(
-              "+ Elon joylash",
+              context.l10n.addPost,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: AppStyles.bodyRegular.copyWith(
@@ -108,7 +108,7 @@ class _PostCreationSectionState extends State<PostCreationSection> {
         Padding(
           padding: EdgeInsets.symmetric(horizontal: AppDimens.md.w),
           child: Text(
-            "Siz maxsulot qidirmaysiz! Nima kerak ekanligini yozing, sotuvchilar o'zi sizni topishadi",
+            context.l10n.postCreationHint,
             textAlign: TextAlign.center,
             style: AppStyles.bodySmall.copyWith(
               color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
@@ -167,7 +167,7 @@ class _PostCreationSectionState extends State<PostCreationSection> {
             ],
           ],
           AppDimens.md.height,
-          Text("Maxsulotning taxminiy rasmi bo'lsa yuklang(ixtiyoriy)",
+          Text(context.l10n.uploadImageHint,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: AppStyles.bodySmall.copyWith(
@@ -230,7 +230,7 @@ class _PostCreationSectionState extends State<PostCreationSection> {
                   AppDimens.sm.width,
                   Expanded(
                     child: Text(
-                      state.selectedCategory?.name ?? 'Kategoriyani tanlang',
+                      state.selectedCategory?.name ?? context.l10n.selectCategory,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppStyles.bodySmall.copyWith(
@@ -319,7 +319,7 @@ class _PostCreationSectionState extends State<PostCreationSection> {
         Expanded(
           child: _uploadButton(
             context,
-            label: 'Galereya',
+            label: context.l10n.gallery,
             icon: AppIcons.gallery,
             onTap: () =>
                 context.read<HomeBloc>().add(const HomeAddImagesFromGallery()),
@@ -329,7 +329,7 @@ class _PostCreationSectionState extends State<PostCreationSection> {
         Expanded(
           child: _uploadButton(
             context,
-            label: 'Kamera',
+            label: context.l10n.camera,
             icon: Icons.camera_alt, // Assuming AppIcons.camera exists for SVG, or replace with Icon(Icons.camera_alt) if _uploadButton is modified
             onTap: () =>
                 context.read<HomeBloc>().add(const HomeAddImageFromCamera()),
@@ -470,7 +470,7 @@ class _PostCreationSectionState extends State<PostCreationSection> {
             color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
           decoration: InputDecoration(
-            hintText: "Qidirayotgan maxsulotingizni to'liq tasvirlab bering. Nomi, sifati, hajmi, taxmiy narxi va boshqa narsalarni yozishingiz mumkin...",
+            hintText: _getHintText(context, state),
             hintStyle:
                 AppStyles.bodySmall.copyWith(color: Theme.of(context).hintColor),
             filled: true,
@@ -544,7 +544,7 @@ class _PostCreationSectionState extends State<PostCreationSection> {
       ),
       alignment: Alignment.center,
       child: Text(
-        'Post yaratish faqat foydalanuvchilar uchun',
+        context.l10n.userOnlyPost,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: AppStyles.bodySmall.copyWith(
@@ -552,6 +552,24 @@ class _PostCreationSectionState extends State<PostCreationSection> {
         ),
       ),
     );
+  }
+
+
+
+  String _getHintText(BuildContext context, HomeState state) {
+    final defaultHint = context.l10n.postDescriptionHint;
+
+    if (state.selectedCategory == null) {
+      return defaultHint;
+    }
+
+    if (state.selectedSubcategory != null) {
+      return state.selectedSubcategory?.hintText ??
+          state.selectedCategory?.hintText ??
+          defaultHint;
+    }
+
+    return state.selectedCategory?.hintText ?? defaultHint;
   }
 
   Future<void> _openCategoryDialog(

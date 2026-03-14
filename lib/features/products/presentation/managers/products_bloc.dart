@@ -24,23 +24,22 @@ class ProductsBloc extends Bloc<ProductsEvent, ProductsState> {
     on<ProductsSelectCategory>(_onSelectCategory);
     on<ProductsUpdateSearch>(_onUpdateSearch);
     on<ProductsLoadDetail>(_onLoadDetail);
+    on<ProductsRefresh>(_onRefresh);
   }
 
-  Future<void> _onStarted(
-    ProductsStarted event,
-    Emitter<ProductsState> emit,
-  ) async {
+  Future<void> _onStarted(ProductsStarted event,
+      Emitter<ProductsState> emit, {bool forceRefresh = false}) async {
     emit(state.copyWith(isLoading: true));
     var categories = state.categories;
-    final categoriesResult = await getCategoriesUseCase();
+    final categoriesResult = await getCategoriesUseCase(forceRefresh: forceRefresh);
     categoriesResult.fold(
-      (_) {},
-      (loaded) => categories = loaded,
+          (_) {},
+          (loaded) => categories = loaded,
     );
-    final productsResult = await getProductsUseCase();
+    final productsResult = await getProductsUseCase(forceRefresh: forceRefresh);
     productsResult.fold(
-      (_) => emit(state.copyWith(isLoading: false)),
-      (products) {
+          (_) => emit(state.copyWith(isLoading: false)),
+          (products) {
         final selected = categories.isEmpty ? null : categories.first;
         final filtered = _applyFilters(products, selected, state.searchQuery);
         final visible = _visibleProducts(filtered, state.visibleCount);
@@ -66,12 +65,10 @@ class ProductsBloc extends Bloc<ProductsEvent, ProductsState> {
     ));
   }
 
-  void _onSelectCategory(
-    ProductsSelectCategory event,
-    Emitter<ProductsState> emit,
-  ) {
+  void _onSelectCategory(ProductsSelectCategory event,
+      Emitter<ProductsState> emit,) {
     final filtered =
-        _applyFilters(state.products, event.category, state.searchQuery);
+    _applyFilters(state.products, event.category, state.searchQuery);
     final visible = _visibleProducts(
       filtered,
       ProductsState.initialVisibleCount,
@@ -84,12 +81,10 @@ class ProductsBloc extends Bloc<ProductsEvent, ProductsState> {
     ));
   }
 
-  void _onUpdateSearch(
-    ProductsUpdateSearch event,
-    Emitter<ProductsState> emit,
-  ) {
+  void _onUpdateSearch(ProductsUpdateSearch event,
+      Emitter<ProductsState> emit,) {
     final filtered =
-        _applyFilters(state.products, state.selectedCategory, event.query);
+    _applyFilters(state.products, state.selectedCategory, event.query);
     final visible = _visibleProducts(
       filtered,
       ProductsState.initialVisibleCount,
@@ -102,47 +97,44 @@ class ProductsBloc extends Bloc<ProductsEvent, ProductsState> {
     ));
   }
 
-  Future<void> _onLoadDetail(
-    ProductsLoadDetail event,
-    Emitter<ProductsState> emit,
-  ) async {
+  Future<void> _onLoadDetail(ProductsLoadDetail event,
+      Emitter<ProductsState> emit,) async {
     emit(state.copyWith(isLoading: true));
     final result = await getProductByIdUseCase(event.productId);
     result.fold(
-      (_) => emit(state.copyWith(isLoading: false)),
-      (product) => emit(state.copyWith(
-        isLoading: false,
-        activeProduct: product,
-      )),
+          (_) => emit(state.copyWith(isLoading: false)),
+          (product) =>
+          emit(state.copyWith(
+            isLoading: false,
+            activeProduct: product,
+          )),
     );
   }
 
-  List<ProductEntity> _applyFilters(
-    List<ProductEntity> products,
-    ProductCategoryEntity? category,
-    String query,
-  ) {
+  List<ProductEntity> _applyFilters(List<ProductEntity> products,
+      ProductCategoryEntity? category,
+      String query,) {
     var filtered = products;
     if (category != null && category.id != 'all') {
       filtered = filtered
           .where((product) => product.category.id == category.id)
           .toList();
     }
-    if (query.trim().isNotEmpty) {
+    if (query
+        .trim()
+        .isNotEmpty) {
       final lowerQuery = query.toLowerCase();
       filtered = filtered
           .where((product) =>
-              product.name.toLowerCase().contains(lowerQuery) ||
-              product.description.toLowerCase().contains(lowerQuery))
+      product.name.toLowerCase().contains(lowerQuery) ||
+          product.description.toLowerCase().contains(lowerQuery))
           .toList();
     }
     return filtered;
   }
 
-  List<ProductEntity> _visibleProducts(
-    List<ProductEntity> products,
-    int count,
-  ) {
+  List<ProductEntity> _visibleProducts(List<ProductEntity> products,
+      int count,) {
     if (products.length <= count) return products;
     return products.take(count).toList();
   }
@@ -154,5 +146,9 @@ class ProductsBloc extends Bloc<ProductsEvent, ProductsState> {
       counts[product.category.id] = (counts[product.category.id] ?? 0) + 1;
     }
     return counts;
+  }
+
+  Future<void> _onRefresh(ProductsRefresh event, Emitter<ProductsState> emit) async {
+    await _onStarted(const ProductsStarted(), emit, forceRefresh: true);
   }
 }

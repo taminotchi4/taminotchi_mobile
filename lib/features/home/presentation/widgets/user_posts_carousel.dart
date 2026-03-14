@@ -9,14 +9,18 @@ import '../../../../global/widgets/measure_size.dart';
 import '../../domain/entities/post_entity.dart';
 import 'post_card.dart';
 
+import '../../../../global/widgets/shimmer_skeleton.dart';
+
 class UserPostsCarousel extends StatefulWidget {
   final List<PostEntity> posts;
   final Map<String, int> commentCounts;
+  final bool isLoading;
 
   const UserPostsCarousel({
     super.key,
     required this.posts,
     required this.commentCounts,
+    this.isLoading = false,
   });
 
   @override
@@ -60,6 +64,7 @@ class _UserPostsCarouselState extends State<UserPostsCarousel> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.isLoading) return _buildSkeleton(context);
     if (widget.posts.isEmpty) {
       return Container(
         padding: EdgeInsets.all(AppDimens.lg.r),
@@ -142,5 +147,17 @@ class _UserPostsCarouselState extends State<UserPostsCarousel> {
   void _restartTimer() {
     _timer?.cancel();
     _startTimer();
+  }
+
+  Widget _buildSkeleton(BuildContext context) {
+    return Container(
+      height: AppDimens.carouselHeight.h,
+      margin: EdgeInsets.symmetric(horizontal: AppDimens.xs.w),
+      child: const ShimmerSkeleton(
+        height: double.infinity,
+        width: double.infinity,
+        borderRadius: AppDimens.cardRadius,
+      ),
+    );
   }
 }

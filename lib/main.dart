@@ -10,10 +10,15 @@ import 'core/utils/theme.dart';
 import 'global/managers/locale/localization_cubit.dart';
 import 'global/managers/locale/locale_repository_impl.dart';
 import 'global/managers/theme/theme_cubit.dart';
+import 'core/services/image_cache_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final pref = await SharedPreferences.getInstance();
+  
+  // Cleanup expired images (Telegram-style 3 days TTL)
+  ImageCacheService().cleanupExpired();
+
   runApp(MyApp(pref: pref));
 }
 
@@ -25,7 +30,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: dependencies,
+      providers: [
+        RepositoryProvider<SharedPreferences>.value(value: pref),
+        ...dependencies,
+      ],
       child: MultiBlocProvider(
         providers: [
           BlocProvider(

@@ -5,17 +5,24 @@ import '../entities/post_entity.dart';
 import '../entities/post_image_entity.dart';
 import '../entities/user_role.dart';
 import '../entities/post_status.dart';
+import '../entities/group_entity.dart';
 
 abstract class HomeRepository {
-  Future<Result<List<PostEntity>>> getAllPosts();
-
-  Future<Result<List<PostEntity>>> getMyPosts(String userId);
+  Future<Result<List<PostEntity>>> getAllPosts({bool forceRefresh = false});
+  Future<Result<List<PostEntity>>> getPostsByCategory(String categoryId, {bool forceRefresh = false});
+  Future<Result<List<PostEntity>>> getPostsByGroup(String groupId, {bool forceRefresh = false});
+  Future<Result<List<PostEntity>>> getMyPosts({bool forceRefresh = false});
 
   Future<Result<PostEntity>> createPost({
     required String content,
     required List<PostImageEntity> images,
     required PostCategoryEntity category,
+    String? price,
+    String? adressname,
+    String? supCategoryId,
   });
+  
+  Future<Result<List<GroupEntity>>> getGroupsByCategory(String categoryId, {bool forceRefresh = false});
 
   Future<Result<PostEntity?>> getPostById(String id);
 
@@ -23,7 +30,7 @@ abstract class HomeRepository {
 
   Future<Result<Map<String, int>>> getCommentCounts();
 
-  Future<Result<List<PostCategoryEntity>>> getCategories();
+  Future<Result<List<PostCategoryEntity>>> getCategories({bool forceRefresh = false});
 
   Future<Result<String>> getCurrentUserId();
 

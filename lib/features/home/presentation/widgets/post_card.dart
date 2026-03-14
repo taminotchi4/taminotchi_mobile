@@ -17,6 +17,7 @@ import '../../domain/entities/post_status.dart';
 import '../managers/home_bloc.dart';
 import '../managers/home_state.dart';
 import 'image_viewer_dialog.dart';
+import '../../../../global/widgets/telegram_image.dart';
 
 class PostCard extends StatelessWidget {
   final PostEntity post;
@@ -48,30 +49,96 @@ class PostCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppDimens.cardRadius.r),
         child: Padding(
           padding: EdgeInsets.all(AppDimens.md.r),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildHeader(context),
-              AppDimens.md.height,
-              if (post.images.isNotEmpty) _buildImageSection(context),
-              if (post.images.isNotEmpty) AppDimens.md.height,
-              Text(
-                post.content,
-                maxLines: showFullText
-                    ? null
-                    : (textMaxLines ?? (post.images.isNotEmpty ? 3 : 5)),
-                overflow:
-                    showFullText ? TextOverflow.visible : TextOverflow.ellipsis,
-                style: AppStyles.bodyRegular.copyWith(
-                  color: theme.textTheme.bodyMedium?.color,
+          child: SingleChildScrollView(
+            physics: const NeverScrollableScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildHeader(context),
+                AppDimens.md.height,
+                if (post.images.isNotEmpty) _buildImageSection(context),
+                if (post.images.isNotEmpty) AppDimens.md.height,
+                Text(
+                  post.content,
+                  maxLines: showFullText
+                      ? null
+                      : (textMaxLines ?? (post.images.isNotEmpty ? 3 : 5)),
+                  overflow:
+                      showFullText ? TextOverflow.visible : TextOverflow.ellipsis,
+                  style: AppStyles.bodyRegular.copyWith(
+                    color: theme.textTheme.bodyMedium?.color,
+                  ),
                 ),
-              ),
-              AppDimens.md.height,
-              _buildFooter(context, commentCount),
-            ],
+                if (showFullText && (post.price != null || post.address != null)) ...[
+                  AppDimens.md.height,
+                  _buildDetailsSection(context),
+                ],
+                AppDimens.md.height,
+                _buildFooter(context, commentCount),
+              ],
+            ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildDetailsSection(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(AppDimens.sm.r),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: BorderRadius.circular(AppDimens.imageRadius.r),
+      ),
+      child: Column(
+        children: [
+          if (post.price != null && post.price != '0.00' && post.price != '0')
+            _detailItem(
+              context,
+              Icons.payments_outlined,
+              context.l10n.priceLabel,
+              '${post.price} so\'m',
+              color: Colors.green,
+            ),
+          if (post.address != null && post.address!.isNotEmpty)
+            _detailItem(
+              context,
+              Icons.location_on_outlined,
+              context.l10n.addressLabel,
+              post.address!,
+              color: Colors.blue,
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _detailItem(BuildContext context, IconData icon, String label, String value, {Color? color}) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 4.h),
+      child: Row(
+        children: [
+          Icon(icon, size: 16.sp, color: color ?? Theme.of(context).primaryColor),
+          SizedBox(width: 8.w),
+          Text(
+            label,
+            style: AppStyles.bodySmall.copyWith(
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).textTheme.bodySmall?.color,
+            ),
+          ),
+          SizedBox(width: 4.w),
+          Expanded(
+            child: Text(
+              value,
+              style: AppStyles.bodySmall.copyWith(
+                fontWeight: FontWeight.w600,
+                color: color ?? Theme.of(context).textTheme.bodyMedium?.color,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -81,22 +148,33 @@ class PostCard extends StatelessWidget {
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(AppDimens.circleRadius.r),
-          child: Container(
-            width: AppDimens.avatar.w,
-            height: AppDimens.avatar.w,
-            color: AppColors.gray100,
-            alignment: Alignment.center,
-            child: SvgPicture.asset(
-              post.authorAvatarPath,
-              width: AppDimens.iconMd.w,
-              height: AppDimens.iconMd.w,
-              colorFilter: const ColorFilter.mode(
-                AppColors.gray700,
-                BlendMode.srcIn,
-              ),
-            ),
+            child: post.authorAvatarPath.startsWith('http')
+                ? (post.authorAvatarPath.endsWith('.svg')
+                    ? SvgPicture.network(
+                        post.authorAvatarPath,
+                        width: AppDimens.iconMd.w,
+                        height: AppDimens.iconMd.w,
+                        colorFilter: const ColorFilter.mode(
+                          AppColors.gray700,
+                          BlendMode.srcIn,
+                        ),
+                      )
+                    : Image.network(
+                        post.authorAvatarPath,
+                        width: AppDimens.avatar.w,
+                        height: AppDimens.avatar.w,
+                        fit: BoxFit.cover,
+                      ))
+                : SvgPicture.asset(
+                    post.authorAvatarPath,
+                    width: AppDimens.iconMd.w,
+                    height: AppDimens.iconMd.w,
+                    colorFilter: const ColorFilter.mode(
+                      AppColors.gray700,
+                      BlendMode.srcIn,
+                    ),
+                  ),
           ),
-        ),
         AppDimens.sm.width,
         Expanded(
           child: Column(
@@ -112,7 +190,7 @@ class PostCard extends StatelessWidget {
               ),
               SizedBox(height: 2.h),
               Text(
-                _formatDate(post.createdAt),
+                _formatDate(post.createdAt, context),
                 style: AppStyles.bodySmall.copyWith(
                   fontSize: 10.sp,
                   color: Theme.of(context).textTheme.bodySmall?.color,
@@ -135,7 +213,7 @@ class PostCard extends StatelessWidget {
     final isArchived = post.status == PostStatus.archived;
     final color = isArchived ? Colors.grey : Colors.green;
     final icon = isArchived ? Icons.check_circle_outline : Icons.fiber_manual_record;
-    final label = isArchived ? 'Kelishilgan' : 'Active';
+    final label = isArchived ? context.l10n.statusAgreed : context.l10n.statusActive;
 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
@@ -162,23 +240,23 @@ class PostCard extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime date) {
+  String _formatDate(DateTime date, BuildContext context) {
     final now = DateTime.now();
     final difference = now.difference(date);
     if (difference.inDays > 0) {
-      return '${difference.inDays} kun oldin';
+      return context.l10n.daysAgo(difference.inDays);
     } else if (difference.inHours > 0) {
-      return '${difference.inHours} soat oldin';
+      return context.l10n.hoursAgo(difference.inHours);
     } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes} daqiqa oldin';
+      return context.l10n.minutesAgo(difference.inMinutes);
     } else {
-      return 'Hozirgina';
+      return context.l10n.justNow;
     }
   }
 
   Widget _buildImageSection(BuildContext context) {
     return SizedBox(
-      height: 70.h,
+      height: showFullText ? 200.h : 70.h,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: post.images.length,
@@ -215,7 +293,7 @@ class PostCard extends StatelessWidget {
             AppSvgIcon(
               assetPath: post.category.iconPath,
               size: AppDimens.iconMd,
-              color: Theme.of(context).iconTheme.color,
+              color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
             ),
             AppDimens.xs.width,
             Expanded(
@@ -224,7 +302,8 @@ class PostCard extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppStyles.bodySmall.copyWith(
-                  color: Theme.of(context).textTheme.bodySmall?.color,
+                  color:
+                      Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
                 ),
               ),
             ),
@@ -259,16 +338,21 @@ class PostCard extends StatelessWidget {
   }
 
   Widget _infoItem(BuildContext context, String icon, String text) {
+    final color = Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7);
     return Row(
       children: [
-        AppSvgIcon(assetPath: icon, size: AppDimens.iconSm),
+        AppSvgIcon(
+          assetPath: icon,
+          size: AppDimens.iconSm,
+          color: color,
+        ),
         AppDimens.xs.width,
         Text(
           text,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: AppStyles.bodySmall.copyWith(
-            color: Theme.of(context).textTheme.bodySmall?.color,
+            color: color,
           ),
         ),
       ],
@@ -282,7 +366,27 @@ class PostCard extends StatelessWidget {
         fit: BoxFit.cover,
       );
     }
-    if (image.path.toLowerCase().endsWith('.svg')) {
+    final isNetwork = image.path.startsWith('http');
+    final isSvg = image.path.toLowerCase().endsWith('.svg');
+
+    if (isNetwork) {
+      if (isSvg) {
+        return SvgPicture.network(
+          image.path,
+          fit: BoxFit.cover,
+          placeholderBuilder: (context) => Container(
+            color: AppColors.gray100,
+            child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          ),
+        );
+      }
+      return TelegramImage(
+        imageUrl: image.path,
+        fit: BoxFit.cover,
+      );
+    }
+
+    if (isSvg) {
       return SvgPicture.asset(image.path, fit: BoxFit.cover);
     }
     return Image.asset(image.path, fit: BoxFit.cover);

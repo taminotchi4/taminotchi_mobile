@@ -6,7 +6,6 @@ import 'auth_interceptor.dart';
 class ApiClient {
   final AuthInterceptor interceptor;
 
-
   ApiClient({required this.interceptor}) {
     _dio = Dio(
       BaseOptions(baseUrl: "http://89.223.126.116:3003/api/v1/", validateStatus: (status) => true),
@@ -26,17 +25,41 @@ class ApiClient {
       );
   }
 
-
   late final Dio _dio;
+
+  /// Backend javobidan faqat statusCode va message ni oladi.
+  Exception _parseError(Response response) {
+    try {
+      final data = response.data;
+      if (data is Map) {
+        final statusCode = data['statusCode'] ?? response.statusCode;
+        final message = data['message'] ?? 'Noma\'lum xatolik';
+        return Exception('$statusCode: $message');
+      }
+    } catch (_) {}
+    return Exception('${response.statusCode}: Noma\'lum xatolik');
+  }
+
+  /// 401 kelsa interceptordagi logout'ni ishga tushiradi.
+  bool _handleUnauthorized(Response response) {
+    if (response.statusCode == 401) {
+      interceptor.handleUnauthorized();
+      return true;
+    }
+    return false;
+  }
 
   Future<Result<T>> get<T>(
     String path, {
     Map<String, dynamic>? queryParams,
   }) async {
     try {
-      var response = await _dio.get(path, queryParameters: queryParams);
+      final response = await _dio.get(path, queryParameters: queryParams);
+      if (_handleUnauthorized(response)) {
+        return Result.error(Exception('401: Avtorizatsiya talab etiladi'));
+      }
       if (response.statusCode != 200) {
-        return Result.error(Exception(response.data));
+        return Result.error(_parseError(response));
       }
       return Result.ok(response.data as T);
     } on Exception catch (e) {
@@ -50,11 +73,14 @@ class ApiClient {
     Options? options,
   }) async {
     try {
-      var response = await _dio.post(path, data: data, options: options);
+      final response = await _dio.post(path, data: data, options: options);
+      if (_handleUnauthorized(response)) {
+        return Result.error(Exception('401: Avtorizatsiya talab etiladi'));
+      }
       if (response.statusCode == 200 || response.statusCode == 201) {
         return Result.ok(response.data as T);
       }
-      return Result.error(Exception(response.data));
+      return Result.error(_parseError(response));
     } on Exception catch (e) {
       return Result.error(e);
     }
@@ -66,9 +92,12 @@ class ApiClient {
     Options? options,
   }) async {
     try {
-      var response = await _dio.patch(path, data: data, options: options);
+      final response = await _dio.patch(path, data: data, options: options);
+      if (_handleUnauthorized(response)) {
+        return Result.error(Exception('401: Avtorizatsiya talab etiladi'));
+      }
       if (response.statusCode != 200) {
-        return Result.error(Exception('hatolik ${response.data}'));
+        return Result.error(_parseError(response));
       }
       return Result.ok(response.data as T);
     } on Exception catch (e) {
@@ -79,13 +108,15 @@ class ApiClient {
   Future<Result<T>> delete<T>(String path) async {
     try {
       final response = await _dio.delete<T>(path);
+      if (_handleUnauthorized(response)) {
+        return Result.error(Exception('401: Avtorizatsiya talab etiladi'));
+      }
       if (response.statusCode == 200) {
         return Result.ok(response.data as T);
       }
-
-      return Result.error(Exception(response.data.toString()));
+      return Result.error(_parseError(response));
     } on DioException catch (e) {
-      return Result.error(Exception(e.toString()));
+      return Result.error(Exception(e.message ?? e.toString()));
     } on Exception catch (e) {
       return Result.error(e);
     }
