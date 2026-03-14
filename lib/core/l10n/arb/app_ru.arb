@@ -1,0 +1,23 @@
+{
+  "selectLanguage": "Выберите язык",
+  "choosePreferredLanguage": "Выберите предпочтительный язык ниже.",
+  "continueButton": "Продолжить",
+  "home": "Главная",
+  "profile": "Профиль",
+  "settings": "Настройки",
+  "save": "Сохранить",
+  "cancel": "Отмена",
+  "error": "Ошибка",
+  "noInternet": "Нет подключения к интернету",
+  "retry": "Повторить",
+  "createPost": "Разместить объявление",
+  "postContentHint": "Введите текст объявления...",
+  "send": "Отправить",
+  "success": "Успешно",
+  "postCreatedSuccess": "Объявление успешно размещено",
+  "myPosts": "Мои объявления",
+  "noPostsYet": "У вас пока нет объявлений",
+  "comments": "Комментарии",
+  "privateReplies": "Личные ответы",
+  "all": "Все"
+}

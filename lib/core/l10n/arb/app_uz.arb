@@ -1,0 +1,23 @@
+{
+  "selectLanguage": "Tilni tanlang",
+  "choosePreferredLanguage": "Quyida oʻzingiz yoqtirgan tilni tanlang.",
+  "continueButton": "Davom etish",
+  "home": "Asosiy",
+  "profile": "Profil",
+  "settings": "Sozlamalar",
+  "save": "Saqlash",
+  "cancel": "Bekor qilish",
+  "error": "Xatolik",
+  "noInternet": "Internet aloqasi yo'q",
+  "retry": "Qayta urinish",
+  "createPost": "Elon joylash",
+  "postContentHint": "Elon matnini kiriting...",
+  "send": "Yuborish",
+  "success": "Muvaffaqiyatli",
+  "postCreatedSuccess": "Elon muvaffaqiyatli joylandi",
+  "myPosts": "Mening elonlarim",
+  "noPostsYet": "Sizning postlaringiz hozircha yoq",
+  "comments": "Izohlar",
+  "privateReplies": "Shaxsiy javoblar",
+  "all": "Barchasi"
+}

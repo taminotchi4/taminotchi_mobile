@@ -1,0 +1,23 @@
+{
+  "selectLanguage": "Select Language",
+  "choosePreferredLanguage": "Select your preferred language below.",
+  "continueButton": "Continue",
+  "home": "Home",
+  "profile": "Profile",
+  "settings": "Settings",
+  "save": "Save",
+  "cancel": "Cancel",
+  "error": "Error",
+  "noInternet": "No internet connection",
+  "retry": "Retry",
+  "createPost": "Create Post",
+  "postContentHint": "Enter post content...",
+  "send": "Send",
+  "success": "Success",
+  "postCreatedSuccess": "Post created successfully",
+  "myPosts": "My Posts",
+  "noPostsYet": "You don't have any posts yet",
+  "comments": "Comments",
+  "privateReplies": "Private Replies",
+  "all": "All"
+}

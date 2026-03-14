@@ -1,0 +1,395 @@
+import 'dart:math';
+
+import '../../../../core/utils/icons.dart';
+import '../../domain/entities/user_role.dart';
+import '../../domain/entities/post_status.dart';
+import '../models/comment_model.dart';
+import '../models/post_category_model.dart';
+import '../models/post_model.dart';
+
+class HomeLocalDataSource {
+  static final List<PostModel> _posts = [];
+  static final Map<String, List<CommentModel>> _comments = {};
+  static bool _initialized = false;
+
+  final Random _random = Random();
+  final String _currentUserId = 'user_1';
+  final UserRole _currentUserRole = UserRole.user;
+  static const int _maxPrivateReplies = 26;
+  late final List<PostCategoryModel> _categories = [
+    const PostCategoryModel(
+      id: 'all',
+      name: 'Barchasi',
+      iconPath: AppIcons.category,
+    ),
+    const PostCategoryModel(
+      id: 'realestate',
+      name: 'Ko\'chmas mulk',
+      iconPath: AppIcons.home,
+    ),
+    const PostCategoryModel(
+      id: 'kids',
+      name: 'Bolalar dunyosi',
+      iconPath: AppIcons.categoryEvent,
+    ),
+    const PostCategoryModel(
+      id: 'electronics',
+      name: 'Elektronika',
+      iconPath: AppIcons.categoryTech,
+      subcategories: [
+        PostCategoryModel(
+          id: 'electronics_computer',
+          name: 'Kompyuter',
+          iconPath: AppIcons.categoryTech,
+          parentId: 'electronics',
+        ),
+        PostCategoryModel(
+          id: 'electronics_phone',
+          name: 'Telefon',
+          iconPath: AppIcons.categoryTech,
+          parentId: 'electronics',
+        ),
+        PostCategoryModel(
+          id: 'electronics_tv',
+          name: 'Televizor',
+          iconPath: AppIcons.categoryTech,
+          parentId: 'electronics',
+        ),
+        PostCategoryModel(
+          id: 'electronics_headphones',
+          name: 'Quloqchin',
+          iconPath: AppIcons.audio,
+          parentId: 'electronics',
+        ),
+        PostCategoryModel(
+          id: 'electronics_other',
+          name: 'Boshqa',
+          iconPath: AppIcons.categoryTech,
+          parentId: 'electronics',
+        ),
+      ],
+    ),
+    const PostCategoryModel(
+      id: 'transport',
+      name: 'Transport',
+      iconPath: AppIcons.orders,
+      subcategories: [
+        PostCategoryModel(
+          id: 'transport_car',
+          name: 'Avtomobil',
+          iconPath: AppIcons.orders,
+          parentId: 'transport',
+        ),
+        PostCategoryModel(
+          id: 'transport_moto',
+          name: 'Mototsikl',
+          iconPath: AppIcons.orders,
+          parentId: 'transport',
+        ),
+        PostCategoryModel(
+          id: 'transport_bicycle',
+          name: 'Velosiped',
+          iconPath: AppIcons.orders,
+          parentId: 'transport',
+        ),
+        PostCategoryModel(
+          id: 'transport_parts',
+          name: 'Ehtiyot qismlar',
+          iconPath: AppIcons.categoryService,
+          parentId: 'transport',
+        ),
+      ],
+    ),
+    const PostCategoryModel(
+      id: 'jobs',
+      name: 'Ish o\'rinlari',
+      iconPath: AppIcons.user,
+    ),
+    const PostCategoryModel(
+      id: 'animals',
+      name: 'Hayvonlar',
+      iconPath: AppIcons.categoryOther,
+    ),
+    const PostCategoryModel(
+      id: 'home_garden',
+      name: 'Uy va bog\'',
+      iconPath: AppIcons.categoryFood,
+    ),
+    const PostCategoryModel(
+      id: 'business',
+      name: 'Biznes va xizmatlar',
+      iconPath: AppIcons.categoryService,
+    ),
+    const PostCategoryModel(
+      id: 'fashion',
+      name: 'Kiyimlar va Aksessuarlar',
+      iconPath: AppIcons.categoryOther,
+      subcategories: [
+        PostCategoryModel(
+          id: 'fashion_men',
+          name: 'Erkaklar kiyimi',
+          iconPath: AppIcons.user,
+          parentId: 'fashion',
+        ),
+        PostCategoryModel(
+          id: 'fashion_women',
+          name: 'Ayollar kiyimi',
+          iconPath: AppIcons.user,
+          parentId: 'fashion',
+        ),
+        PostCategoryModel(
+          id: 'fashion_kids',
+          name: 'Bolalar kiyimi',
+          iconPath: AppIcons.categoryEvent,
+          parentId: 'fashion',
+        ),
+        PostCategoryModel(
+          id: 'fashion_accessories',
+          name: 'Aksessuarlar',
+          iconPath: AppIcons.star,
+          parentId: 'fashion',
+        ),
+      ],
+    ),
+    const PostCategoryModel(
+      id: 'sports',
+      name: 'Sport va dam olish',
+      iconPath: AppIcons.categoryEvent,
+    ),
+    const PostCategoryModel(
+      id: 'food',
+      name: 'Oziq-ovqat',
+      iconPath: AppIcons.categoryFood,
+    ),
+    const PostCategoryModel(
+      id: 'books',
+      name: 'Kitoblar',
+      iconPath: AppIcons.file,
+    ),
+    const PostCategoryModel(
+      id: 'health',
+      name: 'Salomatlik',
+      iconPath: AppIcons.categoryService,
+    ),
+    const PostCategoryModel(
+      id: 'education',
+      name: 'Ta\'lim',
+      iconPath: AppIcons.user,
+    ),
+    const PostCategoryModel(
+      id: 'furniture',
+      name: 'Mebel',
+      iconPath: AppIcons.home,
+    ),
+    const PostCategoryModel(
+      id: 'appliances',
+      name: 'Maishiy texnika',
+      iconPath: AppIcons.categoryTech,
+    ),
+    const PostCategoryModel(
+      id: 'hobbies',
+      name: "Sevimli mashg\'ulotlar va kulguli qo'shiqlar",
+      iconPath: AppIcons.star,
+    ),
+    const PostCategoryModel(
+      id: 'other',
+      name: 'Boshqa',
+      iconPath: AppIcons.category,
+    ),
+  ];
+
+  void ensureSeeded() {
+    if (_initialized) return;
+    _initialized = true;
+
+    final now = DateTime.now();
+    const seedMinutes = 15;
+    const seedHourOne = 1;
+    final seedPosts = [
+      PostModel(
+        id: 'post_1',
+        authorId: 'user_1', // Changed to current user for testing reply
+        authorName: 'Akmal',
+        authorAvatarPath: AppIcons.user,
+        content:
+            'Bugun yangi loyiha ustida ishlayapman. Fikrlar va maslahatlar bolsa, yozib qoldiring.',
+        images: const [],
+        category: _categories[0],
+        createdAt: now.subtract(const Duration(minutes: seedMinutes)),
+        privateReplyCount: _random.nextInt(_maxPrivateReplies),
+      ),
+      PostModel(
+        id: 'post_2',
+        authorId: 'user_3',
+        authorName: 'Dilnoza',
+        authorAvatarPath: AppIcons.user,
+        content:
+            'Bugun ertalabki mashgulotdan keyin ajoyib kayfiyat. Hamma qanday?',
+        images: const [],
+        category: _categories[1],
+        createdAt: now.subtract(const Duration(hours: seedHourOne)),
+        privateReplyCount: _random.nextInt(_maxPrivateReplies),
+        status: PostStatus.archived,
+      ),
+    ];
+
+    _posts.addAll(seedPosts);
+    for (final post in seedPosts) {
+      _comments[post.id] = _generateComments(post.id);
+    }
+  }
+
+  List<PostModel> getAllPosts() {
+    ensureSeeded();
+    return List.unmodifiable(
+      _posts.where((post) => post.status == PostStatus.active).toList(),
+    );
+  }
+
+  List<PostModel> getMyPosts(String userId) {
+    ensureSeeded();
+    return List.unmodifiable(
+      _posts.where((post) => post.authorId == userId).toList(),
+    );
+  }
+
+  PostModel addPost({
+    required String content,
+    required List<PostImageModel> images,
+    required PostCategoryModel category,
+  }) {
+    ensureSeeded();
+    final post = PostModel(
+      id: 'post_${DateTime.now().millisecondsSinceEpoch}',
+      authorId: _currentUserId,
+      authorName: 'Mening akkauntim',
+      authorAvatarPath: AppIcons.user,
+      content: content,
+      images: images,
+      category: category,
+      createdAt: DateTime.now(),
+      privateReplyCount: _random.nextInt(_maxPrivateReplies),
+    );
+    _posts.insert(0, post);
+    _comments[post.id] = _generateComments(post.id);
+    return post;
+  }
+
+  void updatePostStatus(String postId, PostStatus status) {
+    ensureSeeded();
+    final index = _posts.indexWhere((p) => p.id == postId);
+    if (index != -1) {
+      final post = _posts[index];
+      _posts[index] = PostModel(
+        id: post.id,
+        authorId: post.authorId,
+        authorName: post.authorName,
+        authorAvatarPath: post.authorAvatarPath,
+        content: post.content,
+        images: post.images,
+        category: post.category,
+        createdAt: post.createdAt,
+        privateReplyCount: post.privateReplyCount,
+        status: status,
+      );
+    }
+  }
+
+  PostModel? getPostById(String id) {
+    ensureSeeded();
+    try {
+      return _posts.firstWhere((post) => post.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  List<CommentModel> getComments(String postId) {
+    ensureSeeded();
+    return List.unmodifiable(_comments[postId] ?? []);
+  }
+
+  void addComment(String postId, CommentModel comment) {
+    ensureSeeded();
+    if (_comments[postId] == null) {
+      _comments[postId] = [];
+    }
+    _comments[postId]!.insert(0, comment);
+  }
+
+  void addReply(String postId, String parentCommentId, CommentModel reply) {
+    ensureSeeded();
+    final comments = _comments[postId];
+    if (comments == null) return;
+
+    final parentIndex = comments.indexWhere((c) => c.id == parentCommentId);
+    if (parentIndex != -1) {
+      final parent = comments[parentIndex];
+      final updatedReplies = List<CommentModel>.from(parent.replies ?? [])..add(reply);
+      
+      comments[parentIndex] = CommentModel(
+        id: parent.id,
+        postId: parent.postId,
+        userName: parent.userName,
+        userRole: parent.userRole,
+        userAvatarPath: parent.userAvatarPath,
+        content: parent.content,
+        createdAt: parent.createdAt,
+        replies: updatedReplies,
+      );
+    }
+  }
+
+  List<PostCategoryModel> getCategories() {
+    ensureSeeded();
+    return List.unmodifiable(_categories);
+  }
+
+  String getCurrentUserId() => _currentUserId;
+
+  UserRole getCurrentUserRole() => _currentUserRole;
+
+  Map<String, int> getCommentCounts() {
+    ensureSeeded();
+    return Map.unmodifiable(
+      _comments.map((key, value) => MapEntry(key, value.length)),
+    );
+  }
+
+  List<CommentModel> _generateComments(String postId) {
+    const minComments = 1;
+    const extraComments = 7;
+    const minMinutes = 5;
+    const maxMinutes = 120;
+    final count = minComments + _random.nextInt(extraComments);
+    return List.generate(count, (index) {
+      return CommentModel(
+        id: '${postId}_comment_$index',
+        postId: postId,
+        userName: _randomUserName(),
+        userRole: _random.nextBool() ? 'Market' : 'User',
+        userAvatarPath: AppIcons.user,
+        content: _randomComment(),
+        createdAt: DateTime.now()
+            .subtract(Duration(minutes: minMinutes + _random.nextInt(maxMinutes))),
+      );
+    });
+  }
+
+  String _randomUserName() {
+    const names = ['Sarvar', 'Madina', 'Aziza', 'Kamron', 'Malika', 'Ulugbek'];
+    return names[_random.nextInt(names.length)];
+  }
+
+  String _randomComment() {
+    const comments = [
+      'Zor! Fikringiz yoqdi.',
+      'Qiziqarli. Davom ettiring.',
+      'Men ham shunga oxshashni korganman.',
+      'Hozircha yaxshi korinadi.',
+      'Ajoyib kayfiyat uchun rahmat!',
+      'Buni sinab koramiz.',
+    ];
+    return comments[_random.nextInt(comments.length)];
+  }
+}
