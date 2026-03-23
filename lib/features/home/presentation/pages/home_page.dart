@@ -21,8 +21,25 @@ import '../widgets/post_creation_section.dart';
 import '../widgets/user_posts_carousel.dart';
 import '../widgets/category_section.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+    // Trigger initial data load when entering the home page
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<HomeBloc>().add(const HomeRefresh());
+        context.read<ProductsBloc>().add(const ProductsRefresh());
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -96,6 +113,22 @@ class HomePage extends StatelessWidget {
             ),
             SliverToBoxAdapter(
               child: Padding(
+                padding: EdgeInsets.only(
+                  top: AppDimens.lg.h,
+                  bottom: AppDimens.md.h,
+                ),
+                child: BlocBuilder<HomeBloc, HomeState>(
+                  builder: (context, state) {
+                    return CategorySection(
+                      categories: state.categories,
+                      isLoading: state.isLoadingCategories && state.categories.isEmpty,
+                    );
+                  },
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
                 padding: EdgeInsets.fromLTRB(
                   AppDimens.lg.w,
                   AppDimens.sm.h,
@@ -132,22 +165,6 @@ class HomePage extends StatelessWidget {
                       posts: state.carouselPosts,
                       commentCounts: state.commentCounts,
                       isLoading: state.isLoadingPosts && state.carouselPosts.isEmpty,
-                    );
-                  },
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.only(
-                  top: AppDimens.lg.h,
-                  bottom: AppDimens.md.h,
-                ),
-                child: BlocBuilder<HomeBloc, HomeState>(
-                  builder: (context, state) {
-                    return CategorySection(
-                      categories: state.categories,
-                      isLoading: state.isLoadingCategories && state.categories.isEmpty,
                     );
                   },
                 ),

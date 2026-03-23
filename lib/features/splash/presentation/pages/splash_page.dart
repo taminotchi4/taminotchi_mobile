@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/routing/routes.dart';
 import '../../../../core/utils/styles.dart';
 import '../../../auth/domain/repositories/auth_repository.dart';
-import '../../../profile/domain/repositories/client_profile_repository.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -28,7 +27,6 @@ class _SplashPageState extends State<SplashPage> {
     if (!mounted) return;
 
     final authRepo = context.read<AuthRepository>();
-    final profileRepo = context.read<ClientProfileRepository>();
 
     try {
       final token = await authRepo.getToken();
@@ -38,13 +36,10 @@ class _SplashPageState extends State<SplashPage> {
         return;
       }
 
-      // Verify token by trying to fetch the profile
-      // This will also trigger the AuthInterceptor if the token needs refresh
-      await profileRepo.getProfile();
-      
+      // If token exists, we can go to Home. 
+      // The HomeBloc and Interceptors will handle session expiration.
       if (mounted) context.go(Routes.home);
     } catch (e) {
-      // If profile fetch fails (e.g., 401 Unauthorized after internal refresh attempt fails)
       if (mounted) context.go(Routes.auth);
     }
   }

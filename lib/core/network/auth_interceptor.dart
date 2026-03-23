@@ -11,6 +11,8 @@ class AuthInterceptor extends Interceptor {
   final _refreshDio = Dio(
     BaseOptions(
       baseUrl: "http://89.223.126.116:3003/api/v1/",
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
     ),
   );
 

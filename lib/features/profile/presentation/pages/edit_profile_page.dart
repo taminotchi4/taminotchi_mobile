@@ -32,7 +32,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
   late TextEditingController _nameController;
   late TextEditingController _usernameController;
   late TextEditingController _phoneController;
-  String? _selectedLanguage;
   String? _photoPath;
 
   @override
@@ -41,7 +40,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _nameController = TextEditingController(text: widget.profile.name);
     _usernameController = TextEditingController(text: widget.profile.username);
     _phoneController = TextEditingController(text: widget.profile.phone);
-    _selectedLanguage = widget.profile.language;
     _photoPath = widget.profile.photoUrl;
   }
 
@@ -131,7 +129,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       name: _nameController.text.trim(),
       username: username,
       phone: _phoneController.text.trim(),
-      language: _selectedLanguage,
+      language: widget.profile.language,
       photoUrl: _photoPath,
     );
 
@@ -267,7 +265,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
               ),
             ),
             AppDimens.lg.height,
-            _buildLanguageSelector(),
             AppDimens.xl.height,
             SizedBox(
               width: double.infinity,
@@ -394,51 +391,5 @@ class _EditProfilePageState extends State<EditProfilePage> {
     }
 
     return null;
-  }
-
-  Widget _buildLanguageSelector() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          context.l10n.language,
-          style: AppStyles.bodyMedium.copyWith(
-            fontWeight: FontWeight.w600,
-            color: Theme.of(context).textTheme.titleMedium?.color,
-          ),
-        ),
-        AppDimens.sm.height,
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: AppDimens.md.w),
-          decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            borderRadius: BorderRadius.circular(AppDimens.imageRadius.r),
-            border: Border.all(
-              color: Theme.of(context).dividerColor,
-              width: AppDimens.borderWidth.w,
-            ),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: _selectedLanguage,
-              isExpanded: true,
-              dropdownColor: Theme.of(context).cardColor,
-              style: AppStyles.bodyMedium.copyWith(
-                color: Theme.of(context).textTheme.bodyMedium?.color,
-              ),
-              items: [
-                DropdownMenuItem(value: 'uz', child: Text(context.l10n.uzbek)),
-                DropdownMenuItem(value: 'ru', child: Text(context.l10n.russian)),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  _selectedLanguage = value;
-                });
-              },
-            ),
-          ),
-        ),
-      ],
-    );
   }
 }

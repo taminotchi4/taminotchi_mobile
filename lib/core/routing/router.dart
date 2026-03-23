@@ -115,14 +115,14 @@ final router = GoRouter(
                 getPostsByCategoryUseCase: context.read<GetPostsByCategoryUseCase>(),
                 getGroupsByCategoryUseCase: context.read<GetGroupsByCategoryUseCase>(),
                 getPostsByGroupUseCase: context.read<GetPostsByGroupUseCase>(),
-              )..add(const HomeStarted()),
+              ),
             ),
             BlocProvider(
               create: (context) => ProductsBloc(
                 getProductsUseCase: GetProductsUseCase(ProductsRepositoryImpl(ProductsLocalDataSource())),
                 getProductByIdUseCase: GetProductByIdUseCase(ProductsRepositoryImpl(ProductsLocalDataSource())),
                 getCategoriesUseCase: GetProductCategoriesUseCase(ProductsRepositoryImpl(ProductsLocalDataSource())),
-              )..add(const ProductsStarted()),
+              ),
             ),
             BlocProvider(
               create: (context) => SellerProfileBloc(

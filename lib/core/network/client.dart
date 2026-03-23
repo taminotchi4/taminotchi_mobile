@@ -8,7 +8,12 @@ class ApiClient {
 
   ApiClient({required this.interceptor}) {
     _dio = Dio(
-      BaseOptions(baseUrl: "http://89.223.126.116:3003/api/v1/", validateStatus: (status) => true),
+      BaseOptions(
+        baseUrl: "http://89.223.126.116:3003/api/v1/",
+        validateStatus: (status) => true,
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 15),
+      ),
     )
       ..interceptors.add(interceptor)
       ..interceptors.add(
@@ -61,7 +66,13 @@ class ApiClient {
       if (response.statusCode != 200) {
         return Result.error(_parseError(response));
       }
-      return Result.ok(response.data as T);
+      
+      final responseData = response.data;
+      if (responseData is! T) {
+        return Result.error(Exception('Serverdan noto\'g\'ri turdagi ma\'lumot keldi. Kutilgan: $T, Kelgan: ${responseData.runtimeType}'));
+      }
+      
+      return Result.ok(responseData);
     } on Exception catch (e) {
       return Result.error(e);
     }
@@ -78,7 +89,11 @@ class ApiClient {
         return Result.error(Exception('401: Avtorizatsiya talab etiladi'));
       }
       if (response.statusCode == 200 || response.statusCode == 201) {
-        return Result.ok(response.data as T);
+        final responseData = response.data;
+        if (responseData is! T) {
+           return Result.error(Exception('Serverdan noto\'g\'ri turdagi ma\'lumot keldi. Kutilgan: $T, Kelgan: ${responseData.runtimeType}'));
+        }
+        return Result.ok(responseData);
       }
       return Result.error(_parseError(response));
     } on Exception catch (e) {
@@ -92,14 +107,18 @@ class ApiClient {
     Options? options,
   }) async {
     try {
-      final response = await _dio.patch(path, data: data, options: options);
+      final response = await _dio.patch(path, data:  data, options: options);
       if (_handleUnauthorized(response)) {
         return Result.error(Exception('401: Avtorizatsiya talab etiladi'));
       }
       if (response.statusCode != 200) {
         return Result.error(_parseError(response));
       }
-      return Result.ok(response.data as T);
+      final responseData = response.data;
+      if (responseData is! T) {
+         return Result.error(Exception('Serverdan noto\'g\'ri turdagi ma\'lumot keldi. Kutilgan: $T, Kelgan: ${responseData.runtimeType}'));
+      }
+      return Result.ok(responseData);
     } on Exception catch (e) {
       return Result.error(e);
     }
@@ -112,7 +131,11 @@ class ApiClient {
         return Result.error(Exception('401: Avtorizatsiya talab etiladi'));
       }
       if (response.statusCode == 200) {
-        return Result.ok(response.data as T);
+        final responseData = response.data;
+        if (responseData is! T) {
+           return Result.error(Exception('Serverdan noto\'g\'ri turdagi ma\'lumot keldi. Kutilgan: $T, Kelgan: ${responseData.runtimeType}'));
+        }
+        return Result.ok(responseData);
       }
       return Result.error(_parseError(response));
     } on DioException catch (e) {

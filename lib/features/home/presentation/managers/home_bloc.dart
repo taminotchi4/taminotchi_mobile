@@ -1,9 +1,12 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/utils/result.dart';
 import '../../data/datasources/home_media_picker.dart';
+import '../../domain/entities/post_category_entity.dart';
 import '../../domain/entities/post_entity.dart';
 import '../../domain/entities/post_image_entity.dart';
 import '../../domain/entities/user_role.dart';
@@ -82,6 +85,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     on<HomeFetchGroupsByCategory>(_onFetchGroupsByCategory);
     on<HomeFetchPostsByGroup>(_onFetchPostsByGroup);
     on<HomeRefresh>(_onRefresh);
+    
+    add(const HomeStarted());
   }
 
   Future<void> _onRefresh(HomeRefresh event, Emitter<HomeState> emit) async {
@@ -89,82 +94,73 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   }
 
   Future<void> _onStarted(HomeStarted event, Emitter<HomeState> emit, {bool forceRefresh = false}) async {
-    await _loadUser(emit);
-    await _loadCategories(emit, forceRefresh: forceRefresh);
-    await _loadPosts(emit, forceRefresh: forceRefresh);
+    // Immediately set all loading states before parallel execution
+    emit(state.copyWith(
+      isLoadingCategories: true,
+      isLoadingPosts: true,
+    ));
+
+    try {
+      // Parallelize fetches for improved performance
+      final results = await Future.wait([
+        _getUserData(),
+        getCategoriesUseCase(forceRefresh: forceRefresh),
+        getAllPostsUseCase(forceRefresh: forceRefresh),
+        getMyPostsUseCase(forceRefresh: forceRefresh),
+      ]);
+
+      final userRes = results[0] as Map<String, dynamic>;
+      final categoriesRes = results[1] as Result<List<PostCategoryEntity>>;
+      final allPostsRes = results[2] as Result<List<PostEntity>>;
+      final myPostsRes = results[3] as Result<List<PostEntity>>;
+
+      final categories = categoriesRes.fold((_) => <PostCategoryEntity>[], (c) => c);
+      final posts = allPostsRes.fold((_) => <PostEntity>[], (p) => p);
+      final myPosts = myPostsRes.fold((_) => <PostEntity>[], (p) => p);
+
+      final hasError = categoriesRes.isError || allPostsRes.isError;
+      
+      emit(state.copyWith(
+        currentUserId: userRes['id'] as String,
+        currentUserRole: userRes['role'] as UserRole,
+        categories: categories,
+        posts: posts,
+        myPosts: myPosts,
+        carouselPosts: _shufflePosts(posts),
+        selectedCategory: state.selectedCategory ?? (categories.isEmpty ? null : categories.first),
+        actionStatus: hasError ? HomeActionStatus.error : HomeActionStatus.initial,
+        errorMessage: categoriesRes.isError ? categoriesRes.error.toString() : 
+                      allPostsRes.isError ? allPostsRes.error.toString() : null,
+      ));
+    } catch (e) {
+      debugPrint('❌ HomeBloc Error: $e');
+      emit(state.copyWith(
+        actionStatus: HomeActionStatus.error,
+        errorMessage: e.toString(),
+      ));
+    } finally {
+      emit(state.copyWith(
+        isLoadingCategories: false,
+        isLoadingPosts: false,
+      ));
+    }
+    
+    // Non-critical background task
     await _loadCommentCounts(emit);
   }
 
-  Future<void> _loadUser(Emitter<HomeState> emit) async {
-    final idResult = await getCurrentUserIdUseCase();
-    final roleResult = await getCurrentUserRoleUseCase();
-    idResult.fold(
-          (error) =>
-          emit(state.copyWith(
-            actionStatus: HomeActionStatus.error,
-            errorMessage: error.toString(),
-          )),
-          (id) => emit(state.copyWith(currentUserId: id)),
-    );
-    roleResult.fold(
-          (error) =>
-          emit(state.copyWith(
-            actionStatus: HomeActionStatus.error,
-            errorMessage: error.toString(),
-          )),
-          (role) => emit(state.copyWith(currentUserRole: role)),
-    );
+  Future<Map<String, dynamic>> _getUserData() async {
+    final idRes = await getCurrentUserIdUseCase();
+    final roleRes = await getCurrentUserRoleUseCase();
+    
+    final Map<String, dynamic> data = {
+      'id': idRes.fold((_) => '', (id) => id),
+      'role': roleRes.fold((_) => UserRole.guest, (role) => role),
+    };
+    return data;
   }
 
-  Future<void> _loadCategories(Emitter<HomeState> emit, {bool forceRefresh = false}) async {
-    emit(state.copyWith(isLoadingCategories: true));
-    final result = await getCategoriesUseCase(forceRefresh: forceRefresh);
-    result.fold(
-          (error) =>
-          emit(state.copyWith(
-            actionStatus: HomeActionStatus.error,
-            errorMessage: error.toString(),
-            isLoadingCategories: false,
-          )),
-          (categories) =>
-          emit(state.copyWith(
-            categories: categories,
-            selectedCategory: categories.isEmpty ? null : categories.first,
-            isLoadingCategories: false,
-          )),
-    );
-  }
 
-  Future<void> _loadPosts(Emitter<HomeState> emit, {bool forceRefresh = false}) async {
-    emit(state.copyWith(isLoadingPosts: true));
-    final allPostsResult = await getAllPostsUseCase(forceRefresh: forceRefresh);
-    final myPostsResult = await getMyPostsUseCase(forceRefresh: forceRefresh);
-    allPostsResult.fold(
-          (error) =>
-          emit(state.copyWith(
-            actionStatus: HomeActionStatus.error,
-            errorMessage: error.toString(),
-            isLoadingPosts: false,
-          )),
-          (allPosts) {
-        myPostsResult.fold(
-              (error) =>
-              emit(state.copyWith(
-                actionStatus: HomeActionStatus.error,
-                errorMessage: error.toString(),
-                isLoadingPosts: false,
-              )),
-              (myPosts) =>
-              emit(state.copyWith(
-                posts: allPosts,
-                myPosts: myPosts,
-                carouselPosts: _shufflePosts(allPosts),
-                isLoadingPosts: false,
-              )),
-        );
-      },
-    );
-  }
 
   Future<void> _loadCommentCounts(Emitter<HomeState> emit) async {
     final result = await getCommentCountsUseCase();

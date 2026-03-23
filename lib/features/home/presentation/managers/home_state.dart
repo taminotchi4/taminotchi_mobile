@@ -98,8 +98,8 @@ class HomeState {
         isLoadingGroups: false,
         groupError: null,
         categoryGroups: {},
-        isLoadingPosts: false,
-        isLoadingCategories: false,
+        isLoadingPosts: true,
+        isLoadingCategories: true,
       );
 
   HomeState copyWith({

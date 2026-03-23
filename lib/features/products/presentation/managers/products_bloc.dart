@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/utils/result.dart';
 import '../../domain/entities/product_category_entity.dart';
 import '../../domain/entities/product_entity.dart';
 import '../../domain/usecases/get_product_by_id_usecase.dart';
@@ -25,35 +26,48 @@ class ProductsBloc extends Bloc<ProductsEvent, ProductsState> {
     on<ProductsUpdateSearch>(_onUpdateSearch);
     on<ProductsLoadDetail>(_onLoadDetail);
     on<ProductsRefresh>(_onRefresh);
+    
+    add(const ProductsStarted());
   }
 
   Future<void> _onStarted(ProductsStarted event,
       Emitter<ProductsState> emit, {bool forceRefresh = false}) async {
     emit(state.copyWith(isLoading: true));
-    var categories = state.categories;
-    final categoriesResult = await getCategoriesUseCase(forceRefresh: forceRefresh);
-    categoriesResult.fold(
-          (_) {},
-          (loaded) => categories = loaded,
-    );
-    final productsResult = await getProductsUseCase(forceRefresh: forceRefresh);
-    productsResult.fold(
-          (_) => emit(state.copyWith(isLoading: false)),
-          (products) {
-        final selected = categories.isEmpty ? null : categories.first;
-        final filtered = _applyFilters(products, selected, state.searchQuery);
-        final visible = _visibleProducts(filtered, state.visibleCount);
-        emit(state.copyWith(
-          isLoading: false,
-          products: products,
-          categories: categories,
-          selectedCategory: selected,
-          filteredProducts: filtered,
-          visibleProducts: visible,
-          categoryCounts: _buildCounts(products),
-        ));
-      },
-    );
+
+    try {
+      final results = await Future.wait([
+        getCategoriesUseCase(forceRefresh: forceRefresh),
+        getProductsUseCase(forceRefresh: forceRefresh),
+      ]);
+
+      final categoriesResult = results[0] as Result<List<ProductCategoryEntity>>;
+      final productsResult = results[1] as Result<List<ProductEntity>>;
+
+      List<ProductCategoryEntity> categories = state.categories;
+      categoriesResult.fold(
+            (_) => {},
+            (loaded) => categories = loaded,
+      );
+
+      productsResult.fold(
+            (_) => emit(state.copyWith(categories: categories)),
+            (products) {
+          final selected = categories.isEmpty ? null : categories.first;
+          final filtered = _applyFilters(products, selected, state.searchQuery);
+          final visible = _visibleProducts(filtered, state.visibleCount);
+          emit(state.copyWith(
+            products: products,
+            categories: categories,
+            selectedCategory: selected,
+            filteredProducts: filtered,
+            visibleProducts: visible,
+            categoryCounts: _buildCounts(products),
+          ));
+        },
+      );
+    } finally {
+      emit(state.copyWith(isLoading: false));
+    }
   }
 
   void _onLoadMore(ProductsLoadMore event, Emitter<ProductsState> emit) {
