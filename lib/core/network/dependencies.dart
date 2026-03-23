@@ -11,6 +11,7 @@ import '../../features/auth/domain/usecases/request_otp_usecase.dart';
 import '../../features/auth/domain/usecases/verify_otp_usecase.dart';
 import '../../features/auth/domain/usecases/complete_register_usecase.dart';
 import '../../features/auth/domain/usecases/login_usecase.dart';
+import '../../features/auth/domain/usecases/check_username_usecase.dart';
 import 'auth_interceptor.dart';
 import 'client.dart';
 import '../../features/home/data/datasources/home_local_data_source.dart';
@@ -46,6 +47,9 @@ import '../../features/chat/data/datasources/group_remote_data_source.dart';
 import '../../features/chat/data/repositories/chat_repository_impl.dart';
 import '../../features/chat/domain/repositories/chat_repository.dart';
 import '../../features/chat/data/datasources/chat_local_data_source.dart';
+import '../../features/chat/data/services/audio_player_service.dart';
+import '../../features/chat/data/services/audio_recorder_service.dart';
+import '../../features/chat/data/services/chat_media_service.dart';
 import '../../features/notifications/data/repositories/notification_repository_impl.dart';
 
 final dependencies = <SingleChildWidget>[
@@ -72,6 +76,9 @@ final dependencies = <SingleChildWidget>[
   ),
   RepositoryProvider(
     create: (context) => CheckPhoneUseCase(context.read<AuthRepository>()),
+  ),
+  RepositoryProvider(
+    create: (context) => CheckUsernameUseCase(context.read<AuthRepository>()),
   ),
   RepositoryProvider(
     create: (context) => RequestOtpUseCase(context.read<AuthRepository>()),
@@ -147,15 +154,19 @@ final dependencies = <SingleChildWidget>[
     create: (context) => GroupRemoteDataSourceImpl(client: context.read<ApiClient>()),
   ),
   RepositoryProvider<ChatLocalDataSource>(
-    create: (context) => ChatLocalDataSource(),
+    create: (context) => ChatLocalDataSourceImpl(),
   ),
+  RepositoryProvider(create: (context) => ChatMediaService()),
   RepositoryProvider<ChatRepository>(
     create: (context) => ChatRepositoryImpl(
       chatRemoteDataSource: context.read<ChatRemoteDataSource>(),
       groupRemoteDataSource: context.read<GroupRemoteDataSource>(),
       localDataSource: context.read<ChatLocalDataSource>(),
+      mediaService: context.read<ChatMediaService>(),
     ),
   ),
+  RepositoryProvider(create: (context) => AudioPlayerService()),
+  RepositoryProvider(create: (context) => AudioRecorderService()),
   RepositoryProvider<NotificationRepositoryImpl>(
     create: (context) => NotificationRepositoryImpl(client: context.read<ApiClient>()),
   ),

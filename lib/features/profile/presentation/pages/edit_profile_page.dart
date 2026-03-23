@@ -7,12 +7,14 @@ import '../../../../core/constants/dimens.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/icons.dart';
 import '../../../../core/utils/styles.dart';
+import '../../../../core/utils/validators.dart';
 import '../../../../global/widgets/app_back_button.dart';
 import '../../../../global/widgets/app_svg_icon.dart';
 import '../../../../global/widgets/common_app_bar.dart';
 import '../../domain/entities/client_profile_entity.dart';
 import '../managers/client_profile_bloc.dart';
 import '../managers/client_profile_event.dart';
+import '../managers/client_profile_state.dart';
 
 class EditProfilePage extends StatefulWidget {
   final ClientProfileEntity profile;
@@ -112,9 +114,22 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   void _saveProfile() {
+    final state = context.read<ClientProfileBloc>().state;
+    final username = _usernameController.text.trim();
+    
+    // Check if username is valid according to bloc state
+    if (state.usernameValidationError != null) {
+      return;
+    }
+
+    // Check availability if changed
+    if (username != widget.profile.username && state.isUsernameAvailable == false) {
+      return;
+    }
+
     final updatedProfile = widget.profile.copyWith(
       name: _nameController.text.trim(),
-      username: _usernameController.text.trim(),
+      username: username,
       phone: _phoneController.text.trim(),
       language: _selectedLanguage,
       photoUrl: _photoPath,
@@ -204,16 +219,52 @@ class _EditProfilePageState extends State<EditProfilePage> {
               hint: context.l10n.fullNameExample,
             ),
             AppDimens.lg.height,
-            _buildTextField(
-              controller: _usernameController,
-              label: context.l10n.username,
-              hint: context.l10n.usernameExample,
+            BlocBuilder<ClientProfileBloc, ClientProfileState>(
+              builder: (context, state) {
+                return _buildTextField(
+                  controller: _usernameController,
+                  label: context.l10n.username,
+                  hint: context.l10n.usernameExample,
+                  errorText: state.usernameValidationError,
+                  suffixIcon: _buildUsernameSuffix(state),
+                  onChanged: (value) {
+                    context.read<ClientProfileBloc>().add(
+                          ClientProfileUsernameChanged(
+                              value, widget.profile.username),
+                        );
+                  },
+                );
+              },
             ),
             AppDimens.lg.height,
             _buildTextField(
               controller: _phoneController,
               label: context.l10n.phoneNumberLabel,
               hint: '+998 90 123 45 67',
+              enabled: false,
+            ),
+            Transform.translate(
+              offset: Offset(0, -4.h),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  onPressed: () {
+                    // TODO: Implement phone number change flow
+                  },
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.symmetric(horizontal: 4.w),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Text(
+                    'o\'zgartirish',
+                    style: AppStyles.bodySmall.copyWith(
+                      color: Colors.blue,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
+              ),
             ),
             AppDimens.lg.height,
             _buildLanguageSelector(),
@@ -249,6 +300,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
     required TextEditingController controller,
     required String label,
     required String hint,
+    String? errorText,
+    void Function(String)? onChanged,
+    bool enabled = true,
+    Widget? suffixIcon,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -263,16 +318,22 @@ class _EditProfilePageState extends State<EditProfilePage> {
         AppDimens.sm.height,
         TextField(
           controller: controller,
+          onChanged: onChanged,
+          enabled: enabled,
           style: AppStyles.bodyRegular.copyWith(
-            color: Theme.of(context).textTheme.bodyMedium?.color,
+            color: enabled 
+                ? Theme.of(context).textTheme.bodyMedium?.color
+                : Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.6),
           ),
           decoration: InputDecoration(
             hintText: hint,
+            errorText: errorText,
+            suffixIcon: suffixIcon,
             hintStyle: AppStyles.bodyRegular.copyWith(
               color: Theme.of(context).hintColor,
             ),
             filled: true,
-            fillColor: Theme.of(context).cardColor,
+            fillColor: enabled ? Theme.of(context).cardColor : Colors.grey.shade100,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppDimens.imageRadius.r),
               borderSide: BorderSide(
@@ -283,14 +344,21 @@ class _EditProfilePageState extends State<EditProfilePage> {
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppDimens.imageRadius.r),
               borderSide: BorderSide(
-                color: Theme.of(context).dividerColor,
+                color: errorText != null ? Colors.red : Theme.of(context).dividerColor,
+                width: AppDimens.borderWidth.w,
+              ),
+            ),
+            disabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppDimens.imageRadius.r),
+              borderSide: BorderSide(
+                color: Colors.grey.shade300,
                 width: AppDimens.borderWidth.w,
               ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppDimens.imageRadius.r),
               borderSide: BorderSide(
-                color: Theme.of(context).primaryColor,
+                color: errorText != null ? Colors.red : Theme.of(context).primaryColor,
                 width: AppDimens.borderWidth.w,
               ),
             ),
@@ -302,6 +370,30 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ),
       ],
     );
+  }
+
+  Widget? _buildUsernameSuffix(ClientProfileState state) {
+    if (state.isCheckingUsername) {
+      return Padding(
+        padding: EdgeInsets.all(12.r),
+        child: SizedBox(
+          width: 20.r,
+          height: 20.r,
+          child: const CircularProgressIndicator(strokeWidth: 2),
+        ),
+      );
+    }
+
+    if (state.isUsernameAvailable == true &&
+        _usernameController.text.trim() != widget.profile.username) {
+      return const Icon(Icons.check_circle_outline, color: Colors.green);
+    }
+
+    if (state.isUsernameAvailable == false) {
+      return const Icon(Icons.error_outline, color: Colors.red);
+    }
+
+    return null;
   }
 
   Widget _buildLanguageSelector() {

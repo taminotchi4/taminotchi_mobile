@@ -10,6 +10,7 @@ import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/styles.dart';
 import '../../../../global/widgets/common_app_bar.dart';
 import '../../data/models/private_chat_model.dart';
+import '../../data/models/market_model.dart';
 import '../managers/private_chat_list_bloc.dart';
 
 class ChatsHomePage extends StatefulWidget {
@@ -37,10 +38,26 @@ class _ChatsHomePageState extends State<ChatsHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(),
-      child: Scaffold(
-        appBar: CommonAppBar(title: context.l10n.chats),
+    return BlocListener<PrivateChatListBloc, PrivateChatListState>(
+      listenWhen: (prev, curr) => curr.navigateTo != null && curr.navigateTo != prev.navigateTo,
+      listener: (context, state) {
+        final nav = state.navigateTo!;
+        // Reset navigateTo so it won't trigger again on rebuild
+        context.read<PrivateChatListBloc>().add(PrivateChatListClearSearch());
+        context.push(
+          Routes.getPrivateChat(nav.chatId),
+          extra: {
+            'chatId': nav.chatId,
+            'name': nav.name,
+            'receiverId': nav.receiverId,
+            'receiverRole': nav.receiverRole,
+          },
+        );
+      },
+      child: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Scaffold(
+          appBar: CommonAppBar(title: context.l10n.chats),
         body: Column(
           children: [
             Padding(
@@ -54,7 +71,18 @@ class _ChatsHomePageState extends State<ChatsHomePage> {
                 height: 40.h,
                 child: TextField(
                   controller: _searchController,
-                  onChanged: (value) => setState(() => _searchQuery = value),
+                  onChanged: (value) {
+                    setState(() => _searchQuery = value);
+                    if (value.isEmpty) {
+                      context
+                          .read<PrivateChatListBloc>()
+                          .add(PrivateChatListClearSearch());
+                    } else {
+                      context
+                          .read<PrivateChatListBloc>()
+                          .add(PrivateChatListSearch(value));
+                    }
+                  },
                   style: AppStyles.bodySmall.copyWith(
                     fontSize: 13.sp,
                     color: Theme.of(context).textTheme.bodyMedium?.color,
@@ -72,6 +100,9 @@ class _ChatsHomePageState extends State<ChatsHomePage> {
                             onPressed: () {
                               _searchController.clear();
                               setState(() => _searchQuery = '');
+                              context
+                                  .read<PrivateChatListBloc>()
+                                  .add(PrivateChatListClearSearch());
                             },
                           )
                         : null,
@@ -80,11 +111,13 @@ class _ChatsHomePageState extends State<ChatsHomePage> {
                     contentPadding: EdgeInsets.zero,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(20.r),
-                      borderSide: BorderSide(color: Theme.of(context).dividerColor),
+                      borderSide:
+                          BorderSide(color: Theme.of(context).dividerColor),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(20.r),
-                      borderSide: BorderSide(color: Theme.of(context).dividerColor),
+                      borderSide:
+                          BorderSide(color: Theme.of(context).dividerColor),
                     ),
                   ),
                 ),
@@ -93,11 +126,11 @@ class _ChatsHomePageState extends State<ChatsHomePage> {
             Expanded(
               child: BlocBuilder<PrivateChatListBloc, PrivateChatListState>(
                 builder: (context, state) {
-                  if (state.isLoading) {
+                  if (state.isLoading && state.chats.isEmpty && !state.isSearching) {
                     return const Center(child: CircularProgressIndicator());
                   }
 
-                  final chats = state.chats.where((c) {
+                  final filteredLocalChats = state.chats.where((c) {
                     if (_searchQuery.isEmpty) return true;
                     final q = _searchQuery.toLowerCase();
                     final peerName = _getPeerName(c).toLowerCase();
@@ -105,10 +138,48 @@ class _ChatsHomePageState extends State<ChatsHomePage> {
                     return peerName.contains(q) || preview.contains(q);
                   }).toList();
 
-                  if (chats.isEmpty) {
+                  if (_searchQuery.isNotEmpty) {
+                    return ListView(
+                      padding: EdgeInsets.all(AppDimens.lg.r),
+                      children: [
+                        if (filteredLocalChats.isNotEmpty) ...[
+                          _buildSectionHeader('Xabarlar'),
+                          AppDimens.sm.height,
+                          ...filteredLocalChats.map((chat) => Padding(
+                                padding: EdgeInsets.only(bottom: AppDimens.md.h),
+                                child: _ChatItem(chat: chat),
+                              )),
+                          AppDimens.lg.height,
+                        ],
+                        _buildSectionHeader('Global qidiruv'),
+                        AppDimens.sm.height,
+                        if (state.isSearching)
+                          const Center(child: CircularProgressIndicator())
+                        else if (state.searchResults.isEmpty)
+                          Center(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(vertical: 20.h),
+                              child: Text(
+                                context.l10n.resultNotFound,
+                                style: AppStyles.bodySmall.copyWith(
+                                  color: Theme.of(context).textTheme.bodySmall?.color,
+                                ),
+                              ),
+                            ),
+                          )
+                        else
+                          ...state.searchResults.map((market) => Padding(
+                                padding: EdgeInsets.only(bottom: AppDimens.md.h),
+                                child: _SearchResultItem(market: market),
+                              )),
+                      ],
+                    );
+                  }
+
+                  if (state.chats.isEmpty) {
                     return Center(
                       child: Text(
-                        _searchQuery.isEmpty ? context.l10n.noChats : context.l10n.resultNotFound,
+                        context.l10n.noChats,
                         style: AppStyles.bodySmall.copyWith(
                           color: Theme.of(context).textTheme.bodySmall?.color,
                         ),
@@ -118,15 +189,16 @@ class _ChatsHomePageState extends State<ChatsHomePage> {
 
                   return NotificationListener<ScrollNotification>(
                     onNotification: (n) {
-                      if (n is ScrollStartNotification) FocusScope.of(context).unfocus();
+                      if (n is ScrollStartNotification)
+                        FocusScope.of(context).unfocus();
                       return false;
                     },
                     child: ListView.separated(
                       padding: EdgeInsets.all(AppDimens.lg.r),
-                      itemCount: chats.length,
+                      itemCount: state.chats.length,
                       separatorBuilder: (_, __) => AppDimens.md.height,
                       itemBuilder: (context, index) {
-                        return _ChatItem(chat: chats[index]);
+                        return _ChatItem(chat: state.chats[index]);
                       },
                     ),
                   );
@@ -134,6 +206,7 @@ class _ChatsHomePageState extends State<ChatsHomePage> {
               ),
             ),
           ],
+        ),
         ),
       ),
     );
@@ -144,6 +217,90 @@ class _ChatsHomePageState extends State<ChatsHomePage> {
     if (market is Map) return market['name'] as String? ?? 'Market';
     return 'Chat';
   }
+
+  Widget _buildSectionHeader(String title) {
+    return Text(
+      title,
+      style: AppStyles.bodySmall.copyWith(
+        fontWeight: FontWeight.bold,
+        color: Theme.of(context).primaryColor,
+      ),
+    );
+  }
+}
+
+class _SearchResultItem extends StatelessWidget {
+  final MarketModel market;
+
+  const _SearchResultItem({required this.market});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        context.read<PrivateChatListBloc>().add(
+              PrivateChatListOpenChat(
+                receiverId: market.id,
+                receiverRole: market.role,
+                receiverName: market.name,
+              ),
+            );
+      },
+      borderRadius: BorderRadius.circular(AppDimens.cardRadius.r),
+      child: Container(
+        padding: EdgeInsets.all(AppDimens.md.r),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(AppDimens.cardRadius.r),
+          border: Border.all(
+            color: Theme.of(context).dividerColor,
+            width: AppDimens.borderWidth.w,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 50.r,
+              height: 50.r,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Theme.of(context).primaryColor.withOpacity(0.1),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                market.name.isNotEmpty ? market.name[0].toUpperCase() : '?',
+                style: AppStyles.h4Bold
+                    .copyWith(color: Theme.of(context).primaryColor),
+              ),
+            ),
+            AppDimens.md.width,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    market.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppStyles.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    '@${market.username}',
+                    style: AppStyles.bodySmall.copyWith(
+                      color: Theme.of(context).textTheme.bodySmall?.color,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: Theme.of(context).hintColor),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _ChatItem extends StatelessWidget {
@@ -152,9 +309,9 @@ class _ChatItem extends StatelessWidget {
   const _ChatItem({required this.chat});
 
   String get _peerName {
-    final market = chat.market;
-    if (market is Map) return market['name'] as String? ?? 'Market';
-    return 'Market';
+    if (chat.market is Map) return chat.market['name'] as String? ?? 'Market';
+    if (chat.client is Map) return chat.client['fullName'] as String? ?? 'Xaridor';
+    return 'Chat';
   }
 
   @override
@@ -164,12 +321,20 @@ class _ChatItem extends StatelessWidget {
         ? DateFormat('HH:mm').format(lastMsg.createdAt.toLocal())
         : '';
 
+    final peerId = (chat.market is Map ? chat.market['id'] : null) ?? 
+                   (chat.client is Map ? chat.client['id'] : null) ?? '';
+    final peerRole = chat.market is Map ? 'market' : 'client';
+
     return InkWell(
       onTap: () {
         context.read<PrivateChatListBloc>().add(PrivateChatListMarkRead(chat.id));
         context.push(
           Routes.getPrivateChat(chat.id),
-          extra: {'name': _peerName},
+          extra: {
+            'name': _peerName,
+            'receiverId': peerId,
+            'receiverRole': peerRole,
+          },
         );
       },
       borderRadius: BorderRadius.circular(AppDimens.cardRadius.r),

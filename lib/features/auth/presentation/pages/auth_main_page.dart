@@ -7,6 +7,7 @@ import '../../domain/usecases/request_otp_usecase.dart';
 import '../../domain/usecases/verify_otp_usecase.dart';
 import '../../domain/usecases/complete_register_usecase.dart';
 import '../../domain/usecases/login_usecase.dart';
+import '../../domain/usecases/check_username_usecase.dart';
 import '../managers/auth_bloc.dart';
 import '../managers/auth_state.dart';
 import '../widgets/phone_input_step.dart';
@@ -62,6 +63,7 @@ class _AuthMainPageState extends State<AuthMainPage> {
         verifyOtpUseCase: context.read<VerifyOtpUseCase>(),
         completeRegisterUseCase: context.read<CompleteRegisterUseCase>(),
         loginUseCase: context.read<LoginUseCase>(),
+        checkUsernameUseCase: context.read<CheckUsernameUseCase>(),
       ),
       child: BlocListener<AuthBloc, AuthState>(
         listenWhen: (previous, current) => previous.step != current.step || previous.status != current.status,

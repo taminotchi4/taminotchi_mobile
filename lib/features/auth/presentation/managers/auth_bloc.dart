@@ -5,6 +5,8 @@ import '../../domain/usecases/request_otp_usecase.dart';
 import '../../domain/usecases/verify_otp_usecase.dart';
 import '../../domain/usecases/complete_register_usecase.dart';
 import '../../domain/usecases/login_usecase.dart';
+import '../../domain/usecases/check_username_usecase.dart';
+import '../../../../core/utils/validators.dart';
 import 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
@@ -13,7 +15,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final VerifyOtpUseCase _verifyOtpUseCase;
   final CompleteRegisterUseCase _completeRegisterUseCase;
   final LoginUseCase _loginUseCase;
+  final CheckUsernameUseCase _checkUsernameUseCase;
   Timer? _timer;
+  Timer? _debounceTimer;
 
   AuthBloc({
     required CheckPhoneUseCase checkPhoneUseCase,
@@ -21,11 +25,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required VerifyOtpUseCase verifyOtpUseCase,
     required CompleteRegisterUseCase completeRegisterUseCase,
     required LoginUseCase loginUseCase,
+    required CheckUsernameUseCase checkUsernameUseCase,
   })  : _checkPhoneUseCase = checkPhoneUseCase,
         _requestOtpUseCase = requestOtpUseCase,
         _verifyOtpUseCase = verifyOtpUseCase,
         _completeRegisterUseCase = completeRegisterUseCase,
         _loginUseCase = loginUseCase,
+        _checkUsernameUseCase = checkUsernameUseCase,
         super(const AuthState()) {
     on<AuthPhoneNumberSubmitted>(_onPhoneNumberSubmitted);
     on<AuthOtpSubmitted>(_onOtpSubmitted);
@@ -34,15 +40,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthOtpTimerTicked>(_onOtpTimerTicked);
     on<AuthResendOtpRequested>(_onResendOtpRequested);
     on<AuthStepChanged>(_onStepChanged);
+    on<AuthUsernameChanged>(_onUsernameChanged);
   }
 
   void _onStepChanged(AuthStepChanged event, Emitter<AuthState> emit) {
-    emit(state.copyWith(step: event.step));
+    emit(state.copyWith(step: event.step, errorMessage: null, status: AuthStatus.initial));
   }
 
   Future<void> _onPhoneNumberSubmitted(
       AuthPhoneNumberSubmitted event, Emitter<AuthState> emit) async {
-    emit(state.copyWith(status: AuthStatus.loading));
+    emit(state.copyWith(status: AuthStatus.loading, errorMessage: null));
 
     try {
       // Check if phone exists
@@ -82,7 +89,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   Future<void> _onOtpSubmitted(
       AuthOtpSubmitted event, Emitter<AuthState> emit) async {
-    emit(state.copyWith(status: AuthStatus.loading));
+    emit(state.copyWith(status: AuthStatus.loading, errorMessage: null));
 
     try {
       final response = await _verifyOtpUseCase(
@@ -113,7 +120,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   Future<void> _onPasswordSubmitted(
       AuthPasswordSubmitted event, Emitter<AuthState> emit) async {
-    emit(state.copyWith(status: AuthStatus.loading));
+    emit(state.copyWith(status: AuthStatus.loading, errorMessage: null));
 
     try {
       final _ = await _loginUseCase(
@@ -136,7 +143,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   Future<void> _onProfileSubmitted(
       AuthProfileSubmitted event, Emitter<AuthState> emit) async {
-    emit(state.copyWith(status: AuthStatus.loading));
+    emit(state.copyWith(status: AuthStatus.loading, errorMessage: null));
 
     try {
       // Complete registration
@@ -161,6 +168,62 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(state.copyWith(
         status: AuthStatus.error,
         errorMessage: 'Ro\'yxatdan o\'tishda xatolik: ${e.toString()}',
+      ));
+    }
+  }
+
+  Future<void> _onUsernameChanged(
+      AuthUsernameChanged event, Emitter<AuthState> emit) async {
+    final username = event.username.trim();
+    
+    // Reset state if empty
+    if (username.isEmpty) {
+      emit(state.copyWith(
+        username: username,
+        isUsernameAvailable: null,
+        isCheckingUsername: false,
+        usernameValidationError: null,
+      ));
+      return;
+    }
+
+    // Client-side validation
+    final validationError = AppValidators.validateUsername(username);
+    if (validationError != null) {
+      emit(state.copyWith(
+        username: username,
+        isUsernameAvailable: false,
+        isCheckingUsername: false,
+        usernameValidationError: validationError,
+      ));
+      return;
+    }
+
+    emit(state.copyWith(
+      username: username,
+      isCheckingUsername: true,
+      isUsernameAvailable: null,
+      usernameValidationError: null,
+    ));
+
+    _debounceTimer?.cancel();
+    final completer = Completer<void>();
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+      if (!completer.isCompleted) completer.complete();
+    });
+
+    await completer.future;
+
+    try {
+      final response = await _checkUsernameUseCase(username);
+      emit(state.copyWith(
+        isCheckingUsername: false,
+        isUsernameAvailable: !response.exists,
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        isCheckingUsername: false,
+        isUsernameAvailable: null,
       ));
     }
   }
@@ -207,6 +270,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   @override
   Future<void> close() {
     _timer?.cancel();
+    _debounceTimer?.cancel();
     return super.close();
   }
 }

@@ -5,6 +5,7 @@ import '../models/request_otp_model.dart';
 import '../models/verify_otp_model.dart';
 import '../models/complete_register_model.dart';
 import '../models/login_model.dart';
+import '../models/check_username_model.dart';
 
 class AuthRemoteDataSource {
   final ApiClient _client;
@@ -32,6 +33,24 @@ class AuthRemoteDataSource {
           return Result.ok(response);
         } catch (e) {
           print('❌ Error parsing checkPhone response: $e');
+          return Result.error(Exception('Failed to parse response: $e'));
+        }
+      },
+    );
+  }
+  
+  Future<Result<CheckUsernameResponse>> checkUsername(String username) async {
+    final encodedUsername = Uri.encodeComponent(username);
+    final result = await _client.get<Map<String, dynamic>>(
+      'client/check-username/$encodedUsername',
+    );
+
+    return result.fold(
+      (error) => Result.error(error),
+      (data) {
+        try {
+          return Result.ok(CheckUsernameResponse.fromJson(data));
+        } catch (e) {
           return Result.error(Exception('Failed to parse response: $e'));
         }
       },

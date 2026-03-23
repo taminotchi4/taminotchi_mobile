@@ -23,3 +23,10 @@ class ClientProfilePhotoChanged extends ClientProfileEvent {
 class ClientProfileLogoutRequested extends ClientProfileEvent {
   const ClientProfileLogoutRequested();
 }
+
+class ClientProfileUsernameChanged extends ClientProfileEvent {
+  final String username;
+  final String currentUsername;
+
+  const ClientProfileUsernameChanged(this.username, this.currentUsername);
+}

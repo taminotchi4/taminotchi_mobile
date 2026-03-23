@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/l10n/app_localizations.dart';
@@ -11,9 +12,14 @@ import 'global/managers/locale/localization_cubit.dart';
 import 'global/managers/locale/locale_repository_impl.dart';
 import 'global/managers/theme/theme_cubit.dart';
 import 'core/services/image_cache_service.dart';
+import 'features/chat/data/models/message_model.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  await Hive.initFlutter();
+  Hive.registerAdapter(MessageModelAdapter());
+
   final pref = await SharedPreferences.getInstance();
   
   // Cleanup expired images (Telegram-style 3 days TTL)

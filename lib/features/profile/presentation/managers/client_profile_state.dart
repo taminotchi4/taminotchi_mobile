@@ -5,12 +5,18 @@ class ClientProfileState {
   final ClientProfileEntity? profile;
   final String? error;
   final bool isLoggedOut;
+  final bool isCheckingUsername;
+  final bool? isUsernameAvailable;
+  final String? usernameValidationError;
 
   const ClientProfileState({
     this.isLoading = false,
     this.profile,
     this.error,
     this.isLoggedOut = false,
+    this.isCheckingUsername = false,
+    this.isUsernameAvailable,
+    this.usernameValidationError,
   });
 
   ClientProfileState copyWith({
@@ -18,12 +24,18 @@ class ClientProfileState {
     ClientProfileEntity? profile,
     String? error,
     bool? isLoggedOut,
+    bool? isCheckingUsername,
+    bool? isUsernameAvailable,
+    String? usernameValidationError,
   }) {
     return ClientProfileState(
       isLoading: isLoading ?? this.isLoading,
       profile: profile ?? this.profile,
       error: error,
       isLoggedOut: isLoggedOut ?? this.isLoggedOut,
+      isCheckingUsername: isCheckingUsername ?? this.isCheckingUsername,
+      isUsernameAvailable: isUsernameAvailable,
+      usernameValidationError: usernameValidationError,
     );
   }
 }

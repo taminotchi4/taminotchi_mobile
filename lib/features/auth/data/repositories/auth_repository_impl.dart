@@ -5,6 +5,7 @@ import '../models/request_otp_model.dart';
 import '../models/verify_otp_model.dart';
 import '../models/complete_register_model.dart';
 import '../models/login_model.dart';
+import '../models/check_username_model.dart';
 import '../datasources/auth_local_data_source.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
@@ -20,6 +21,15 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<CheckPhoneResponse> checkPhone(String phoneNumber) async {
     final result = await _remoteDataSource.checkPhone(phoneNumber);
+    return result.fold(
+      (error) => throw error,
+      (response) => response,
+    );
+  }
+  
+  @override
+  Future<CheckUsernameResponse> checkUsername(String username) async {
+    final result = await _remoteDataSource.checkUsername(username);
     return result.fold(
       (error) => throw error,
       (response) => response,
@@ -70,6 +80,7 @@ class AuthRepositoryImpl implements AuthRepository {
       (response) async {
         if (response.accessToken != null) {
           await _localDataSource.saveToken(response.accessToken!);
+          await _localDataSource.saveUserId(response.user.id);
           // Save for AuthInterceptor
           await _localDataSource.saveUserData(
             username: response.user.username,
@@ -94,6 +105,7 @@ class AuthRepositoryImpl implements AuthRepository {
       (error) => throw error,
       (response) async {
         await _localDataSource.saveToken(response.accessToken);
+        await _localDataSource.saveUserId(response.user.id);
         // Save these for AuthInterceptor's auto-refresh logic
         await _localDataSource.saveUserData(
           username: response.username,
@@ -107,5 +119,10 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<String?> getToken() async {
     return await _localDataSource.getToken();
+  }
+
+  @override
+  Future<String?> getUserId() async {
+    return await _localDataSource.getUserId();
   }
 }

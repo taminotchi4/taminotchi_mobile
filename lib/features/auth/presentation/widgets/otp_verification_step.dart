@@ -126,7 +126,7 @@ class _OtpVerificationStepState extends State<OtpVerificationStep> {
                         );
                       }),
                     ),
-                    if (state.errorMessage != null) ...[
+                    if (state.status == AuthStatus.error && state.errorMessage != null) ...[
                       SizedBox(height: 16.h),
                       Text(
                         state.errorMessage!,

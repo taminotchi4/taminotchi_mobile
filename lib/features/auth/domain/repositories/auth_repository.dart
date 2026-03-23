@@ -3,9 +3,12 @@ import '../../data/models/request_otp_model.dart';
 import '../../data/models/verify_otp_model.dart';
 import '../../data/models/complete_register_model.dart';
 import '../../data/models/login_model.dart';
+import '../../data/models/check_username_model.dart';
 
 abstract class AuthRepository {
   Future<CheckPhoneResponse> checkPhone(String phoneNumber);
+  
+  Future<CheckUsernameResponse> checkUsername(String username);
   
   Future<RequestOtpResponse> requestOtp(String phoneNumber);
   
@@ -28,4 +31,5 @@ abstract class AuthRepository {
   });
 
   Future<String?> getToken();
+  Future<String?> getUserId();
 }

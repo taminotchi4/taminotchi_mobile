@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:taminotchi_app/core/routing/routes.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
+import '../../features/auth/domain/usecases/check_username_usecase.dart';
 import '../../features/chat/domain/repositories/chat_repository.dart';
 import '../../features/home/data/datasources/home_media_picker.dart';
 import '../../features/home/domain/usecases/create_post_usecase.dart';
@@ -168,6 +169,7 @@ final router = GoRouter(
                 updateProfileUseCase: context.read<UpdateClientProfileUseCase>(),
                 uploadPhotoUseCase: context.read<UploadProfilePhotoUseCase>(),
                 logoutUseCase: context.read<profile_logout.LogoutUseCase>(),
+                checkUsernameUseCase: context.read<CheckUsernameUseCase>(),
               )..add(const ClientProfileStarted()),
             ),
             // --- New BLoCs ---
@@ -260,15 +262,29 @@ final router = GoRouter(
           builder: (context, state) {
             final chatId = state.pathParameters['chatId'] ?? '';
             final extra = state.extra as Map<String, dynamic>? ?? {};
+            final name = extra['name'] as String?;
             return BlocProvider(
-              create: (_) => PrivateChatBloc(
-                repository: context.read<ChatRepository>(),
-                authRepository: context.read<AuthRepository>(),
-              ),
+              create: (_) {
+                final bloc = PrivateChatBloc(
+                  repository: context.read<ChatRepository>(),
+                  authRepository: context.read<AuthRepository>(),
+                );
+                // If chatId is in extra, the chat was already opened via REST (search flow)
+                // Just connect to socket directly
+                if (extra.containsKey('chatId')) {
+                  bloc.add(PrivateChatStartedWithId(chatId));
+                } else {
+                  // legacy: receiverId + role
+                  final receiverId = extra['receiverId'] as String? ?? chatId;
+                  final receiverRole = extra['receiverRole'] as String? ?? 'market';
+                  bloc.add(PrivateChatStarted(receiverId: receiverId, receiverRole: receiverRole));
+                }
+                return bloc;
+              },
               child: PrivateChatPage(
                 receiverId: extra['receiverId'] as String? ?? chatId,
                 receiverRole: extra['receiverRole'] as String? ?? 'market',
-                receiverName: extra['name'] as String?,
+                receiverName: name,
               ),
             );
           },

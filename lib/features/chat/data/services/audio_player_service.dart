@@ -12,6 +12,7 @@ class AudioPlayerService {
   
   Stream<PlayerState> get onPlayerStateChanged => _player.onPlayerStateChanged;
   Stream<Duration> get onPositionChanged => _player.onPositionChanged;
+  Stream<Duration> get onDurationChanged => _player.onDurationChanged;
 
   AudioPlayerService() {
     _player.onPlayerStateChanged.listen((state) {

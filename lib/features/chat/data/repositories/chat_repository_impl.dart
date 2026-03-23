@@ -6,17 +6,22 @@ import '../datasources/chat_local_data_source.dart';
 import '../datasources/chat_remote_data_source.dart';
 import '../datasources/group_remote_data_source.dart';
 import '../models/group_model.dart';
+import '../models/message_model.dart';
 import '../models/private_chat_model.dart';
+import '../models/market_model.dart';
+import '../services/chat_media_service.dart';
 
 class ChatRepositoryImpl implements ChatRepository {
   final ChatRemoteDataSource chatRemoteDataSource;
   final GroupRemoteDataSource groupRemoteDataSource;
   final ChatLocalDataSource localDataSource;
+  final ChatMediaService mediaService;
 
   ChatRepositoryImpl({
     required this.chatRemoteDataSource,
     required this.groupRemoteDataSource,
     required this.localDataSource,
+    required this.mediaService,
   });
 
   // --- Legacy ---
@@ -38,16 +43,14 @@ class ChatRepositoryImpl implements ChatRepository {
   @override
   Future<Result<List<ChatMessageEntity>>> getMessages(String chatId) async {
     try {
-      return Result.ok(localDataSource.getMessages(chatId));
+      return Result.ok(localDataSource.getLegacyMessages(chatId));
     } catch (e) {
       return Result.error(Exception('Failed to load messages'));
     }
   }
 
   @override
-  Future<Result<ChatMessageEntity>> sendMessage(
-    ChatMessageEntity message,
-  ) async {
+  Future<Result<ChatMessageEntity>> sendMessage(ChatMessageEntity message) async {
     try {
       return Result.ok(localDataSource.addMessage(message));
     } catch (e) {
@@ -55,9 +58,10 @@ class ChatRepositoryImpl implements ChatRepository {
     }
   }
 
-  // --- New ---
+  // --- Private Chat ---
   @override
-  Future<Result<PrivateChatModel>> openPrivateChat(String receiverId, String receiverRole) async {
+  Future<Result<PrivateChatModel>> openPrivateChat(
+      String receiverId, String receiverRole) async {
     final result = await chatRemoteDataSource.openPrivateChat(receiverId, receiverRole);
     return result.fold(
       (error) => Result.error(error),
@@ -74,6 +78,16 @@ class ChatRepositoryImpl implements ChatRepository {
     );
   }
 
+  @override
+  Future<Result<List<MarketModel>>> searchMarkets(String query) async {
+    final result = await chatRemoteDataSource.searchMarkets(query);
+    return result.fold(
+      (error) => Result.error(error),
+      (list) => Result.ok(list.map((e) => MarketModel.fromJson(e)).toList()),
+    );
+  }
+
+  // --- Group Chat ---
   @override
   Future<Result<List<GroupModel>>> getGroups() async {
     final result = await groupRemoteDataSource.getGroups();
@@ -102,32 +116,79 @@ class ChatRepositoryImpl implements ChatRepository {
   }
 
   @override
-  Future<Result<void>> joinGroup(String id) async {
-    return await groupRemoteDataSource.joinGroup(id);
+  Future<Result<void>> joinGroup(String id) async =>
+      groupRemoteDataSource.joinGroup(id);
+
+  @override
+  Future<Result<void>> leaveGroup(String id) async =>
+      groupRemoteDataSource.leaveGroup(id);
+
+  // --- Common ---
+  @override
+  Future<Result<void>> markMessageSeen(String messageId) async =>
+      chatRemoteDataSource.markMessageSeen(messageId);
+
+  @override
+  Future<Result<void>> editMessage(String messageId, String text) async =>
+      chatRemoteDataSource.editMessage(messageId, text);
+
+  @override
+  Future<Result<void>> deleteMessage(String messageId) async =>
+      chatRemoteDataSource.deleteMessage(messageId);
+
+  @override
+  Future<Result<String>> uploadMedia(String type, String filePath) async =>
+      chatRemoteDataSource.uploadMedia(type, filePath);
+
+  // --- Offline Support (Hive) ---
+  @override
+  Future<List<MessageModel>> getLocalMessages(
+    String chatId, {
+    int page = 1,
+    int limit = 50,
+  }) =>
+      localDataSource.getMessages(chatId, page: page, limit: limit);
+
+  @override
+  Future<void> saveLocalMessages(
+      String chatId, List<MessageModel> messages) async {
+    await localDataSource.saveMessages(chatId, messages);
   }
 
   @override
-  Future<Result<void>> leaveGroup(String id) async {
-    return await groupRemoteDataSource.leaveGroup(id);
+  Future<void> saveLocalMessage(String chatId, MessageModel message) async {
+    await localDataSource.saveMessage(chatId, message);
   }
 
   @override
-  Future<Result<void>> markMessageSeen(String messageId) async {
-    return await chatRemoteDataSource.markMessageSeen(messageId);
+  Future<void> upsertLocalMessage(String chatId, MessageModel message) async {
+    await localDataSource.upsertMessage(chatId, message);
   }
 
   @override
-  Future<Result<void>> editMessage(String messageId, String text) async {
-    return await chatRemoteDataSource.editMessage(messageId, text);
+  Future<void> replaceTempMessage(
+    String chatId,
+    String tempId,
+    MessageModel real,
+  ) async {
+    await localDataSource.replaceTempMessage(chatId, tempId, real);
   }
 
   @override
-  Future<Result<void>> deleteMessage(String messageId) async {
-    return await chatRemoteDataSource.deleteMessage(messageId);
+  Future<void> updateLocalMessageStatus(
+    String chatId,
+    String messageId,
+    String status,
+  ) async {
+    await localDataSource.updateMessageStatus(chatId, messageId, status);
   }
 
+  // --- Media Cache ---
   @override
-  Future<Result<String>> uploadMedia(String type, String filePath) async {
-    return await chatRemoteDataSource.uploadMedia(type, filePath);
-  }
+  Future<String?> getLocalMediaPath(String serverUrl, String type) =>
+      mediaService.getLocalPath(serverUrl, type);
+
+  @override
+  Future<bool> isMediaCached(String serverUrl, String type) =>
+      mediaService.isCached(serverUrl, type);
 }

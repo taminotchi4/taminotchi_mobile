@@ -5,6 +5,7 @@ import '../../../../core/constants/dimens.dart';
 import '../../../../core/utils/colors.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/styles.dart';
+import '../../../../core/utils/validators.dart';
 import '../managers/auth_bloc.dart';
 import '../managers/auth_state.dart';
 
@@ -104,20 +105,47 @@ class _RegistrationStepState extends State<RegistrationStep> {
                   style: AppStyles.h5Bold.copyWith(
                     color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
+                  onChanged: (value) {
+                    context.read<AuthBloc>().add(AuthUsernameChanged(value));
+                  },
                   decoration: InputDecoration(
                     labelText: context.l10n.username,
                     hintText: context.l10n.usernameExample,
                     prefixIcon: Icon(Icons.alternate_email, color: AppColors.mainBlue),
+                    suffixIcon: _buildUsernameSuffix(state),
                     contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16.r),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16.r),
-                      borderSide: BorderSide(color: AppColors.mainBlue, width: 2),
+                      borderSide: BorderSide(
+                        color: state.isUsernameAvailable == false
+                            ? Colors.red
+                            : state.isUsernameAvailable == true
+                                ? Colors.green
+                                : AppColors.mainBlue,
+                        width: 2,
+                      ),
                     ),
                   ),
                 ),
+                if (state.username.isNotEmpty && state.usernameValidationError != null)
+                  Padding(
+                    padding: EdgeInsets.only(top: 4.h, left: 12.w),
+                    child: Text(
+                      state.usernameValidationError!,
+                      style: AppStyles.bodySmall.copyWith(color: Colors.red),
+                    ),
+                  ),
+                if (state.isUsernameAvailable == false && state.usernameValidationError == null)
+                  Padding(
+                    padding: EdgeInsets.only(top: 4.h, left: 12.w),
+                    child: Text(
+                      'Username allaqachon band',
+                      style: AppStyles.bodySmall.copyWith(color: Colors.red),
+                    ),
+                  ),
                 SizedBox(height: 16.h),
                 // Password
                 TextField(
@@ -194,14 +222,18 @@ class _RegistrationStepState extends State<RegistrationStep> {
                   width: double.infinity,
                   height: 56.h,
                   child: ElevatedButton(
-                    onPressed: state.status == AuthStatus.loading
+                    onPressed: state.status == AuthStatus.loading ||
+                            state.isCheckingUsername ||
+                            state.isUsernameAvailable == false
                         ? null
                         : () {
                             final fullName = _fullNameController.text.trim();
                             final username = _usernameController.text.trim();
                             final password = _passwordController.text.trim();
 
-                            if (fullName.isNotEmpty && username.isNotEmpty && password.isNotEmpty) {
+                            if (fullName.isNotEmpty &&
+                                username.isNotEmpty &&
+                                password.isNotEmpty) {
                               // Store password in state first, then call profile submitted
                               context.read<AuthBloc>().add(AuthProfileSubmitted(
                                     fullName: fullName,
@@ -222,7 +254,7 @@ class _RegistrationStepState extends State<RegistrationStep> {
                     child: state.status == AuthStatus.loading
                         ? const CircularProgressIndicator(color: Colors.white)
                         : Text(context.l10n.register,
-                              style: AppStyles.h4Bold.copyWith(color: Colors.white)),
+                            style: AppStyles.h4Bold.copyWith(color: Colors.white)),
                   ),
                 ),
                 SizedBox(height: 20.h),
@@ -232,5 +264,28 @@ class _RegistrationStepState extends State<RegistrationStep> {
         );
       },
     );
+  }
+
+  Widget? _buildUsernameSuffix(AuthState state) {
+    if (state.isCheckingUsername) {
+      return Padding(
+        padding: EdgeInsets.all(12.r),
+        child: SizedBox(
+          width: 20.w,
+          height: 20.h,
+          child: const CircularProgressIndicator(strokeWidth: 2),
+        ),
+      );
+    }
+
+    if (state.isUsernameAvailable == true) {
+      return const Icon(Icons.check_circle_outline, color: Colors.green);
+    }
+
+    if (state.isUsernameAvailable == false) {
+      return const Icon(Icons.error_outline, color: Colors.red);
+    }
+
+    return null;
   }
 }

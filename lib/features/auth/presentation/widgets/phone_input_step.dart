@@ -26,81 +26,89 @@ class _PhoneInputStepState extends State<PhoneInputStep> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.all(AppDimens.lg.r),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(height: 40.h),
-          Text(
-            context.l10n.welcomeTitle,
-            style: AppStyles.h1Bold.copyWith(color: Theme.of(context).primaryColor),
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            context.l10n.welcomeSubtitle,
-            style: AppStyles.bodyRegular.copyWith(
-              color: Theme.of(context).textTheme.bodySmall?.color,
-            ),
-          ),
-          SizedBox(height: 40.h),
-          TextField(
-            controller: _controller,
-            keyboardType: TextInputType.phone,
-            style: AppStyles.h4Bold.copyWith(
-              letterSpacing: 1.2,
-              color: Theme.of(context).textTheme.bodyLarge?.color,
-            ),
-            decoration: InputDecoration(
-              labelText: context.l10n.phoneNumberLabel,
-              hintText: "+998 90 123 45 67",
-              prefixIcon: Icon(Icons.phone_android_rounded, color: AppColors.mainBlue),
-              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16.r),
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        return Padding(
+          padding: EdgeInsets.all(AppDimens.lg.r),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: 40.h),
+              Text(
+                context.l10n.welcomeTitle,
+                style: AppStyles.h1Bold.copyWith(color: Theme.of(context).primaryColor),
               ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16.r),
-                borderSide: BorderSide(color: AppColors.mainBlue, width: 2),
+              SizedBox(height: 8.h),
+              Text(
+                context.l10n.welcomeSubtitle,
+                style: AppStyles.bodyRegular.copyWith(
+                  color: Theme.of(context).textTheme.bodySmall?.color,
+                ),
               ),
-            ),
-            onChanged: (value) {
-              if (!value.startsWith('+998 ')) {
-                _controller.text = '+998 ';
-                _controller.selection = TextSelection.fromPosition(
-                  TextPosition(offset: _controller.text.length),
-                );
-                return;
-              }
-              
-              String digits = value.substring(5).replaceAll(' ', '');
-              if (digits.length > 9) {
-                digits = digits.substring(0, 9);
-              }
-              
-              String formatted = '+998 ';
-              if (digits.length > 0) {
-                formatted += digits.substring(0, digits.length >= 2 ? 2 : digits.length);
-              }
-              if (digits.length > 2) {
-                formatted += ' ' + digits.substring(2, digits.length >= 5 ? 5 : digits.length);
-              }
-              if (digits.length > 5) {
-                formatted += ' ' + digits.substring(5);
-              }
+              SizedBox(height: 40.h),
+              TextField(
+                controller: _controller,
+                keyboardType: TextInputType.phone,
+                style: AppStyles.h4Bold.copyWith(
+                  letterSpacing: 1.2,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                ),
+                decoration: InputDecoration(
+                  labelText: context.l10n.phoneNumberLabel,
+                  hintText: "+998 90 123 45 67",
+                  prefixIcon: Icon(Icons.phone_android_rounded, color: AppColors.mainBlue),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16.r),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16.r),
+                    borderSide: BorderSide(color: AppColors.mainBlue, width: 2),
+                  ),
+                ),
+                onChanged: (value) {
+                  if (!value.startsWith('+998 ')) {
+                    _controller.text = '+998 ';
+                    _controller.selection = TextSelection.fromPosition(
+                      TextPosition(offset: _controller.text.length),
+                    );
+                    return;
+                  }
+                  
+                  String digits = value.substring(5).replaceAll(' ', '');
+                  if (digits.length > 9) {
+                    digits = digits.substring(0, 9);
+                  }
+                  
+                  String formatted = '+998 ';
+                  if (digits.length > 0) {
+                    formatted += digits.substring(0, digits.length >= 2 ? 2 : digits.length);
+                  }
+                  if (digits.length > 2) {
+                    formatted += ' ' + digits.substring(2, digits.length >= 5 ? 5 : digits.length);
+                  }
+                  if (digits.length > 5) {
+                    formatted += ' ' + digits.substring(5);
+                  }
 
-              if (_controller.text != formatted) {
-                _controller.text = formatted;
-                _controller.selection = TextSelection.fromPosition(
-                  TextPosition(offset: _controller.text.length),
-                );
-              }
-            },
-          ),
-          const Spacer(),
-          BlocBuilder<AuthBloc, AuthState>(
-            builder: (context, state) {
-              return SizedBox(
+                  if (_controller.text != formatted) {
+                    _controller.text = formatted;
+                    _controller.selection = TextSelection.fromPosition(
+                      TextPosition(offset: _controller.text.length),
+                    );
+                  }
+                },
+              ),
+              if (state.status == AuthStatus.error && state.errorMessage != null)
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8.h),
+                  child: Text(
+                    state.errorMessage!,
+                    style: AppStyles.bodySmall.copyWith(color: Colors.red),
+                  ),
+                ),
+              const Spacer(),
+              SizedBox(
                 width: double.infinity,
                 height: 56.h,
                 child: ElevatedButton(
@@ -125,12 +133,12 @@ class _PhoneInputStepState extends State<PhoneInputStep> {
                       : Text(context.l10n.continueButton, 
                             style: AppStyles.h4Bold.copyWith(color: Colors.white)),
                 ),
-              );
-            },
+              ),
+              SizedBox(height: 20.h),
+            ],
           ),
-          SizedBox(height: 20.h),
-        ],
-      ),
+        );
+      },
     );
   }
 }
