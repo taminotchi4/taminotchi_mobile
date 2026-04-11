@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -7,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'core/l10n/app_localizations.dart';
 import 'core/network/dependencies.dart';
 import 'core/routing/router.dart';
+import 'core/services/notification_service.dart';
 import 'core/utils/theme.dart';
 import 'global/managers/locale/localization_cubit.dart';
 import 'global/managers/locale/locale_repository_impl.dart';
@@ -16,14 +18,20 @@ import 'features/chat/data/models/message_model.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
+  // Firebase ishga tushirish
+  await Firebase.initializeApp();
+
   await Hive.initFlutter();
   Hive.registerAdapter(MessageModelAdapter());
 
   final pref = await SharedPreferences.getInstance();
-  
+
   // Cleanup expired images (Telegram-style 3 days TTL)
   ImageCacheService().cleanupExpired();
+
+  // FCM Notification servisini ishga tushirish
+  await NotificationService().initialize();
 
   runApp(MyApp(pref: pref));
 }
@@ -78,7 +86,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-<<<<<<< HEAD
-
-=======
->>>>>>> d931a0c24080f8377e3122f46026f139133a3b0d

@@ -136,6 +136,7 @@
   "russian": "Русский",
   "priceLabel": "Цена:",
   "addressLabel": "Адрес:",
+  "statusNegotiation": "В процессе обсуждения",
   "statusAgreed": "Договорено",
   "statusActive": "Активно",
   "leaveComment": "Оставьте комментарий",

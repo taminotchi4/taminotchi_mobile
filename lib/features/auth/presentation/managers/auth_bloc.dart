@@ -50,10 +50,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   Future<void> _onPhoneNumberSubmitted(
       AuthPhoneNumberSubmitted event, Emitter<AuthState> emit) async {
     emit(state.copyWith(status: AuthStatus.loading, errorMessage: null));
+    final cleanedPhone = event.phoneNumber.replaceAll(' ', '');
 
     try {
       // Check if phone exists
-      final response = await _checkPhoneUseCase(event.phoneNumber);
+      final response = await _checkPhoneUseCase(cleanedPhone);
       
       // Debug: Print the response
       print('📱 Phone check response: exists = ${response.exists}');
@@ -64,16 +65,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(state.copyWith(
           status: AuthStatus.initial,
           step: AuthStep.login,
-          phoneNumber: event.phoneNumber,
+          phoneNumber: cleanedPhone,
         ));
       } else {
         // User doesn't exist → request OTP and go to OTP verification step
         print('❌ User does not exist, requesting OTP');
-        final otpResponse = await _requestOtpUseCase(event.phoneNumber);
+        final otpResponse = await _requestOtpUseCase(cleanedPhone);
         emit(state.copyWith(
           status: AuthStatus.initial,
           step: AuthStep.otpVerification,
-          phoneNumber: event.phoneNumber,
+          phoneNumber: cleanedPhone,
           serverOtpCode: otpResponse.otpCode, // For debug only
         ));
         _startTimer(emit);

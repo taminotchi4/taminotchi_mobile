@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/dimens.dart';
+import '../../../../core/routing/routes.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/icons.dart';
 import '../../../../core/utils/styles.dart';
@@ -16,12 +18,16 @@ class ProductCommentsSection extends StatefulWidget {
   final String productId;
   final String currentUserId;
   final String currentUserName;
+  final String? commentId;
+  final String? productName;
 
   const ProductCommentsSection({
     super.key,
     required this.productId,
     required this.currentUserId,
     required this.currentUserName,
+    this.commentId,
+    this.productName,
   });
 
   @override
@@ -72,13 +78,52 @@ class _ProductCommentsSectionState extends State<ProductCommentsSection> {
           ),
         ),
         const Spacer(),
+        // Open real-time comment chat
+        if (widget.commentId != null && widget.commentId!.isNotEmpty)
+          Padding(
+            padding: EdgeInsets.only(right: 8.w),
+            child: InkWell(
+              onTap: () => context.push(
+                Routes.getProductCommentChat(
+                  widget.productId,
+                  widget.commentId!,
+                ),
+                extra: {'productName': widget.productName ?? 'Mahsulot'},
+              ),
+              borderRadius: BorderRadius.circular(8.r),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.chat_bubble_outline_rounded,
+                        size: 14.r,
+                        color: Theme.of(context).primaryColor),
+                    SizedBox(width: 4.w),
+                    Text(
+                      'Chatda gaplash',
+                      style: AppStyles.bodySmall.copyWith(
+                        fontSize: 11.sp,
+                        color: Theme.of(context).primaryColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         InkWell(
           onTap: () => _openCommentInput(context),
           borderRadius: BorderRadius.circular(AppDimens.imageRadius.r),
           child: Container(
             padding: EdgeInsets.all(8.r),
             decoration: BoxDecoration(
-              color: Theme.of(context).primaryColor.withOpacity(0.1),
+              color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8.r),
             ),
             child: Icon(

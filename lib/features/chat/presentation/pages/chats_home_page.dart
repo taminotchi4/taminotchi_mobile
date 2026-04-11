@@ -189,17 +189,22 @@ class _ChatsHomePageState extends State<ChatsHomePage> {
 
                   return NotificationListener<ScrollNotification>(
                     onNotification: (n) {
-                      if (n is ScrollStartNotification)
-                        FocusScope.of(context).unfocus();
+                      if (n is ScrollStartNotification) FocusScope.of(context).unfocus();
                       return false;
                     },
-                    child: ListView.separated(
-                      padding: EdgeInsets.all(AppDimens.lg.r),
-                      itemCount: state.chats.length,
-                      separatorBuilder: (_, __) => AppDimens.md.height,
-                      itemBuilder: (context, index) {
-                        return _ChatItem(chat: state.chats[index]);
+                    child: RefreshIndicator(
+                      onRefresh: () async {
+                        context.read<PrivateChatListBloc>().add(PrivateChatListLoad());
                       },
+                      child: ListView.separated(
+                        padding: EdgeInsets.all(AppDimens.lg.r),
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        itemCount: state.chats.length,
+                        separatorBuilder: (_, __) => AppDimens.md.height,
+                        itemBuilder: (context, index) {
+                          return _ChatItem(chat: state.chats[index]);
+                        },
+                      ),
                     ),
                   );
                 },

@@ -7,6 +7,7 @@ import '../../domain/usecases/get_client_profile_usecase.dart';
 import '../../domain/usecases/update_client_profile_usecase.dart';
 import '../../domain/usecases/upload_profile_photo_usecase.dart';
 import '../../domain/usecases/logout_usecase.dart';
+import '../../domain/usecases/delete_account_usecase.dart';
 import 'client_profile_event.dart';
 import 'client_profile_state.dart';
 
@@ -15,6 +16,7 @@ class ClientProfileBloc extends Bloc<ClientProfileEvent, ClientProfileState> {
   final UpdateClientProfileUseCase updateProfileUseCase;
   final UploadProfilePhotoUseCase uploadPhotoUseCase;
   final LogoutUseCase logoutUseCase;
+  final DeleteAccountUseCase deleteAccountUseCase;
   final CheckUsernameUseCase checkUsernameUseCase;
   Timer? _debounceTimer;
 
@@ -23,6 +25,7 @@ class ClientProfileBloc extends Bloc<ClientProfileEvent, ClientProfileState> {
     required this.updateProfileUseCase,
     required this.uploadPhotoUseCase,
     required this.logoutUseCase,
+    required this.deleteAccountUseCase,
     required this.checkUsernameUseCase,
   }) : super(const ClientProfileState()) {
     on<ClientProfileStarted>(_onStarted);
@@ -30,6 +33,7 @@ class ClientProfileBloc extends Bloc<ClientProfileEvent, ClientProfileState> {
     on<ClientProfilePhotoChanged>(_onPhotoChanged);
     on<ClientProfileLogoutRequested>(_onLogoutRequested);
     on<ClientProfileUsernameChanged>(_onUsernameChanged);
+    on<ClientProfileDeleteAccountRequested>(_onDeleteAccountRequested);
   }
 
   Future<void> _onStarted(
@@ -84,6 +88,19 @@ class ClientProfileBloc extends Bloc<ClientProfileEvent, ClientProfileState> {
       emit(state.copyWith(isLoggedOut: true));
     } catch (e) {
       emit(state.copyWith(error: e.toString()));
+    }
+  }
+
+  Future<void> _onDeleteAccountRequested(
+    ClientProfileDeleteAccountRequested event,
+    Emitter<ClientProfileState> emit,
+  ) async {
+    emit(state.copyWith(isLoading: true));
+    try {
+      await deleteAccountUseCase();
+      emit(state.copyWith(isLoading: false, isLoggedOut: true));
+    } catch (e) {
+      emit(state.copyWith(isLoading: false, error: e.toString()));
     }
   }
 

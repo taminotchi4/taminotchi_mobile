@@ -120,7 +120,7 @@ class PostModel {
           ? DateTime.parse(json['createdAt'])
           : DateTime.now(),
       privateReplyCount: json['answerCount'] ?? 0,
-      status: json['status'] == 'archived' ? PostStatus.archived : PostStatus.active,
+      status: _parseStatus(json['status']),
       price: json['price']?.toString().split('.').first,
       address: json['adressname'] as String?,
       authorPhone: client?['phoneNumber'] as String?,
@@ -130,5 +130,20 @@ class PostModel {
       commentId: json['commentId'] as String?,
       commentMessageCount: json['commentMessageCount'] ?? 0,
     );
+  }
+
+  static PostStatus _parseStatus(String? status) {
+    switch (status) {
+      case 'active':
+        return PostStatus.active;
+      case 'archived':
+        return PostStatus.archived;
+      case 'agreed':
+        return PostStatus.agreed;
+      case 'negotiation':
+        return PostStatus.negotiation;
+      default:
+        return PostStatus.active;
+    }
   }
 }

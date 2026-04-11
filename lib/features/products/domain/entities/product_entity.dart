@@ -11,6 +11,7 @@ class ProductEntity {
   final List<String> imagePaths;
   final SellerEntity seller;
   final ProductCategoryEntity category;
+  final String? commentId;
 
   const ProductEntity({
     required this.id,
@@ -22,6 +23,7 @@ class ProductEntity {
     required this.imagePaths,
     required this.seller,
     required this.category,
+    this.commentId,
     this.colors = const [],
     this.sizes = const [],
   });

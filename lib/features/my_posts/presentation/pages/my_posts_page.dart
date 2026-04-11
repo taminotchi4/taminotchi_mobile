@@ -26,7 +26,7 @@ class MyPostsPage extends StatelessWidget {
         builder: (context, state) {
           if (state.myPosts.isEmpty) {
             return Center(
-              child: Padding(
+              child: SingleChildScrollView(
                 padding: EdgeInsets.all(AppDimens.lg.r),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -58,107 +58,124 @@ class MyPostsPage extends StatelessWidget {
                 child: const PostCreationSection(),
               ),
               Expanded(
-                child: ListView.separated(
-                  padding: EdgeInsets.fromLTRB(
-                    AppDimens.lg.w,
-                    0,
-                    AppDimens.lg.w,
-                    AppDimens.lg.h,
-                  ),
-                  itemCount: state.myPosts.length,
-                  separatorBuilder: (context, _) => AppDimens.md.height,
-                  itemBuilder: (context, index) {
-                    final post = state.myPosts[index];
-                    final commentCount = state.commentCounts[post.id] ?? 0;
-                    return PostCard(
-                      post: post,
-                      commentCount: commentCount,
-                      onTap: () => context.push(Routes.getPostDetail(post.id)),
-                      trailing: PopupMenuButton<String>(
-                        onSelected: (value) {
-                          if (value == 'edit') {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(context.l10n.editComingSoon),
-                              ),
-                            );
-                          } else if (value == 'delete') {
-                            // TODO: Implement delete in MyPostsPage if needed or redirect to detail
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(context.l10n.clickPostToDelete),
-                              ),
-                            );
-                          } else if (value == 'toggle_status') {
-                            final newStatus = post.status == PostStatus.active
-                                ? PostStatus.archived
-                                : PostStatus.active;
-                            context.read<HomeBloc>().add(
-                                  HomeUpdatePostStatus(
-                                    postId: post.id,
-                                    status: newStatus,
+                child: RefreshIndicator(
+                  onRefresh: () async {
+                    context.read<HomeBloc>().add(const HomeRefresh());
+                  },
+                  child: ListView.separated(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: EdgeInsets.fromLTRB(
+                      AppDimens.lg.w,
+                      0,
+                      AppDimens.lg.w,
+                      AppDimens.lg.h,
+                    ),
+                    itemCount: state.myPosts.length,
+                    separatorBuilder: (context, _) => AppDimens.md.height,
+                    itemBuilder: (context, index) {
+                      final post = state.myPosts[index];
+                      final commentCount = state.commentCounts[post.id] ?? 0;
+                      return PostCard(
+                        post: post,
+                        commentCount: commentCount,
+                        onTap: () => context.push(Routes.getPostDetail(post.id)),
+                        trailing: PopupMenuButton<String>(
+                          onSelected: (value) {
+                            if (value == 'edit') {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(context.l10n.editComingSoon),
+                                ),
+                              );
+                            } else if (value == 'delete') {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(context.l10n.clickPostToDelete),
+                                ),
+                              );
+                            } else {
+                              PostStatus? newStatus;
+                              if (value == 'status_active') newStatus = PostStatus.active;
+                              if (value == 'status_agreed') newStatus = PostStatus.agreed;
+                              if (value == 'status_negotiation') newStatus = PostStatus.negotiation;
+                              
+                              if (newStatus != null) {
+                                context.read<HomeBloc>().add(
+                                      HomeUpdatePostStatus(
+                                        postId: post.id,
+                                        status: newStatus,
+                                      ),
+                                    );
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Status o\'zgartirildi: ${newStatus.label}'),
                                   ),
                                 );
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  newStatus == PostStatus.active
-                                      ? context.l10n.postActivated
-                                      : context.l10n.postArchivedAgreed,
+                              }
+                            }
+                          },
+                          itemBuilder: (context) => [
+                            if (post.status != PostStatus.active)
+                              PopupMenuItem(
+                                value: 'status_active',
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.refresh, color: Colors.green),
+                                    SizedBox(width: 8.w),
+                                    Text(context.l10n.reactivate),
+                                  ],
                                 ),
                               ),
-                            );
-                          }
-                        },
-                        itemBuilder: (context) => [
-                          PopupMenuItem(
-                            value: 'toggle_status',
-                            child: Row(
-                              children: [
-                                Icon(
-                                  post.status == PostStatus.active
-                                      ? Icons.check_circle_outline
-                                      : Icons.fiber_manual_record,
-                                  color: post.status == PostStatus.active
-                                      ? Colors.grey
-                                      : Colors.green,
+                            if (post.status == PostStatus.active) ...[
+                              PopupMenuItem(
+                                value: 'status_negotiation',
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.handshake_outlined, color: Colors.orange),
+                                    SizedBox(width: 8.w),
+                                    Text(context.l10n.statusNegotiation),
+                                  ],
                                 ),
-                                SizedBox(width: 8.w),
-                                Text(
-                                  post.status == PostStatus.active
-                                      ? context.l10n.statusAgreed
-                                      : context.l10n.reactivate,
+                              ),
+                              PopupMenuItem(
+                                value: 'status_agreed',
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.check_circle_outline, color: Colors.blue),
+                                    SizedBox(width: 8.w),
+                                    Text(context.l10n.statusAgreed),
+                                  ],
                                 ),
-                              ],
+                              ),
+                            ],
+                            PopupMenuItem(
+                              value: 'edit',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.edit_outlined,
+                                      color: Theme.of(context).primaryColor),
+                                  SizedBox(width: 8.w),
+                                  Text(context.l10n.edit),
+                                ],
+                              ),
                             ),
-                          ),
-                          PopupMenuItem(
-                            value: 'edit',
-                            child: Row(
-                              children: [
-                                Icon(Icons.edit_outlined,
-                                    color: Theme.of(context).primaryColor),
-                                SizedBox(width: 8.w),
-                                Text(context.l10n.edit),
-                              ],
+                            PopupMenuItem(
+                              value: 'delete',
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.delete_outline_rounded,
+                                      color: Colors.red),
+                                  SizedBox(width: 8.w),
+                                  Text(context.l10n.delete),
+                                ],
+                              ),
                             ),
-                          ),
-                          PopupMenuItem(
-                            value: 'delete',
-                            child: Row(
-                              children: [
-                                const Icon(Icons.delete_outline_rounded,
-                                    color: Colors.red),
-                                SizedBox(width: 8.w),
-                                Text(context.l10n.delete),
-                              ],
-                            ),
-                          ),
-                        ],
-                        child: Icon(Icons.more_vert, size: 20.sp),
-                      ),
-                    );
-                  },
+                          ],
+                          child: Icon(Icons.more_vert, size: 20.sp),
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ),
             ],

@@ -6,13 +6,26 @@ import '../../../../core/constants/dimens.dart';
 import '../../../../core/routing/routes.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/styles.dart';
-import '../../../../global/widgets/app_svg_icon.dart';
 import '../../domain/entities/product_entity.dart';
 
 class ProductSellerInfo extends StatelessWidget {
   final ProductEntity product;
 
   const ProductSellerInfo({super.key, required this.product});
+
+  Widget _buildAvatar(String path, double size) {
+    final isUrl = path.startsWith('http://') || path.startsWith('https://');
+    if (isUrl) {
+      return Image.network(
+        path,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => Icon(Icons.person_outline, size: size * 0.5),
+      );
+    }
+    return Icon(Icons.person_outline, size: size * 0.5);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,11 +53,7 @@ class ProductSellerInfo extends StatelessWidget {
                     width: 50.w,
                     height: 50.w,
                     color: Theme.of(context).dividerColor,
-                    child: AppSvgIcon(
-                      assetPath: product.seller.avatarPath,
-                      size: 24.w,
-                      color: Theme.of(context).iconTheme.color,
-                    ),
+                    child: _buildAvatar(product.seller.avatarPath, 50.w),
                   ),
                 ),
                 AppDimens.md.width,

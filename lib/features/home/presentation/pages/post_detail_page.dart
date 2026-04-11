@@ -1,3 +1,4 @@
+import 'dart:core';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -19,6 +20,7 @@ import '../widgets/post_card.dart';
 import '../../../chat/presentation/managers/comment_bloc.dart';
 import '../../../chat/data/models/message_model.dart';
 import '../../../auth/domain/repositories/auth_repository.dart';
+import '../../../chat/domain/repositories/chat_repository.dart';
 import 'dart:async';
 
 // Mock Reply Data for "Javoblar" tab
@@ -65,10 +67,8 @@ class _PostDetailPageState extends State<PostDetailPage>
   @override
   void dispose() {
     if (_commentBloc != null) {
-      if (_commentBloc!.state.comments.isNotEmpty) {
-        // Find commentId from some local state or the bloc itself if needed, or simply let the socket disconnect handle it when it drops
-      }
-      _commentBloc!.close(); // Better to properly close the local Bloc instance when disposing the page
+      // Close the local bloc; leave_comment is handled in CommentBloc.close()
+      _commentBloc!.close();
     }
     _tabController.dispose();
     _commentController.dispose();
@@ -79,12 +79,12 @@ class _PostDetailPageState extends State<PostDetailPage>
   Future<void> _initCommentBloc(String? commentId) async {
     if (commentId == null || _isJoining) return;
     _isJoining = true;
-    
-    final token = await context.read<AuthRepository>().getToken();
     if (!mounted) return;
-    
     setState(() {
-      _commentBloc = CommentBloc(token: token ?? '');
+      _commentBloc = CommentBloc(
+        authRepository: context.read<AuthRepository>(),
+        chatRepository: context.read<ChatRepository>(),
+      );
       _commentBloc!.add(CommentJoin(commentId));
     });
   }
@@ -134,25 +134,25 @@ class _PostDetailPageState extends State<PostDetailPage>
                       );
                     } else if (value == 'delete') {
                       _showDeleteDialog();
-                    } else if (value == 'toggle_status') {
-                      final newStatus = post.status == PostStatus.active
-                          ? PostStatus.archived
-                          : PostStatus.active;
-                      context.read<HomeBloc>().add(
-                            HomeUpdatePostStatus(
-                              postId: post.id,
-                              status: newStatus,
-                            ),
-                          );
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            newStatus == PostStatus.active
-                                ? context.l10n.postActivated
-                                : context.l10n.postArchivedAgreed,
+                    } else {
+                      PostStatus? newStatus;
+                      if (value == 'status_active') newStatus = PostStatus.active;
+                      if (value == 'status_agreed') newStatus = PostStatus.agreed;
+                      if (value == 'status_negotiation') newStatus = PostStatus.negotiation;
+                      
+                      if (newStatus != null) {
+                        context.read<HomeBloc>().add(
+                              HomeUpdatePostStatus(
+                                postId: post.id,
+                                status: newStatus,
+                              ),
+                            );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Status o\'zgartirildi: ${newStatus.label}'),
                           ),
-                        ),
-                      );
+                        );
+                      }
                     }
                   },
                   icon: Icon(
@@ -163,27 +163,39 @@ class _PostDetailPageState extends State<PostDetailPage>
                   ),
                   itemBuilder: (BuildContext context) =>
                       <PopupMenuEntry<String>>[
-                    PopupMenuItem<String>(
-                      value: 'toggle_status',
-                      child: Row(
-                        children: [
-                          Icon(
-                            post.status == PostStatus.active
-                                ? Icons.check_circle_outline
-                                : Icons.fiber_manual_record,
-                            color: post.status == PostStatus.active
-                                ? Colors.grey
-                                : Colors.green,
-                          ),
-                          SizedBox(width: 8.w),
-                          Text(
-                            post.status == PostStatus.active
-                                ? context.l10n.markAsAgreed
-                                : context.l10n.reactivate,
-                          ),
-                        ],
+                    if (post.status != PostStatus.active)
+                      PopupMenuItem<String>(
+                        value: 'status_active',
+                        child: Row(
+                          children: [
+                            const Icon(Icons.refresh, color: Colors.green),
+                            SizedBox(width: 8.w),
+                            Text(context.l10n.reactivate),
+                          ],
+                        ),
                       ),
-                    ),
+                    if (post.status == PostStatus.active) ...[
+                      PopupMenuItem<String>(
+                        value: 'status_negotiation',
+                        child: Row(
+                          children: [
+                            const Icon(Icons.handshake_outlined, color: Colors.orange),
+                            SizedBox(width: 8.w),
+                            Text(context.l10n.statusNegotiation),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem<String>(
+                        value: 'status_agreed',
+                        child: Row(
+                          children: [
+                            const Icon(Icons.check_circle_outline, color: Colors.blue),
+                            SizedBox(width: 8.w),
+                            Text(context.l10n.statusAgreed),
+                          ],
+                        ),
+                      ),
+                    ],
                     PopupMenuItem<String>(
                       value: 'edit',
                       child: Row(
@@ -228,7 +240,7 @@ class _PostDetailPageState extends State<PostDetailPage>
                                   builder: (context, commentState) {
                                     return PostCard(
                                       post: post,
-                                      commentCount: commentState.comments.length,
+                                      commentCount: commentState.messages.length,
                                       showFullText: true,
                                     );
                                   },
@@ -407,12 +419,12 @@ children: [
 
     return BlocBuilder<CommentBloc, CommentState>(
       bloc: _commentBloc,
-      builder: (context, commentState) {
+      builder: (BuildContext context, CommentState commentState) {
         if (commentState.isLoading) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        final flatComments = commentState.comments;
+        final flatComments = commentState.messages;
         final rootComments = flatComments.where((c) => c.replyToId == null).toList();
         final Map<String, List<MessageModel>> repliesMap = {};
         for (var c in flatComments) {
@@ -457,7 +469,7 @@ children: [
             final commentReplies = repliesMap[rootComment.id] ?? [];
             
             final commentEntity = rootComment.toCommentEntity(widget.postId);
-            final mappedReplies = commentReplies.map((r) => r.toCommentEntity(widget.postId)).toList();
+            final List<CommentEntity> mappedReplies = commentReplies.map((r) => r.toCommentEntity(widget.postId)).toList();
 
             return Padding(
               padding: EdgeInsets.only(bottom: AppDimens.md.h),

@@ -28,12 +28,26 @@ abstract class ElonRemoteDataSource {
     int limit = 100,
   });
   Future<Result<List<PostModel>>> getMyElons();
+  Future<Result<void>> updateElonStatus(String postId, String status);
 }
 
 class ElonRemoteDataSourceImpl implements ElonRemoteDataSource {
   final ApiClient client;
 
   ElonRemoteDataSourceImpl({required this.client});
+
+  @override
+  Future<Result<void>> updateElonStatus(String postId, String status) async {
+    final response = await client.patch<Map<String, dynamic>>(
+      'elon/$postId/status',
+      data: {'status': status},
+    );
+
+    return response.fold(
+      (error) => Result.error(error),
+      (data) => Result.ok(null),
+    );
+  }
 
   @override
   Future<Result<PostModel>> createElon({

@@ -8,7 +8,10 @@ import '../../../../core/utils/styles.dart';
 
 import '../../../../global/widgets/app_back_button.dart';
 import '../../../../global/widgets/common_app_bar.dart';
+import '../../../profile/domain/usecases/get_client_profile_usecase.dart';
+import '../../data/repositories/product_comments_repository_impl.dart';
 import '../../domain/entities/product_entity.dart';
+import '../../domain/repositories/product_comments_repository.dart';
 import '../managers/product_comments_bloc.dart';
 import '../managers/product_comments_event.dart';
 import '../managers/product_details_bloc.dart';
@@ -34,12 +37,13 @@ class ProductDetailPage extends StatefulWidget {
 }
 
 class _ProductDetailPageState extends State<ProductDetailPage> {
-  final String _currentUserId = 'user_1';
-  final String _currentUserName = 'Mening akkauntim';
+  String _currentUserId = '';
+  String _currentUserName = 'Men';
 
   int? _selectedColor;
   String? _selectedSize;
   String? _sizeError;
+  bool _commentIdCached = false;
 
   @override
   void initState() {
@@ -48,9 +52,36 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     context.read<ProductDetailsBloc>().add(
           ProductDetailsStarted(widget.productId),
         );
-    context.read<ProductCommentsBloc>().add(
-          ProductCommentsStarted(widget.productId),
-        );
+    // Load current user profile
+    _loadCurrentUser();
+  }
+
+  Future<void> _loadCurrentUser() async {
+    try {
+      final useCase = context.read<GetClientProfileUseCase>();
+      final profile = await useCase();
+      if (mounted) {
+        setState(() {
+          _currentUserId = profile.id;
+          _currentUserName = profile.name.isNotEmpty ? profile.name : profile.username;
+        });
+      }
+    } catch (_) {}
+  }
+
+  void _cacheCommentIdAndLoad(ProductEntity product) {
+    if (_commentIdCached) return;
+    final commentId = product.commentId;
+    if (commentId != null && commentId.isNotEmpty) {
+      final repo = context.read<ProductCommentsRepository>();
+      if (repo is ProductCommentsRepositoryImpl) {
+        repo.cacheCommentId(product.id, commentId);
+      }
+      _commentIdCached = true;
+      context.read<ProductCommentsBloc>().add(
+            ProductCommentsStarted(product.id),
+          );
+    }
   }
 
   @override
@@ -83,6 +114,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               ),
             );
           }
+
+          // Cache commentId and trigger comments load
+          _cacheCommentIdAndLoad(product);
 
           // Initial selection for color only
           if (_selectedColor == null && product.colors.isNotEmpty) {
@@ -129,6 +163,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       productId: product.id,
                       currentUserId: _currentUserId,
                       currentUserName: _currentUserName,
+                      commentId: product.commentId,
+                      productName: product.name,
                     ),
                     80.verticalSpace, // Spacing for bottom bar
                   ],

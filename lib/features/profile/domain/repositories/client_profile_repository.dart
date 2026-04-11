@@ -5,4 +5,5 @@ abstract class ClientProfileRepository {
   Future<ClientProfileEntity> updateProfile(ClientProfileEntity profile);
   Future<String?> uploadPhoto(String imagePath);
   Future<void> logout();
+  Future<void> deleteAccount();
 }

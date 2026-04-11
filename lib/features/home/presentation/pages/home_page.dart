@@ -58,17 +58,6 @@ class _HomePageState extends State<HomePage> {
           context.read<HomeBloc>().add(const HomeClearActionStatus());
           context.go(Routes.myPosts);
         }
-        if (state.actionStatus == HomeActionStatus.error &&
-            state.errorMessage != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              behavior: SnackBarBehavior.floating,
-              backgroundColor: Colors.red,
-              content: Text(state.errorMessage!),
-            ),
-          );
-          context.read<HomeBloc>().add(const HomeClearActionStatus());
-        }
         if (state.actionStatus == HomeActionStatus.authRequired) {
           showDialog(
             context: context,

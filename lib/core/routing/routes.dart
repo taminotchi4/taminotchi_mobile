@@ -18,6 +18,7 @@ class Routes {
   static const categoryFeed = '/category/:categoryId';
   static const notifications = '/notifications';
   static const becomeSeller = '/become-seller';
+  static const productCommentChat = '/products/:productId/comments/:commentId';
 
   static String getPostDetail(String postId) => '/post/$postId';
   static String getProductDetail(String productId) => '/products/$productId';
@@ -28,4 +29,6 @@ class Routes {
   static String getCategoryFeed(String categoryId) => '/category/$categoryId';
   static String getPrivateChat(String chatId) => '/chats/private/$chatId';
   static String getGroupChat(String groupId) => '/chats/group/$groupId';
+  static String getProductCommentChat(String productId, String commentId) =>
+      '/products/$productId/comments/$commentId';
 }

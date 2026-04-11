@@ -42,6 +42,7 @@ import '../../features/profile/domain/usecases/get_client_profile_usecase.dart';
 import '../../features/profile/domain/usecases/update_client_profile_usecase.dart';
 import '../../features/profile/domain/usecases/upload_profile_photo_usecase.dart';
 import '../../features/profile/domain/usecases/logout_usecase.dart' as profile_logout;
+import '../../features/profile/domain/usecases/delete_account_usecase.dart';
 import '../../features/chat/data/datasources/chat_remote_data_source.dart';
 import '../../features/chat/data/datasources/group_remote_data_source.dart';
 import '../../features/chat/data/repositories/chat_repository_impl.dart';
@@ -50,7 +51,22 @@ import '../../features/chat/data/datasources/chat_local_data_source.dart';
 import '../../features/chat/data/services/audio_player_service.dart';
 import '../../features/chat/data/services/audio_recorder_service.dart';
 import '../../features/chat/data/services/chat_media_service.dart';
+import '../../features/chat/presentation/managers/notification_proxy_bloc.dart';
 import '../../features/notifications/data/repositories/notification_repository_impl.dart';
+import '../../features/products/data/datasources/products_remote_data_source.dart';
+import '../../features/products/data/datasources/product_comments_remote_data_source.dart';
+import '../../features/products/data/repositories/products_repository_impl.dart';
+import '../../features/products/data/repositories/product_comments_repository_impl.dart';
+import '../../features/products/domain/repositories/products_repository.dart';
+import '../../features/products/domain/repositories/product_comments_repository.dart';
+import '../../features/products/domain/usecases/get_products_usecase.dart';
+import '../../features/products/domain/usecases/get_product_by_id_usecase.dart';
+import '../../features/products/domain/usecases/get_product_categories_usecase.dart';
+import '../../features/products/domain/usecases/get_product_comments_usecase.dart';
+import '../../features/products/domain/usecases/add_product_comment_usecase.dart';
+import '../../features/products/domain/usecases/update_product_comment_usecase.dart';
+import '../../features/products/domain/usecases/delete_product_comment_usecase.dart';
+import '../../features/products/data/datasources/product_comments_local_data_source.dart';
 
 final dependencies = <SingleChildWidget>[
   RepositoryProvider(create: (context) => const FlutterSecureStorage()),
@@ -145,6 +161,7 @@ final dependencies = <SingleChildWidget>[
   RepositoryProvider(create: (context) => UpdateClientProfileUseCase(context.read<ClientProfileRepository>())),
   RepositoryProvider(create: (context) => UploadProfilePhotoUseCase(context.read<ClientProfileRepository>())),
   RepositoryProvider(create: (context) => profile_logout.LogoutUseCase(context.read<ClientProfileRepository>())),
+  RepositoryProvider(create: (context) => DeleteAccountUseCase(context.read<ClientProfileRepository>())),
 
   // Chat dependencies
   RepositoryProvider<ChatRemoteDataSource>(
@@ -169,5 +186,55 @@ final dependencies = <SingleChildWidget>[
   RepositoryProvider(create: (context) => AudioRecorderService()),
   RepositoryProvider<NotificationRepositoryImpl>(
     create: (context) => NotificationRepositoryImpl(client: context.read<ApiClient>()),
+  ),
+  BlocProvider<NotificationProxyBloc>(
+    create: (context) => NotificationProxyBloc(
+      repository: context.read<NotificationRepositoryImpl>(),
+      authRepository: context.read<AuthRepository>(),
+    ),
+    lazy: false,
+  ),
+
+  // Products dependencies
+  RepositoryProvider<ProductsRemoteDataSource>(
+    create: (context) => ProductsRemoteDataSourceImpl(client: context.read<ApiClient>()),
+  ),
+  RepositoryProvider<ProductsRepository>(
+    create: (context) => ProductsRepositoryImpl(
+      remoteDataSource: context.read<ProductsRemoteDataSource>(),
+    ),
+  ),
+  RepositoryProvider(
+    create: (context) => GetProductsUseCase(context.read<ProductsRepository>()),
+  ),
+  RepositoryProvider(
+    create: (context) => GetProductByIdUseCase(context.read<ProductsRepository>()),
+  ),
+  RepositoryProvider(
+    create: (context) => GetProductCategoriesUseCase(context.read<ProductsRepository>()),
+  ),
+
+  // Product Comments dependencies
+  RepositoryProvider(create: (_) => ProductCommentsLocalDataSource()),
+  RepositoryProvider<ProductCommentsRemoteDataSource>(
+    create: (context) => ProductCommentsRemoteDataSourceImpl(client: context.read<ApiClient>()),
+  ),
+  RepositoryProvider<ProductCommentsRepository>(
+    create: (context) => ProductCommentsRepositoryImpl(
+      remoteDataSource: context.read<ProductCommentsRemoteDataSource>(),
+      localDataSource: context.read<ProductCommentsLocalDataSource>(),
+    ),
+  ),
+  RepositoryProvider(
+    create: (context) => GetProductCommentsUseCase(context.read<ProductCommentsRepository>()),
+  ),
+  RepositoryProvider(
+    create: (context) => AddProductCommentUseCase(context.read<ProductCommentsRepository>()),
+  ),
+  RepositoryProvider(
+    create: (context) => UpdateProductCommentUseCase(context.read<ProductCommentsRepository>()),
+  ),
+  RepositoryProvider(
+    create: (context) => DeleteProductCommentUseCase(context.read<ProductCommentsRepository>()),
   ),
 ];

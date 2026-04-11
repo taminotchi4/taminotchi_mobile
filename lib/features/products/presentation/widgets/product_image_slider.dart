@@ -43,9 +43,36 @@ class ProductImageSlider extends StatelessWidget {
   }
 
   Widget _buildImage(String path) {
+    final isUrl = path.startsWith('http://') || path.startsWith('https://');
+    if (isUrl) {
+      return Image.network(
+        path,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, progress) {
+          if (progress == null) return child;
+          return Container(
+            color: Theme.of(context).dividerColor,
+            child: const Center(
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) => Container(
+          color: Theme.of(context).dividerColor,
+          child: const Icon(Icons.broken_image_outlined, size: 40),
+        ),
+      );
+    }
     if (path.toLowerCase().endsWith('.svg')) {
       return SvgPicture.asset(path, fit: BoxFit.cover);
     }
-    return Image.asset(path, fit: BoxFit.cover);
+    return Image.asset(
+      path,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) => Container(
+        color: Theme.of(context).dividerColor,
+        child: const Icon(Icons.broken_image_outlined, size: 40),
+      ),
+    );
   }
 }

@@ -5,6 +5,7 @@ import '../../../../core/constants/dimens.dart';
 import '../../../../core/utils/colors.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/styles.dart';
+import '../../../../core/utils/formatters.dart';
 import '../managers/auth_bloc.dart';
 import '../managers/auth_state.dart';
 
@@ -90,7 +91,7 @@ class _OtpVerificationStepState extends State<OtpVerificationStep> {
                     ),
                     SizedBox(height: 8.h),
                     Text(
-                      context.l10n.enterOtp(state.phoneNumber),
+                      context.l10n.enterOtp(formatPhoneNumber(state.phoneNumber)),
                       style: AppStyles.bodyRegular.copyWith(
                         color: Theme.of(context).textTheme.bodySmall?.color,
                       ),

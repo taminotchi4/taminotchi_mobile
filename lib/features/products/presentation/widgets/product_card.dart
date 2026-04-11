@@ -7,7 +7,6 @@ import '../../../../core/routing/routes.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/utils/styles.dart';
-import '../../../../global/widgets/app_svg_icon.dart';
 import '../../domain/entities/product_entity.dart';
 import 'product_image_slider.dart';
 
@@ -15,6 +14,20 @@ class ProductCard extends StatelessWidget {
   final ProductEntity product;
 
   const ProductCard({super.key, required this.product});
+
+  Widget _buildSellerAvatar(String path, double size) {
+    final isUrl = path.startsWith('http://') || path.startsWith('https://');
+    if (isUrl) {
+      return Image.network(
+        path,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => Icon(Icons.person_outline, size: size * 0.5),
+      );
+    }
+    return Icon(Icons.person_outline, size: size * 0.5);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +93,10 @@ class ProductCard extends StatelessWidget {
             ),
             Expanded(
               child: Padding(
-                padding: EdgeInsets.all(AppDimens.md.r),
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppDimens.md.r,
+                  vertical: AppDimens.sm.r,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -90,7 +106,8 @@ class ProductCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppStyles.bodyMedium.copyWith(
                         fontWeight: FontWeight.w600,
-                        height: 1.2,
+                        fontSize: 13.sp,
+                        height: 1.1,
                         color: Theme.of(context).textTheme.bodyMedium?.color,
                       ),
                     ),
@@ -103,11 +120,7 @@ class ProductCard extends StatelessWidget {
                             width: 16.w,
                             height: 16.w,
                             color: Theme.of(context).dividerColor,
-                            child: AppSvgIcon(
-                              assetPath: product.seller.avatarPath,
-                              size: 10.w,
-                              color: Theme.of(context).iconTheme.color,
-                            ),
+                            child: _buildSellerAvatar(product.seller.avatarPath, 16.w),
                           ),
                         ),
                         4.horizontalSpace,
@@ -124,7 +137,7 @@ class ProductCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const Spacer(),
+                    const SizedBox(height: 4),
                     Row(
                       children: [
                         Expanded(
@@ -132,7 +145,9 @@ class ProductCard extends StatelessWidget {
                             formatPrice(product.price),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: AppStyles.h5Bold.copyWith(
+                            style: AppStyles.bodyMedium.copyWith(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13.sp,
                               color: Theme.of(context).primaryColor,
                             ),
                           ),

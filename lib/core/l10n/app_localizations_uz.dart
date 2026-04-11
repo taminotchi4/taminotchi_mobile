@@ -331,6 +331,9 @@ class MyLocalizationsUz extends MyLocalizations {
   String get addressLabel => 'Manzil:';
 
   @override
+  String get statusNegotiation => 'Kelishilmoqda';
+
+  @override
   String get statusAgreed => 'Kelishilgan';
 
   @override
@@ -462,4 +465,14 @@ class MyLocalizationsUz extends MyLocalizations {
 
   @override
   String get notificationsNone => 'Bildirishnomalar yo\'q';
+
+  @override
+  String get deleteAccountTitle => 'Hisobni o\'chirish';
+
+  @override
+  String get deleteAccountConfirm =>
+      'Haqiqatan ham hisobingizni butunlay o\'chirib tashlamoqchimisiz? Bu amalni ortga qaytarib bo\'lmaydi.';
+
+  @override
+  String get deleteAccount => 'O\'chirish';
 }

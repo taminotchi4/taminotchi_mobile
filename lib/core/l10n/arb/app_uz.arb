@@ -135,6 +135,7 @@
   "russian": "Русский",
   "priceLabel": "Narxi:",
   "addressLabel": "Manzil:",
+  "statusNegotiation": "Kelishilmoqda",
   "statusAgreed": "Kelishilgan",
   "statusActive": "Active",
   "leaveComment": "Izoh qoldiring",
@@ -191,5 +192,8 @@
   "clickPostToDelete": "O'chirish uchun e'lon ustiga bosing",
   "market": "Market",
   "user": "Foydalanuvchi",
-  "notificationsNone": "Bildirishnomalar yo'q"
+  "notificationsNone": "Bildirishnomalar yo'q",
+  "deleteAccountTitle": "Hisobni o'chirish",
+  "deleteAccountConfirm": "Haqiqatan ham hisobingizni butunlay o'chirib tashlamoqchimisiz? Bu amalni ortga qaytarib bo'lmaydi.",
+  "deleteAccount": "O'chirish"
 }

@@ -8,6 +8,7 @@ sealed class Result<T> {
   R fold<R>(R Function(Exception error) onError, R Function(T value) onSuccess);
 
   bool get isOk => this is Ok<T>;
+  bool get isSuccess => this is Ok<T>;
   bool get isError => this is Error<T>;
 
   T? get data => fold((_) => null, (val) => val);

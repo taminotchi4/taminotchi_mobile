@@ -37,8 +37,12 @@ class ClientProfileRepositoryImpl implements ClientProfileRepository {
 
   @override
   Future<void> logout() async {
-    // remoteDataSource currently doesn't have logout in the interface I created, but generic logout logic can be added if needed
-    // For now, let's just use local logout or update interface
+    await localDataSource.logout();
+  }
+
+  @override
+  Future<void> deleteAccount() async {
+    await remoteDataSource.deleteAccount();
     await localDataSource.logout();
   }
 }

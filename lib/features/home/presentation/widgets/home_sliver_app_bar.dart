@@ -47,18 +47,6 @@ class HomeSliverAppBar extends StatelessWidget {
                       SizedBox(
                         width: AppDimens.appBarButton.w,
                         height: AppDimens.appBarButton.w,
-                        child: InkWell(
-                          onTap: onLeftTap,
-                          borderRadius:
-                              BorderRadius.circular(AppDimens.imageRadius.r),
-                          child: Center(
-                            child: AppSvgIcon(
-                              assetPath: AppIcons.menu,
-                              size: AppDimens.iconLg,
-                              color: Theme.of(context).iconTheme.color,
-                            ),
-                          ),
-                        ),
                       ),
                       Expanded(
                         child: Center(

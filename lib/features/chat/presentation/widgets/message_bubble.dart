@@ -87,11 +87,15 @@ class _MessageBubbleState extends State<MessageBubble> with SingleTickerProvider
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onLongPress: () => _showMessageDialog(context),
       onTap: () {
         if (widget.isSelected || context.read<ChatBloc>().state.selectedMessageIds.isNotEmpty) {
            context.read<ChatBloc>().add(ChatToggleMessageSelection(widget.message.id));
+        } else {
+          _showMessageDialog(context);
         }
+      },
+      onLongPress: () {
+        context.read<ChatBloc>().add(ChatToggleMessageSelection(widget.message.id));
       },
       onHorizontalDragUpdate: _onHorizontalDragUpdate,
       onHorizontalDragEnd: _onHorizontalDragEnd,

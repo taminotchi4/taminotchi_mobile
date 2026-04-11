@@ -300,10 +300,16 @@ class HomeRepositoryImpl implements HomeRepository {
     required PostStatus status,
   }) async {
     try {
-      localDataSource.updatePostStatus(postId, status);
-      return Result.ok(null);
+      final result = await elonRemoteDataSource.updateElonStatus(postId, status.value);
+      return result.fold(
+        (error) => Result.error(error),
+        (_) {
+          localDataSource.updatePostStatus(postId, status);
+          return Result.ok(null);
+        },
+      );
     } catch (e) {
-      return Result.error(Exception('Failed to update post status'));
+      return Result.error(Exception('Failed to update post status: $e'));
     }
   }
 }

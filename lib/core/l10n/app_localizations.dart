@@ -706,6 +706,12 @@ abstract class MyLocalizations {
   /// **'Manzil:'**
   String get addressLabel;
 
+  /// No description provided for @statusNegotiation.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kelishilmoqda'**
+  String get statusNegotiation;
+
   /// No description provided for @statusAgreed.
   ///
   /// In uz, this message translates to:
@@ -963,6 +969,24 @@ abstract class MyLocalizations {
   /// In uz, this message translates to:
   /// **'Bildirishnomalar yo\'q'**
   String get notificationsNone;
+
+  /// No description provided for @deleteAccountTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Hisobni o\'chirish'**
+  String get deleteAccountTitle;
+
+  /// No description provided for @deleteAccountConfirm.
+  ///
+  /// In uz, this message translates to:
+  /// **'Haqiqatan ham hisobingizni butunlay o\'chirib tashlamoqchimisiz? Bu amalni ortga qaytarib bo\'lmaydi.'**
+  String get deleteAccountConfirm;
+
+  /// No description provided for @deleteAccount.
+  ///
+  /// In uz, this message translates to:
+  /// **'O\'chirish'**
+  String get deleteAccount;
 }
 
 class _MyLocalizationsDelegate extends LocalizationsDelegate<MyLocalizations> {

@@ -19,5 +19,16 @@
   "noPostsYet": "You don't have any posts yet",
   "comments": "Comments",
   "privateReplies": "Private Replies",
-  "all": "All"
+  "all": "All",
+  "statusNegotiation": "In negotiation",
+  "statusAgreed": "Agreed",
+  "statusActive": "Active",
+  "reactivate": "Reactivate",
+  "edit": "Edit",
+  "delete": "Delete",
+  "editComingSoon": "Edit feature coming soon",
+  "postActivated": "Post activated",
+  "postArchivedAgreed": "Post marked as agreed",
+  "clickPostToDelete": "Tap post to delete",
+  "logout": "Logout"
 }

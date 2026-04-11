@@ -12,7 +12,7 @@ class BecomeSellerPage extends StatelessWidget {
   const BecomeSellerPage({super.key});
 
   static const _androidUrl =
-      'https://play.google.com/store/apps/details?id=com.taminotchi.seller';
+      'https://play.google.com/store/apps/details?id=uz.taminotchi.seller';
   static const _iosUrl =
       'https://apps.apple.com/app/taminotchi-seller/id0000000000';
 

@@ -52,6 +52,21 @@ class ProductsBloc extends Bloc<ProductsEvent, ProductsState> {
       productsResult.fold(
             (_) => emit(state.copyWith(categories: categories)),
             (products) {
+          // If no categories from repository, build them from products
+          if (categories.isEmpty && products.isNotEmpty) {
+            final seen = <String>{};
+            final built = <ProductCategoryEntity>[];
+            for (final p in products) {
+              if (seen.add(p.category.id)) {
+                built.add(p.category);
+              }
+            }
+            categories = [
+              const ProductCategoryEntity(id: 'all', name: 'Barchasi', iconPath: ''),
+              ...built,
+            ];
+          }
+
           final selected = categories.isEmpty ? null : categories.first;
           final filtered = _applyFilters(products, selected, state.searchQuery);
           final visible = _visibleProducts(filtered, state.visibleCount);

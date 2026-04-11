@@ -2,42 +2,43 @@ import '../../../../core/utils/result.dart';
 import '../../domain/entities/product_category_entity.dart';
 import '../../domain/entities/product_entity.dart';
 import '../../domain/repositories/products_repository.dart';
-import '../datasources/products_local_data_source.dart';
+import '../datasources/products_remote_data_source.dart';
 
 class ProductsRepositoryImpl implements ProductsRepository {
-  final ProductsLocalDataSource localDataSource;
+  final ProductsRemoteDataSource remoteDataSource;
 
-  const ProductsRepositoryImpl(this.localDataSource);
+  const ProductsRepositoryImpl({required this.remoteDataSource});
 
   @override
   Future<Result<List<ProductEntity>>> getProducts({bool forceRefresh = false}) async {
     try {
-      final products =
-          localDataSource.getProducts().map((e) => e.toEntity()).toList();
-      return Result.ok(products);
-    } catch (_) {
-      return Result.error(Exception('Failed to load products'));
+      final result = await remoteDataSource.getProducts();
+      return result.fold(
+        (error) => Result.error(error),
+        (products) => Result.ok(products.map((e) => e.toEntity()).toList()),
+      );
+    } catch (e) {
+      return Result.error(Exception('Mahsulotlarni yuklashda xatolik: $e'));
     }
   }
 
   @override
   Future<Result<ProductEntity?>> getProductById(String id) async {
     try {
-      final product = localDataSource.getProductById(id)?.toEntity();
-      return Result.ok(product);
-    } catch (_) {
-      return Result.error(Exception('Failed to load product'));
+      final result = await remoteDataSource.getProductById(id);
+      return result.fold(
+        (error) => Result.error(error),
+        (product) => Result.ok(product.toEntity()),
+      );
+    } catch (e) {
+      return Result.error(Exception('Mahsulotni yuklashda xatolik: $e'));
     }
   }
 
   @override
   Future<Result<List<ProductCategoryEntity>>> getCategories({bool forceRefresh = false}) async {
-    try {
-      final categories =
-          localDataSource.getCategories().map((e) => e.toEntity()).toList();
-      return Result.ok(categories);
-    } catch (_) {
-      return Result.error(Exception('Failed to load categories'));
-    }
+    // Categories are derived from products – return empty list;
+    // category bar in AllProductsPage will populate from loaded products.
+    return Result.ok([]);
   }
 }

@@ -6,12 +6,22 @@ abstract class ClientProfileRemoteDataSource {
   Future<ClientProfileEntity> getProfile();
   Future<ClientProfileEntity> updateProfile(ClientProfileEntity profile);
   Future<String?> uploadPhoto(String imagePath);
+  Future<void> deleteAccount();
 }
 
 class ClientProfileRemoteDataSourceImpl implements ClientProfileRemoteDataSource {
   final ApiClient client;
 
   ClientProfileRemoteDataSourceImpl({required this.client});
+
+  @override
+  Future<void> deleteAccount() async {
+    final result = await client.delete<Map<String, dynamic>>('client/me');
+    result.fold(
+      (error) => throw error,
+      (data) => null,
+    );
+  }
 
   @override
   Future<ClientProfileEntity> getProfile() async {

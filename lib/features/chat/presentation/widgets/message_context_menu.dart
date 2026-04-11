@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:taminotchi_app/core/utils/colors.dart';
 import 'package:taminotchi_app/core/utils/styles.dart';
 import '../../domain/entities/chat_message_entity.dart';
 
@@ -41,45 +40,34 @@ class MessageContextMenu extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           _buildItem(
-            icon: Icons.reply,
-            text: "Javob yozish",
+            icon: Icons.reply_rounded,
+            text: "Javob berish",
             action: MessageAction.reply,
-            color: AppColors.black,
+            color: Theme.of(context).primaryColor,
           ),
           if (isMine && message.type == ChatMessageType.text)
             _buildItem(
-              icon: Icons.edit,
-              text: "Taxrirlash",
+              icon: Icons.edit_rounded,
+              text: "Tahrirlash",
               action: MessageAction.edit,
-              color: AppColors.black,
+              color: Colors.blue,
             ),
           if (message.type == ChatMessageType.text)
             _buildItem(
-              icon: Icons.copy,
-              text: "Nusxalash",
+              icon: Icons.copy_rounded,
+              text: "Nusxa olish",
               action: MessageAction.copy,
-              color: AppColors.black,
+              color: Colors.black87,
             ),
-          _buildItem(
-            icon: Icons.forward,
-            text: "Uzatish",
-            action: MessageAction.forward,
-            color: AppColors.black,
-          ),
-          Divider(color: Colors.grey.withOpacity(0.2)),
-          _buildItem(
-            icon: Icons.check_circle_outline,
-            text: "Tanlash",
-            action: MessageAction.select,
-            color: AppColors.black,
-          ),
-          _buildItem(
-            icon: Icons.delete_outline,
-            text: "O'chirish",
-            action: MessageAction.delete,
-            color: Colors.red,
-          ),
-          SizedBox(height: 10.h),
+          if (isMine) ...[
+            Divider(color: Colors.grey.withValues(alpha: 0.1)),
+            _buildItem(
+              icon: Icons.delete_outline_rounded,
+              text: "O'chirish",
+              action: MessageAction.delete,
+              color: Colors.red,
+            ),
+          ],
         ],
       ),
     );

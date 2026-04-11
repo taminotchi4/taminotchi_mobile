@@ -96,7 +96,7 @@ class MyLocalizationsEn extends MyLocalizations {
   String get faq => 'Ko\'p beriladigan savollar (FAQs)';
 
   @override
-  String get logout => 'Chiqish';
+  String get logout => 'Logout';
 
   @override
   String get logoutConfirm => 'Haqiqatan ham chiqmoqchimisiz?';
@@ -186,10 +186,10 @@ class MyLocalizationsEn extends MyLocalizations {
   }
 
   @override
-  String get edit => 'Tahrirlash';
+  String get edit => 'Edit';
 
   @override
-  String get delete => 'O\'chirish';
+  String get delete => 'Delete';
 
   @override
   String get noCommentsYet => 'Izohlar yo\'q';
@@ -330,7 +330,10 @@ class MyLocalizationsEn extends MyLocalizations {
   String get addressLabel => 'Manzil:';
 
   @override
-  String get statusAgreed => 'Kelishilgan';
+  String get statusNegotiation => 'In negotiation';
+
+  @override
+  String get statusAgreed => 'Agreed';
 
   @override
   String get statusActive => 'Active';
@@ -358,19 +361,19 @@ class MyLocalizationsEn extends MyLocalizations {
   String get postNotFound => 'Post topilmadi';
 
   @override
-  String get editComingSoon => 'Tahrirlash funksiyasi yaqin orada qo\'shiladi';
+  String get editComingSoon => 'Edit feature coming soon';
 
   @override
-  String get postActivated => 'E\'lon faollashtirildi';
+  String get postActivated => 'Post activated';
 
   @override
-  String get postArchivedAgreed => 'E\'lon kelishilgan deb belgilandi';
+  String get postArchivedAgreed => 'Post marked as agreed';
 
   @override
   String get markAsAgreed => 'Kelishilgan deb belgilash';
 
   @override
-  String get reactivate => 'Qayta faollashtirish';
+  String get reactivate => 'Reactivate';
 
   @override
   String get deleteConfirmTitle => 'O\'chirish';
@@ -451,7 +454,7 @@ class MyLocalizationsEn extends MyLocalizations {
   String get resultNotFound => 'Natija topilmadi';
 
   @override
-  String get clickPostToDelete => 'O\'chirish uchun e\'lon ustiga bosing';
+  String get clickPostToDelete => 'Tap post to delete';
 
   @override
   String get market => 'Market';
@@ -461,4 +464,14 @@ class MyLocalizationsEn extends MyLocalizations {
 
   @override
   String get notificationsNone => 'Bildirishnomalar yo\'q';
+
+  @override
+  String get deleteAccountTitle => 'Hisobni o\'chirish';
+
+  @override
+  String get deleteAccountConfirm =>
+      'Haqiqatan ham hisobingizni butunlay o\'chirib tashlamoqchimisiz? Bu amalni ortga qaytarib bo\'lmaydi.';
+
+  @override
+  String get deleteAccount => 'O\'chirish';
 }

@@ -38,6 +38,8 @@ class MessageModel {
   final bool isSending; // true only for optimistic messages
   @HiveField(15)
   final String? localPath; // Locally cached media file path
+  @HiveField(16)
+  final String? senderRole;
 
   MessageModel({
     required this.id,
@@ -56,33 +58,53 @@ class MessageModel {
     this.status,
     this.isSending = false,
     this.localPath,
+    this.senderRole,
   });
 
   factory MessageModel.fromJson(Map<String, dynamic> json) {
     final senderData = json['sender'] as Map<String, dynamic>?;
+    
+    // Robust sender name extraction
+    final String sName = json['senderName']?.toString() ??
+        senderData?['fullName']?.toString() ??
+        senderData?['name']?.toString() ??
+        senderData?['username']?.toString() ??
+        json['user']?['username']?.toString() ??
+        json['client']?['username']?.toString() ??
+        'Noma\'lum';
+
+    // Robust sender avatar extraction
+    final String? sAvatar = json['senderAvatar']?.toString() ??
+        senderData?['photoPath']?.toString() ??
+        senderData?['avatar']?.toString() ??
+        senderData?['photo']?.toString();
+
+    // Robust senderId extraction
+    final String sId = json['senderId']?.toString() ??
+        json['userId']?.toString() ??
+        senderData?['id']?.toString() ??
+        json['user']?['id']?.toString() ??
+        '';
+
     return MessageModel(
-      id: json['id'] as String,
-      privateChatId: json['privateChatId'] as String?,
-      groupId: json['groupId'] as String?,
-      commentId: json['commentId'] as String?,
-      senderId: json['senderId'] as String,
-      senderName: json['senderName'] as String? ??
-          senderData?['fullName'] as String? ??
-          senderData?['name'] as String? ??
-          'Noma\'lum',
-      senderAvatar: json['senderAvatar'] as String? ??
-          senderData?['photoPath'] as String?,
-      type: json['type'] as String,
-      text: json['text'] as String?,
-      mediaPath: json['mediaPath'] as String?,
+      id: json['id']?.toString() ?? '',
+      privateChatId: json['privateChatId']?.toString(),
+      groupId: json['groupId']?.toString(),
+      commentId: json['commentId']?.toString(),
+      senderId: sId,
+      senderName: sName,
+      senderAvatar: sAvatar,
+      type: json['type']?.toString() ?? 'text',
+      text: json['text']?.toString(),
+      mediaPath: json['mediaPath']?.toString(),
       createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'])
+          ? DateTime.parse(json['createdAt'].toString())
           : DateTime.now(),
-      isRead: json['isRead'] ?? false,
-      replyToId: json['replyToId'] as String?,
-      status: (json['status'] as String?) ??
-          (json['isRead'] == true ? 'SEEN' : 'SENT'),
-      // localPath not in server response; populated later by cache service
+      isRead: json['isRead'] as bool? ?? false,
+      replyToId: json['replyToId']?.toString(),
+      status: json['status']?.toString() ?? 
+               (json['isRead'] == true ? 'SEEN' : 'SENT'),
+      senderRole: json['senderRole']?.toString() ?? senderData?['role']?.toString(),
     );
   }
 
@@ -101,6 +123,7 @@ class MessageModel {
         'isRead': isRead,
         'replyToId': replyToId,
         'status': status,
+        'senderRole': senderRole,
       };
 
   MessageModel copyWith({
@@ -110,6 +133,7 @@ class MessageModel {
     String? text,
     String? localPath,
     String? mediaPath,
+    String? senderRole,
   }) {
     return MessageModel(
       id: id,
@@ -128,6 +152,7 @@ class MessageModel {
       status: status ?? this.status,
       isSending: isSending ?? this.isSending,
       localPath: localPath ?? this.localPath,
+      senderRole: senderRole ?? this.senderRole,
     );
   }
 
@@ -137,12 +162,11 @@ class MessageModel {
       chatId: privateChatId ?? groupId ?? commentId ?? '',
       senderId: senderId,
       senderName: senderName,
-      isSeller: false,
+      isSeller: senderId != currentUserId, // In client app, if sender is not me, it's typically the seller/other
       type: _parseType(type),
       content: text ?? mediaPath ?? '',
       createdAt: createdAt,
-      status:
-          (status == 'SEEN' || isRead) ? MessageStatus.read : MessageStatus.sent,
+      status: _parseStatus(status ?? (isRead ? 'SEEN' : 'SENT')),
       replyToId: replyToId,
     );
   }
@@ -167,6 +191,22 @@ class MessageModel {
         return ChatMessageType.audio;
       default:
         return ChatMessageType.text;
+    }
+  }
+
+  static MessageStatus _parseStatus(String status) {
+    switch (status) {
+      case 'SENDING':
+        return MessageStatus.sending;
+      case 'SENT':
+        return MessageStatus.sent;
+      case 'DELIVERED':
+        return MessageStatus.delivered;
+      case 'SEEN':
+      case 'READ':
+        return MessageStatus.read;
+      default:
+        return MessageStatus.sent;
     }
   }
 }

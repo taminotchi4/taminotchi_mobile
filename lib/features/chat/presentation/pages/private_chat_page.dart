@@ -15,6 +15,9 @@ import '../../data/models/message_model.dart';
 import '../../data/services/audio_player_service.dart';
 import '../../data/services/audio_recorder_service.dart';
 import '../managers/private_chat_bloc.dart';
+import '../widgets/message_context_menu.dart';
+import 'package:flutter/services.dart';
+import 'dart:ui';
 
 class PrivateChatPage extends StatefulWidget {
   final String receiverId;
@@ -51,10 +54,60 @@ class _PrivateChatPageState extends State<PrivateChatPage> {
   void _onScroll() {
     if (!_scrollController.hasClients) return;
     final pos = _scrollController.position;
-    // In a reversed list, reaching maxScrollExtent = oldest messages (top)
     if (pos.pixels >= pos.maxScrollExtent - 200) {
       context.read<PrivateChatBloc>().add(const PrivateChatLoadMore());
     }
+  }
+
+  void _handleMenuAction(BuildContext context, MessageAction action, MessageModel message) {
+    final bloc = context.read<PrivateChatBloc>();
+    final chatId = bloc.state.chatId;
+    if (chatId == null) return;
+
+    switch (action) {
+      case MessageAction.reply:
+        bloc.add(PrivateChatReplyToMessage(message));
+        break;
+      case MessageAction.copy:
+        Clipboard.setData(ClipboardData(text: message.text ?? ''));
+        break;
+      case MessageAction.edit:
+        if (message.type == 'text') {
+          bloc.add(PrivateChatStartEditing(message));
+        }
+        break;
+      case MessageAction.delete:
+        bloc.add(PrivateChatDeleteMessage(chatId: chatId, messageId: message.id));
+        break;
+      default:
+        break;
+    }
+  }
+
+  void _sendText() {
+    final chatId = context.read<PrivateChatBloc>().state.chatId;
+    if (chatId == null) return;
+
+    final text = _controller.text.trim();
+    final state = context.read<PrivateChatBloc>().state;
+
+    if (text.isEmpty && state.editingMessage == null) return;
+
+    if (state.editingMessage != null) {
+      context.read<PrivateChatBloc>().add(PrivateChatEditMessage(
+        chatId: chatId,
+        messageId: state.editingMessage!.id,
+        text: text,
+      ));
+    } else {
+      context.read<PrivateChatBloc>().add(PrivateChatSendMessage(
+        chatId: chatId,
+        text: text,
+      ));
+    }
+
+    _controller.clear();
+    _isTyping = false;
   }
 
   @override
@@ -63,19 +116,6 @@ class _PrivateChatPageState extends State<PrivateChatPage> {
     _scrollController.dispose();
     _recordingTimer?.cancel();
     super.dispose();
-  }
-
-  void _sendText() {
-    final text = _controller.text.trim();
-    if (text.isEmpty) return;
-    final chatId = context.read<PrivateChatBloc>().state.chatId;
-    if (chatId == null) return;
-    context.read<PrivateChatBloc>().add(PrivateChatSendMessage(
-          chatId: chatId,
-          text: text,
-        ));
-    _controller.clear();
-    _scrollToBottom();
   }
 
   void _scrollToBottom() {
@@ -142,78 +182,84 @@ class _PrivateChatPageState extends State<PrivateChatPage> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
-      child: Scaffold(
-        appBar: CommonAppBar(
-          title: widget.receiverName ?? 'Chat',
-          leading: const AppBackButton(),
-        ),
-        body: BlocBuilder<PrivateChatBloc, PrivateChatState>(
-          builder: (context, state) {
-            return Column(
-              children: [
-                Expanded(
-                  child: state.isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : state.messages.isEmpty
-                          ? Center(
-                              child: Text(
-                                'Xabarlar yo\'q',
-                                style: AppStyles.bodySmall.copyWith(
-                                  color: Theme.of(context).textTheme.bodySmall?.color,
-                                ),
-                              ),
-                            )
-                          : ListView.builder(
-                              controller: _scrollController,
-                              reverse: true,
-                              padding: EdgeInsets.all(AppDimens.md.r),
-                              // +1 for load-more indicator at top
-                              itemCount: state.messages.length +
-                                  (state.isLoadingMore ? 1 : 0),
-                              itemBuilder: (context, index) {
-                                // Load-more spinner at the visual top
-                                if (index == state.messages.length) {
-                                  return const Padding(
-                                    padding: EdgeInsets.all(16),
-                                    child: Center(
-                                        child: CircularProgressIndicator()),
-                                  );
-                                }
-                                final msg = state.messages[index];
-                                // Robust logic for private chat: if it's not from the peer, it's from me
-                                final isMine = msg.senderId != widget.receiverId || 
-                                             msg.senderId == 'me' ||
-                                             (state.currentUserId != null && msg.senderId == state.currentUserId);
-                                return _MessageBubble(
-                                  message: msg,
-                                  isMine: isMine,
-                                );
-                              },
-                            ),
-                ),
-                
-                if (state.isPeerTyping)
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(16.w, 4.h, 16.w, 8.h),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                         Text(
-                          'Yozmoqda...',
-                          style: AppStyles.bodySmall.copyWith(
-                            fontSize: 10.sp,
-                            fontStyle: FontStyle.italic,
-                            color: Theme.of(context).primaryColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                _buildInputBar(context, state),
-              ],
+      child: BlocListener<PrivateChatBloc, PrivateChatState>(
+        listener: (context, state) {
+          if (state.error != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.error!), backgroundColor: Colors.red),
             );
-          },
+          }
+          if (state.editingMessage != null && _controller.text != state.editingMessage!.text) {
+             _controller.text = state.editingMessage!.text ?? '';
+          }
+        },
+        child: Scaffold(
+          backgroundColor: Colors.white,
+          appBar: CommonAppBar(
+            title: widget.receiverName ?? 'Chat',
+            leading: const AppBackButton(),
+          ),
+          body: BlocBuilder<PrivateChatBloc, PrivateChatState>(
+            builder: (context, state) {
+              return Column(
+                children: [
+                  Expanded(
+                    child: state.isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : state.messages.isEmpty
+                            ? Center(
+                                child: Text(
+                                  'Xabarlar yo\'q',
+                                  style: AppStyles.bodySmall.copyWith(
+                                    color: Theme.of(context).textTheme.bodySmall?.color,
+                                  ),
+                                ),
+                              )
+                            : ListView.builder(
+                                controller: _scrollController,
+                                reverse: true,
+                                padding: EdgeInsets.all(AppDimens.md.r),
+                                itemCount: state.messages.length + (state.isLoadingMore ? 1 : 0),
+                                itemBuilder: (context, index) {
+                                  if (index == state.messages.length) {
+                                    return const Padding(
+                                      padding: EdgeInsets.all(16),
+                                      child: Center(child: CircularProgressIndicator()),
+                                    );
+                                  }
+                                  final msg = state.messages[index];
+                                  final isMine = msg.senderId != widget.receiverId || 
+                                               msg.senderId == 'me' ||
+                                               (state.currentUserId != null && msg.senderId == state.currentUserId);
+                                  return _MessageBubble(
+                                    message: msg, 
+                                    isMine: isMine,
+                                    onAction: (action) => _handleMenuAction(context, action, msg),
+                                  );
+                                },
+                              ),
+                  ),
+                  if (state.isPeerTyping)
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(16.w, 4.h, 16.w, 8.h),
+                      child: Row(
+                        children: [
+                          Text(
+                            'Yozmoqda...',
+                            style: AppStyles.bodySmall.copyWith(
+                              fontSize: 10.sp,
+                              fontStyle: FontStyle.italic,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  _buildInputBar(context, state),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -232,9 +278,14 @@ class _PrivateChatPageState extends State<PrivateChatPage> {
         color: theme.cardColor,
         border: Border(top: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1))),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
+          if (state.editingMessage != null || state.replyingToMessage != null)
+            _buildActionStatus(context, state),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
           IconButton(
             onPressed: _pickImage,
             icon: Icon(Icons.add_circle_outline_rounded, color: theme.primaryColor, size: 26.r),
@@ -295,8 +346,8 @@ class _PrivateChatPageState extends State<PrivateChatPage> {
           ),
           SizedBox(width: 8.w),
           GestureDetector(
-            onLongPress: _controller.text.trim().isEmpty ? _startRecording : null,
-            onLongPressUp: _controller.text.trim().isEmpty ? _stopRecording : null,
+            onLongPress: _controller.text.trim().isEmpty && state.editingMessage == null ? _startRecording : null,
+            onLongPressUp: _controller.text.trim().isEmpty && state.editingMessage == null ? _stopRecording : null,
             onTap: () {
               if (_controller.text.trim().isNotEmpty) {
                  _sendText();
@@ -312,13 +363,69 @@ class _PrivateChatPageState extends State<PrivateChatPage> {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                _controller.text.trim().isNotEmpty 
+                _controller.text.trim().isNotEmpty || state.editingMessage != null
                   ? Icons.send_rounded 
                   : (_isRecording ? Icons.stop_rounded : Icons.mic_rounded),
                 color: Colors.white, 
                 size: 20.r
               ),
             ),
+          ),
+        ],
+      ),
+    ],
+  ),
+);
+  }
+
+  Widget _buildActionStatus(BuildContext context, PrivateChatState state) {
+    final theme = Theme.of(context);
+    final isEditing = state.editingMessage != null;
+    final msg = isEditing ? state.editingMessage : state.replyingToMessage;
+
+    return Container(
+      padding: EdgeInsets.fromLTRB(40.w, 4.h, 8.w, 4.h),
+      margin: EdgeInsets.only(bottom: 4.h),
+      child: Row(
+        children: [
+          Icon(
+            isEditing ? Icons.edit_rounded : Icons.reply_rounded,
+            size: 16.r,
+            color: theme.primaryColor,
+          ),
+          SizedBox(width: 8.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isEditing ? 'Tahrirlash' : (msg?.senderName ?? 'Xabar'),
+                  style: AppStyles.bodySmall.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.primaryColor,
+                    fontSize: 11.sp,
+                  ),
+                ),
+                Text(
+                  msg?.text ?? '[Media]',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppStyles.bodySmall.copyWith(
+                    color: Colors.grey,
+                    fontSize: 11.sp,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: () {
+              context.read<PrivateChatBloc>().add(const PrivateChatCancelAction());
+              if (isEditing) _controller.clear();
+            },
+            icon: Icon(Icons.close_rounded, size: 18.r, color: Colors.grey),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
           ),
         ],
       ),
@@ -329,8 +436,9 @@ class _PrivateChatPageState extends State<PrivateChatPage> {
 class _MessageBubble extends StatelessWidget {
   final MessageModel message;
   final bool isMine;
+  final Function(MessageAction)? onAction;
 
-  const _MessageBubble({required this.message, required this.isMine});
+  const _MessageBubble({required this.message, required this.isMine, this.onAction});
 
   @override
   Widget build(BuildContext context) {
@@ -338,70 +446,150 @@ class _MessageBubble extends StatelessWidget {
     final timeStr = DateFormat('HH:mm').format(message.createdAt.toLocal());
     final effectivelyMine = isMine || message.senderId == 'me';
 
-    return Align(
-      alignment: effectivelyMine ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: EdgeInsets.only(
-          bottom: 4.h,
-          left: effectivelyMine ? 60.w : 0,
-          right: effectivelyMine ? 0 : 60.w,
-        ),
-        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
-        decoration: BoxDecoration(
-          color: effectivelyMine ? theme.primaryColor : theme.cardColor,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(16.r),
-            topRight: Radius.circular(16.r),
-            bottomLeft: Radius.circular(effectivelyMine ? 16.r : 4.r),
-            bottomRight: Radius.circular(effectivelyMine ? 4.r : 16.r),
+    return GestureDetector(
+      onTap: () => _showMessageDialog(context, message, isMine),
+      child: Align(
+        alignment: effectivelyMine ? Alignment.centerRight : Alignment.centerLeft,
+        child: Container(
+          margin: EdgeInsets.only(
+            bottom: 4.h,
+            left: effectivelyMine ? 60.w : 0,
+            right: effectivelyMine ? 0 : 60.w,
           ),
-        ),
-        child: Column(
-          crossAxisAlignment: effectivelyMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (message.type == 'text' && message.text != null)
-              Text(
-                message.text!,
-                style: AppStyles.bodySmall.copyWith(
-                  color: effectivelyMine ? Colors.white : theme.textTheme.bodyMedium?.color,
-                ),
-              )
-            else if (message.type == 'image' && message.mediaPath != null)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12.r),
-                child: _buildImage(context),
-              )
-            else if (message.type == 'audio' && message.mediaPath != null)
-              _AudioPlayer(
-                url: message.localPath ?? message.mediaPath!,
-                isMine: effectivelyMine,
-              )
-            else
-              const Text('[Media]'),
-              
-            SizedBox(height: 2.h),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  timeStr,
-                  style: AppStyles.bodySmall.copyWith(
-                    fontSize: 9.sp,
-                    color: effectivelyMine ? Colors.white70 : Colors.grey,
-                  ),
-                ),
-                if (effectivelyMine) ...[
-                  SizedBox(width: 4.w),
-                  _buildStatusIcon(context),
-                ],
-              ],
+          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+          decoration: BoxDecoration(
+            color: effectivelyMine ? theme.primaryColor : const Color(0xFFF2F2F7),
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(16.r),
+              topRight: Radius.circular(16.r),
+              bottomLeft: Radius.circular(effectivelyMine ? 16.r : 4.r),
+              bottomRight: Radius.circular(effectivelyMine ? 4.r : 16.r),
             ),
-          ],
+          ),
+          child: Column(
+            crossAxisAlignment: effectivelyMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (message.type == 'text' && message.text != null)
+                Text(
+                  message.text!,
+                  style: AppStyles.bodySmall.copyWith(
+                    color: effectivelyMine ? Colors.white : theme.textTheme.bodyMedium?.color,
+                  ),
+                )
+              else if (message.type == 'image' && message.mediaPath != null)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12.r),
+                  child: _buildImage(context),
+                )
+              else if (message.type == 'audio' && message.mediaPath != null)
+                _AudioPlayer(
+                  url: message.localPath ?? message.mediaPath!,
+                  isMine: effectivelyMine,
+                )
+              else
+                const Text('[Media]'),
+                
+              SizedBox(height: 2.h),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    timeStr,
+                    style: AppStyles.bodySmall.copyWith(
+                      fontSize: 9.sp,
+                      color: effectivelyMine ? Colors.white70 : Colors.grey,
+                    ),
+                  ),
+                  if (effectivelyMine) ...[
+                    SizedBox(width: 4.w),
+                    _buildStatusIcon(context),
+                  ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
+
+  void _showMessageDialog(BuildContext context, MessageModel message, bool isMine) {
+    final renderBox = context.findRenderObject() as RenderBox;
+    final offset = renderBox.localToGlobal(Offset.zero);
+    final size = renderBox.size;
+    final screenSize = MediaQuery.of(context).size;
+
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Dismiss',
+      barrierColor: Colors.black26,
+      transitionDuration: const Duration(milliseconds: 200),
+      pageBuilder: (ctx, anim, __) => _buildMenu(ctx, anim, offset, size, screenSize, message, isMine),
+    );
+  }
+
+  Widget _buildMenu(BuildContext context, Animation<double> anim, Offset offset, Size size, Size screenSize, MessageModel message, bool isMine) {
+    final double menuHeightEst = 250.h;
+    final bool showBelow = (offset.dy + size.height + menuHeightEst) < screenSize.height;
+    final double? top = showBelow ? offset.dy + size.height + 8.h : null;
+    final double? bottom = showBelow ? null : (screenSize.height - offset.dy + 8.h);
+
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+              child: Container(color: Colors.transparent),
+            ),
+          ),
+        ),
+        // Original message clone
+        Positioned(
+          top: offset.dy,
+          left: offset.dx,
+          width: size.width,
+          child: Material(
+            color: Colors.transparent,
+            child: _MessageBubble(message: message, isMine: isMine),
+          ),
+        ),
+        // Menu
+        AnimatedBuilder(
+          animation: anim,
+          builder: (context, child) {
+            return Positioned(
+              top: top,
+              bottom: bottom,
+              left: isMine ? null : offset.dx,
+              right: isMine ? (screenSize.width - (offset.dx + size.width)) : null,
+              child: Transform.scale(
+                scale: anim.value,
+                alignment: showBelow 
+                    ? (isMine ? Alignment.topRight : Alignment.topLeft)
+                    : (isMine ? Alignment.bottomRight : Alignment.bottomLeft),
+                child: Material(
+                  color: Colors.transparent,
+                  child: MessageContextMenu(
+                    message: message.toEntity(''), // Empty id just for type/id
+                    isMine: isMine,
+                    onAction: (action) {
+                      Navigator.pop(context);
+                      if (onAction != null) onAction!(action);
+                    },
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
 
   Widget _buildImage(BuildContext context) {
     // 1. Use locally cached file if available

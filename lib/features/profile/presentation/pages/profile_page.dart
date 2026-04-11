@@ -78,203 +78,292 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  void _showDeleteAccountDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Theme.of(context).cardColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDimens.cardRadius.r),
+        ),
+        title: Text(
+          context.l10n.deleteAccountTitle,
+          style: AppStyles.h4Bold.copyWith(
+            color: Colors.red,
+          ),
+        ),
+        content: Text(
+          context.l10n.deleteAccountConfirm,
+          style: AppStyles.bodyRegular.copyWith(
+            color: Theme.of(context).textTheme.bodyMedium?.color,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              context.l10n.cancel,
+              style: AppStyles.bodyMedium.copyWith(
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              context.read<ClientProfileBloc>().add(
+                    const ClientProfileDeleteAccountRequested(),
+                  );
+            },
+            child: Text(
+              context.l10n.deleteAccount,
+              style: AppStyles.bodyMedium.copyWith(
+                color: Colors.red,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CommonAppBar(title: context.l10n.profile),
-      body: BlocBuilder<ClientProfileBloc, ClientProfileState>(
-        builder: (context, state) {
-          if (state.isLoading && state.profile == null) {
-            return const Center(child: CircularProgressIndicator());
+      body: BlocListener<ClientProfileBloc, ClientProfileState>(
+        listener: (context, state) {
+          if (state.isLoggedOut) {
+            context.go(Routes.auth);
           }
-          if (state.profile == null) {
-            return Center(
-              child: Text(
-                context.l10n.noProfileData,
-                style: AppStyles.bodySmall.copyWith(
-                  color: Theme.of(context).textTheme.bodySmall?.color,
-                ),
-              ),
+          if (state.error != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.error!)),
             );
           }
-          return SingleChildScrollView(
-            padding: EdgeInsets.all(AppDimens.lg.r),
-            child: Column(
-              children: [
-                ProfileHeader(profile: state.profile!),
-                AppDimens.xl.height,
-                _buildSectionTitle(context.l10n.settings),
-                AppDimens.md.height,
-                _buildSettingsCard(
-                  children: [
-                    BlocBuilder<ThemeCubit, ThemeMode>(
-                      builder: (context, themeMode) {
-                        return ProfileMenuItem(
-                          icon: Icons.brightness_6_outlined,
-                          title: context.l10n.nightMode,
-                          trailing: Switch(
-                            value: themeMode == ThemeMode.dark,
-                            onChanged: (value) {
-                              context.read<ThemeCubit>().toggleTheme();
-                            },
-                            activeTrackColor: Theme.of(context).primaryColor,
-                          ),
-                        );
-                      },
-                    ),
-                    _buildDivider(),
-                    BlocBuilder<LocalizationCubit, Locale>(
-                      builder: (context, locale) {
-                        return ProfileMenuItem(
-                          icon: Icons.language_outlined,
-                          title: context.l10n.language,
-                          trailing: DropdownButton<String>(
-                            value: locale.languageCode,
-                            underline: const SizedBox(),
-                            dropdownColor: Theme.of(context).cardColor,
-                            style: AppStyles.bodyMedium.copyWith(
-                              color: Theme.of(context).textTheme.bodyMedium?.color,
-                            ),
-                            items: [
-                              DropdownMenuItem(
-                                value: 'uz',
-                                child: Text(context.l10n.uzbek),
-                              ),
-                              DropdownMenuItem(
-                                value: 'ru',
-                                child: Text(context.l10n.russian),
-                              ),
-                            ],
-                            onChanged: (value) {
-                              if (value != null) {
-                                context
-                                    .read<LocalizationCubit>()
-                                    .changeLocale(localeCode: value);
-                                
-                                final profileState = context.read<ClientProfileBloc>().state;
-                                if (profileState.profile != null) {
-                                  context.read<ClientProfileBloc>().add(
-                                    ClientProfileUpdated(
-                                      profileState.profile!.copyWith(language: value),
-                                    ),
-                                  );
-                                }
-                              }
-                            },
-                          ),
-                        );
-                      },
-                    ),
-                    _buildDivider(),
-                    ProfileMenuItem(
-                      icon: Icons.notifications_outlined,
-                      title: context.l10n.notifications,
-                      trailing: Icon(
-                        Icons.chevron_right_rounded,
-                        color: Theme.of(context).iconTheme.color,
-                      ),
-                      onTap: () => context.push(Routes.notifications),
-                    ),
-                    _buildDivider(),
-                    ProfileMenuItem(
-                      icon: Icons.lock_outline_rounded,
-                      title: context.l10n.privacy,
-                      trailing: Icon(
-                        Icons.chevron_right_rounded,
-                        color: Theme.of(context).iconTheme.color,
-                      ),
-                      onTap: () {},
-                    ),
-                  ],
+        },
+        child: BlocBuilder<ClientProfileBloc, ClientProfileState>(
+          builder: (context, state) {
+            if (state.isLoading && state.profile == null) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (state.profile == null) {
+              return Center(
+                child: Text(
+                  context.l10n.noProfileData,
+                  style: AppStyles.bodySmall.copyWith(
+                    color: Theme.of(context).textTheme.bodySmall?.color,
+                  ),
                 ),
-                AppDimens.xl.height,
-                _buildSectionTitle(context.l10n.other),
-                AppDimens.md.height,
-                _buildSettingsCard(
+              );
+            }
+            return RefreshIndicator(
+              onRefresh: () async {
+                context.read<ClientProfileBloc>().add(
+                      const ClientProfileStarted(),
+                    );
+              },
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: EdgeInsets.all(AppDimens.lg.r),
+                child: Column(
                   children: [
-                    ProfileMenuItem(
-                      icon: Icons.shopping_bag_outlined,
-                      title: context.l10n.myOrders,
-                      trailing: Icon(
-                        Icons.chevron_right_rounded,
-                        color: Theme.of(context).iconTheme.color,
-                      ),
-                      onTap: () => context.go(Routes.orders),
-                    ),
-                    _buildDivider(),
-                    ProfileMenuItem(
-                      icon: Icons.support_agent_rounded,
-                      title: context.l10n.help,
-                      trailing: Icon(
-                        Icons.chevron_right_rounded,
-                        color: Theme.of(context).iconTheme.color,
-                      ),
-                      onTap: () => context.push(
-                        Routes.getSellerChat('admin'),
-                        extra: {'name': 'Admin', 'role': 'Support'},
-                      ),
-                    ),
-                    _buildDivider(),
-                    ProfileMenuItem(
-                      icon: Icons.help_outline_rounded,
-                      title: context.l10n.faq,
-                      trailing: Icon(
-                        Icons.chevron_right_rounded,
-                        color: Theme.of(context).iconTheme.color,
-                      ),
-                      onTap: () {
-                        // FAQ functionality could be a dialog or a new page
-                        _showFAQDialog(context);
-                      },
-                    ),
-                    _buildDivider(),
-                    ProfileMenuItem(
-                      icon: Icons.store_mall_directory_outlined,
-                      title: 'Sotuvchi bo\'lish',
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 8.w,
-                              vertical: 3.h,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(6.r),
-                            ),
-                            child: Text(
-                              'Yangi',
-                              style: AppStyles.bodySmall.copyWith(
-                                fontSize: 10.sp,
-                                color: Theme.of(context).primaryColor,
-                                fontWeight: FontWeight.w600,
+                    ProfileHeader(profile: state.profile!),
+                    AppDimens.xl.height,
+                    _buildSectionTitle(context.l10n.settings),
+                    AppDimens.md.height,
+                    _buildSettingsCard(
+                      children: [
+                        BlocBuilder<ThemeCubit, ThemeMode>(
+                          builder: (context, themeMode) {
+                            return ProfileMenuItem(
+                              icon: Icons.brightness_6_outlined,
+                              title: context.l10n.nightMode,
+                              trailing: Switch(
+                                value: themeMode == ThemeMode.dark,
+                                onChanged: (value) {
+                                  context.read<ThemeCubit>().toggleTheme();
+                                },
+                                activeTrackColor: Theme.of(context).primaryColor,
                               ),
-                            ),
-                          ),
-                          SizedBox(width: 6.w),
-                          Icon(
+                            );
+                          },
+                        ),
+                        _buildDivider(),
+                        BlocBuilder<LocalizationCubit, Locale>(
+                          builder: (context, locale) {
+                            return ProfileMenuItem(
+                              icon: Icons.language_outlined,
+                              title: context.l10n.language,
+                              trailing: DropdownButton<String>(
+                                value: locale.languageCode,
+                                underline: const SizedBox(),
+                                dropdownColor: Theme.of(context).cardColor,
+                                style: AppStyles.bodyMedium.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).textTheme.bodyMedium?.color,
+                                ),
+                                items: [
+                                  DropdownMenuItem(
+                                    value: 'uz',
+                                    child: Text(context.l10n.uzbek),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'ru',
+                                    child: Text(context.l10n.russian),
+                                  ),
+                                ],
+                                onChanged: (value) {
+                                  if (value != null) {
+                                    context
+                                        .read<LocalizationCubit>()
+                                        .changeLocale(localeCode: value);
+
+                                    final profileState = context
+                                        .read<ClientProfileBloc>()
+                                        .state;
+                                    if (profileState.profile != null) {
+                                      context.read<ClientProfileBloc>().add(
+                                            ClientProfileUpdated(
+                                              profileState.profile!.copyWith(
+                                                language: value,
+                                              ),
+                                            ),
+                                          );
+                                    }
+                                  }
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                        _buildDivider(),
+                        ProfileMenuItem(
+                          icon: Icons.notifications_outlined,
+                          title: context.l10n.notifications,
+                          trailing: Icon(
                             Icons.chevron_right_rounded,
                             color: Theme.of(context).iconTheme.color,
                           ),
-                        ],
-                      ),
-                      onTap: () => context.push(Routes.becomeSeller),
+                          onTap: () => context.push(Routes.notifications),
+                        ),
+                        _buildDivider(),
+                        ProfileMenuItem(
+                          icon: Icons.lock_outline_rounded,
+                          title: context.l10n.privacy,
+                          trailing: Icon(
+                            Icons.chevron_right_rounded,
+                            color: Theme.of(context).iconTheme.color,
+                          ),
+                          onTap: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Tez kunda..')),
+                            );
+                          },
+                        ),
+                      ],
                     ),
-                    _buildDivider(),
-                    ProfileMenuItem(
-                      icon: Icons.logout_rounded,
-                      title: context.l10n.logout,
-                      titleColor: Colors.red,
-                      onTap: _showLogoutDialog,
+                    AppDimens.xl.height,
+                    _buildSectionTitle(context.l10n.other),
+                    AppDimens.md.height,
+                    _buildSettingsCard(
+                      children: [
+                        ProfileMenuItem(
+                          icon: Icons.shopping_bag_outlined,
+                          title: context.l10n.myOrders,
+                          trailing: Icon(
+                            Icons.chevron_right_rounded,
+                            color: Theme.of(context).iconTheme.color,
+                          ),
+                          onTap: () => context.go(Routes.orders),
+                        ),
+                        _buildDivider(),
+                        ProfileMenuItem(
+                          icon: Icons.support_agent_rounded,
+                          title: context.l10n.help,
+                          trailing: Icon(
+                            Icons.chevron_right_rounded,
+                            color: Theme.of(context).iconTheme.color,
+                          ),
+                          onTap: () => context.push(
+                            Routes.getSellerChat('admin'),
+                            extra: {'name': 'Admin', 'role': 'Support'},
+                          ),
+                        ),
+                        _buildDivider(),
+                        ProfileMenuItem(
+                          icon: Icons.help_outline_rounded,
+                          title: context.l10n.faq,
+                          trailing: Icon(
+                            Icons.chevron_right_rounded,
+                            color: Theme.of(context).iconTheme.color,
+                          ),
+                          onTap: () {
+                            // FAQ functionality could be a dialog or a new page
+                            _showFAQDialog(context);
+                          },
+                        ),
+                        _buildDivider(),
+                        ProfileMenuItem(
+                          icon: Icons.store_mall_directory_outlined,
+                          title: 'Sotuvchi bo\'lish',
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 8.w,
+                                  vertical: 3.h,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(
+                                    context,
+                                  ).primaryColor.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(6.r),
+                                ),
+                                child: Text(
+                                  'Yangi',
+                                  style: AppStyles.bodySmall.copyWith(
+                                    fontSize: 10.sp,
+                                    color: Theme.of(context).primaryColor,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 6.w),
+                              Icon(
+                                Icons.chevron_right_rounded,
+                                color: Theme.of(context).iconTheme.color,
+                              ),
+                            ],
+                          ),
+                          onTap: () => context.push(Routes.becomeSeller),
+                        ),
+                        _buildDivider(),
+                        ProfileMenuItem(
+                          icon: Icons.logout_rounded,
+                          title: context.l10n.logout,
+                          titleColor: Colors.amber[800],
+                          onTap: _showLogoutDialog,
+                        ),
+                        _buildDivider(),
+                        ProfileMenuItem(
+                          icon: Icons.delete_forever_rounded,
+                          title: context.l10n.deleteAccountTitle,
+                          titleColor: Colors.red,
+                          onTap: _showDeleteAccountDialog,
+                        ),
+                      ],
                     ),
+                    AppDimens.xl.height,
                   ],
                 ),
-                AppDimens.xl.height,
-              ],
-            ),
-          );
-        },
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -312,6 +401,7 @@ class _ProfilePageState extends State<ProfilePage> {
       color: Theme.of(context).dividerColor,
     );
   }
+
   void _showFAQDialog(BuildContext context) {
     showModalBottomSheet(
       context: context,

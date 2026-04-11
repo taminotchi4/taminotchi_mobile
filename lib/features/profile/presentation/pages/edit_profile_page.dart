@@ -7,7 +7,6 @@ import '../../../../core/constants/dimens.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/icons.dart';
 import '../../../../core/utils/styles.dart';
-import '../../../../core/utils/validators.dart';
 import '../../../../global/widgets/app_back_button.dart';
 import '../../../../global/widgets/app_svg_icon.dart';
 import '../../../../global/widgets/common_app_bar.dart';

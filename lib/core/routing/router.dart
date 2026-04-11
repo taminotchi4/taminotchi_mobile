@@ -20,15 +20,10 @@ import '../../features/home/domain/usecases/update_post_status_usecase.dart';
 import '../../features/home/domain/usecases/get_groups_by_category_usecase.dart';
 import '../../features/home/domain/usecases/get_posts_by_group_usecase.dart';
 import '../../features/home/presentation/managers/home_bloc.dart';
-import '../../features/home/presentation/managers/home_event.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/home/presentation/pages/post_detail_page.dart';
 import '../../features/my_posts/presentation/pages/my_posts_page.dart';
 import '../../features/orders/presentation/pages/orders_page.dart';
-import '../../features/products/data/datasources/products_local_data_source.dart';
-import '../../features/products/data/datasources/product_comments_local_data_source.dart';
-import '../../features/products/data/repositories/products_repository_impl.dart';
-import '../../features/products/data/repositories/product_comments_repository_impl.dart';
 import '../../features/products/domain/usecases/get_product_by_id_usecase.dart';
 import '../../features/products/domain/usecases/get_product_categories_usecase.dart';
 import '../../features/products/domain/usecases/get_products_usecase.dart';
@@ -37,11 +32,11 @@ import '../../features/products/domain/usecases/add_product_comment_usecase.dart
 import '../../features/products/domain/usecases/update_product_comment_usecase.dart';
 import '../../features/products/domain/usecases/delete_product_comment_usecase.dart';
 import '../../features/products/presentation/managers/products_bloc.dart';
-import '../../features/products/presentation/managers/products_event.dart';
 import '../../features/products/presentation/managers/product_comments_bloc.dart';
 import '../../features/products/presentation/managers/product_details_bloc.dart';
 import '../../features/products/presentation/pages/all_products_page.dart';
 import '../../features/products/presentation/pages/product_detail_page.dart';
+import '../../features/profile/domain/usecases/delete_account_usecase.dart';
 import '../../features/profile/presentation/managers/client_profile_event.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/profile/presentation/pages/seller_profile_page.dart';
@@ -65,10 +60,11 @@ import '../../features/chat/presentation/managers/private_chat_bloc.dart';
 import '../../features/chat/presentation/managers/private_chat_list_bloc.dart';
 import '../../features/chat/presentation/managers/group_chat_bloc.dart';
 import '../../features/chat/presentation/managers/notification_proxy_bloc.dart';
-import '../../features/chat/presentation/pages/chat_page.dart';
 import '../../features/chat/presentation/pages/chats_home_page.dart';
 import '../../features/chat/presentation/pages/private_chat_page.dart';
 import '../../features/chat/presentation/pages/group_chat_page.dart';
+import '../../features/chat/presentation/managers/comment_bloc.dart';
+import '../../features/products/presentation/pages/product_comment_chat_page.dart';
 import '../../features/profile/domain/usecases/get_client_profile_usecase.dart';
 import '../../features/profile/domain/usecases/update_client_profile_usecase.dart';
 import '../../features/profile/domain/usecases/upload_profile_photo_usecase.dart';
@@ -119,9 +115,9 @@ final router = GoRouter(
             ),
             BlocProvider(
               create: (context) => ProductsBloc(
-                getProductsUseCase: GetProductsUseCase(ProductsRepositoryImpl(ProductsLocalDataSource())),
-                getProductByIdUseCase: GetProductByIdUseCase(ProductsRepositoryImpl(ProductsLocalDataSource())),
-                getCategoriesUseCase: GetProductCategoriesUseCase(ProductsRepositoryImpl(ProductsLocalDataSource())),
+                getProductsUseCase: context.read<GetProductsUseCase>(),
+                getProductByIdUseCase: context.read<GetProductByIdUseCase>(),
+                getCategoriesUseCase: context.read<GetProductCategoriesUseCase>(),
               ),
             ),
             BlocProvider(
@@ -132,7 +128,7 @@ final router = GoRouter(
                 toggleFollowUseCase: ToggleFollowUseCase(SellerRepositoryImpl(SellerLocalDataSource())),
                 getCurrentUserProfileUseCase:
                     GetCurrentUserProfileUseCase(SellerRepositoryImpl(SellerLocalDataSource())),
-                getProductsUseCase: GetProductsUseCase(ProductsRepositoryImpl(ProductsLocalDataSource())),
+                getProductsUseCase: context.read<GetProductsUseCase>(),
               ),
             ),
             BlocProvider(
@@ -143,13 +139,10 @@ final router = GoRouter(
             BlocProvider(create: (_) => ProductDetailsBloc()),
             BlocProvider(
               create: (context) => ProductCommentsBloc(
-                getCommentsUseCase:
-                    GetProductCommentsUseCase(ProductCommentsRepositoryImpl(ProductCommentsLocalDataSource())),
-                addCommentUseCase: AddProductCommentUseCase(ProductCommentsRepositoryImpl(ProductCommentsLocalDataSource())),
-                updateCommentUseCase:
-                    UpdateProductCommentUseCase(ProductCommentsRepositoryImpl(ProductCommentsLocalDataSource())),
-                deleteCommentUseCase:
-                    DeleteProductCommentUseCase(ProductCommentsRepositoryImpl(ProductCommentsLocalDataSource())),
+                getCommentsUseCase: context.read<GetProductCommentsUseCase>(),
+                addCommentUseCase: context.read<AddProductCommentUseCase>(),
+                updateCommentUseCase: context.read<UpdateProductCommentUseCase>(),
+                deleteCommentUseCase: context.read<DeleteProductCommentUseCase>(),
               ),
             ),
             BlocProvider(
@@ -169,6 +162,7 @@ final router = GoRouter(
                 updateProfileUseCase: context.read<UpdateClientProfileUseCase>(),
                 uploadPhotoUseCase: context.read<UploadProfilePhotoUseCase>(),
                 logoutUseCase: context.read<profile_logout.LogoutUseCase>(),
+                deleteAccountUseCase: context.read<DeleteAccountUseCase>(),
                 checkUsernameUseCase: context.read<CheckUsernameUseCase>(),
               )..add(const ClientProfileStarted()),
             ),
@@ -247,12 +241,20 @@ final router = GoRouter(
           path: Routes.sellerChat,
           builder: (context, state) {
             final sellerId = state.pathParameters['sellerId'] ?? '';
-            final extra = state.extra as Map<String, dynamic>?;
-            return ChatPage(
-              sellerId: sellerId,
-              userId: 'user_1',
-              sellerName: extra?['name'] as String?,
-              sellerRole: extra?['role'] as String?,
+            final extra = state.extra as Map<String, dynamic>? ?? {};
+            final name = extra['name'] as String?;
+            final role = extra['role'] as String? ?? 'market';
+            
+            return BlocProvider(
+              create: (_) => PrivateChatBloc(
+                repository: context.read<ChatRepository>(),
+                authRepository: context.read<AuthRepository>(),
+              )..add(PrivateChatStarted(receiverId: sellerId, receiverRole: role)),
+              child: PrivateChatPage(
+                receiverId: sellerId,
+                receiverRole: role,
+                receiverName: name,
+              ),
             );
           },
         ),
@@ -321,6 +323,26 @@ final router = GoRouter(
         GoRoute(
           path: Routes.becomeSeller,
           builder: (context, state) => const BecomeSellerPage(),
+        ),
+        // Product Comment Chat
+        GoRoute(
+          path: Routes.productCommentChat,
+          builder: (context, state) {
+            final productId = state.pathParameters['productId'] ?? '';
+            final commentId = state.pathParameters['commentId'] ?? '';
+            final extra = state.extra as Map<String, dynamic>? ?? {};
+            final productName = extra['productName'] as String? ?? 'Izohlar';
+            return BlocProvider(
+              create: (_) => CommentBloc(
+                authRepository: context.read<AuthRepository>(),
+                chatRepository: context.read<ChatRepository>(),
+              ),
+              child: ProductCommentChatPage(
+                productName: productName,
+                commentId: commentId,
+              ),
+            );
+          },
         ),
       ],
     ),

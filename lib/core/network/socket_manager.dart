@@ -22,10 +22,10 @@ class ChatSocketManager {
     );
 
     socket.onConnect((_) => debugPrint('✅ Socket $namespace ulandi'));
-    socket.onDisconnect((reason) => debugPrint('❌ Socket $namespace uzildi: $reason'));
-    socket.onConnectError((err) => debugPrint('⚠️ Socket $namespace ulanishda xato: $err'));
-    socket.on('error', (data) => debugPrint('🛑 Socket $namespace xato: $data'));
-
+    socket.onConnectError((data) => debugPrint('❌ Socket $namespace ulanishda xato: $data'));
+    socket.onDisconnect((_) => debugPrint('🔌 Socket $namespace uzildi'));
+    socket.onError((data) => debugPrint('⚠️ Socket $namespace xatosi: $data'));
+    
     _sockets[namespace] = socket;
     return socket;
   }

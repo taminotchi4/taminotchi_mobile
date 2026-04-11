@@ -327,6 +327,9 @@ class MyLocalizationsRu extends MyLocalizations {
   String get addressLabel => 'Адрес:';
 
   @override
+  String get statusNegotiation => 'В процессе обсуждения';
+
+  @override
   String get statusAgreed => 'Договорено';
 
   @override
@@ -458,4 +461,14 @@ class MyLocalizationsRu extends MyLocalizations {
 
   @override
   String get notificationsNone => 'Уведомлений нет';
+
+  @override
+  String get deleteAccountTitle => 'Hisobni o\'chirish';
+
+  @override
+  String get deleteAccountConfirm =>
+      'Haqiqatan ham hisobingizni butunlay o\'chirib tashlamoqchimisiz? Bu amalni ortga qaytarib bo\'lmaydi.';
+
+  @override
+  String get deleteAccount => 'O\'chirish';
 }

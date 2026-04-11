@@ -210,10 +210,32 @@ class PostCard extends StatelessWidget {
   }
 
   Widget _buildStatusChip(BuildContext context) {
-    final isArchived = post.status == PostStatus.archived;
-    final color = isArchived ? Colors.grey : Colors.green;
-    final icon = isArchived ? Icons.check_circle_outline : Icons.fiber_manual_record;
-    final label = isArchived ? context.l10n.statusAgreed : context.l10n.statusActive;
+    Color color;
+    IconData icon;
+    String label;
+
+    switch (post.status) {
+      case PostStatus.active:
+        color = Colors.green;
+        icon = Icons.fiber_manual_record;
+        label = context.l10n.statusActive;
+        break;
+      case PostStatus.agreed:
+        color = Colors.blue;
+        icon = Icons.check_circle_outline;
+        label = context.l10n.statusAgreed;
+        break;
+      case PostStatus.negotiation:
+        color = Colors.orange;
+        icon = Icons.handshake_outlined;
+        label = context.l10n.statusNegotiation;
+        break;
+      case PostStatus.archived:
+        color = Colors.grey;
+        icon = Icons.archive_outlined;
+        label = 'Arxivlangan';
+        break;
+    }
 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),

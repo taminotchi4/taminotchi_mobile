@@ -5,7 +5,7 @@ import '../../../../core/constants/dimens.dart';
 import '../../../../core/utils/colors.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/styles.dart';
-import '../../../../core/utils/validators.dart';
+import '../../../../core/utils/formatters.dart';
 import '../managers/auth_bloc.dart';
 import '../managers/auth_state.dart';
 
@@ -56,7 +56,7 @@ class _RegistrationStepState extends State<RegistrationStep> {
                 SizedBox(height: 32.h),
                 // Disabled phone number field
                 TextField(
-                  controller: TextEditingController(text: state.phoneNumber),
+                  controller: TextEditingController(text: formatPhoneNumber(state.phoneNumber)),
                   enabled: false,
                   style: AppStyles.h5Bold.copyWith(
                     letterSpacing: 1.2,

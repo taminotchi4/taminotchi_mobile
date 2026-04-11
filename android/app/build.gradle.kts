@@ -3,9 +3,22 @@ import java.io.FileInputStream
 
 plugins {
     id("com.android.application")
+    id("com.google.gms.google-services")
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+dependencies {
+    // Core library desugaring (flutter_local_notifications uchun talab etiladi)
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+
+    // Import the Firebase BoM
+    implementation(platform("com.google.firebase:firebase-bom:34.11.0"))
+
+    // Firebase dependencies - no version needed when using BoM
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-messaging")
 }
 
 val keystoreProperties = Properties()
@@ -20,6 +33,7 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }

@@ -62,6 +62,33 @@ class PrivateChatTyping extends PrivateChatEvent {
   const PrivateChatTyping(this.chatId);
 }
 
+class PrivateChatEditMessage extends PrivateChatEvent {
+  final String chatId;
+  final String messageId;
+  final String text;
+  const PrivateChatEditMessage({required this.chatId, required this.messageId, required this.text});
+}
+
+class PrivateChatDeleteMessage extends PrivateChatEvent {
+  final String chatId;
+  final String messageId;
+  const PrivateChatDeleteMessage({required this.chatId, required this.messageId});
+}
+
+class PrivateChatStartEditing extends PrivateChatEvent {
+  final MessageModel message;
+  const PrivateChatStartEditing(this.message);
+}
+
+class PrivateChatReplyToMessage extends PrivateChatEvent {
+  final MessageModel message;
+  const PrivateChatReplyToMessage(this.message);
+}
+
+class PrivateChatCancelAction extends PrivateChatEvent {
+  const PrivateChatCancelAction();
+}
+
 // ─── Internal ────────────────────────────────────────────────
 class _NewMessage extends PrivateChatEvent {
   final MessageModel message;
@@ -97,7 +124,6 @@ class _MediaResolved extends PrivateChatEvent {
 // ═══════════════════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════════════════
-
 class PrivateChatState {
   final List<MessageModel> messages;
   final bool isLoading;
@@ -108,6 +134,8 @@ class PrivateChatState {
   final bool isPeerTyping;
   final String? currentUserId;
   final int currentPage;
+  final MessageModel? editingMessage;
+  final MessageModel? replyingToMessage;
 
   const PrivateChatState({
     this.messages = const [],
@@ -119,6 +147,8 @@ class PrivateChatState {
     this.isPeerTyping = false,
     this.currentUserId,
     this.currentPage = 1,
+    this.editingMessage,
+    this.replyingToMessage,
   });
 
   PrivateChatState copyWith({
@@ -131,6 +161,10 @@ class PrivateChatState {
     bool? isPeerTyping,
     String? currentUserId,
     int? currentPage,
+    MessageModel? editingMessage,
+    MessageModel? replyingToMessage,
+    bool clearEditing = false,
+    bool clearReplying = false,
   }) {
     return PrivateChatState(
       messages: messages ?? this.messages,
@@ -142,6 +176,8 @@ class PrivateChatState {
       isPeerTyping: isPeerTyping ?? this.isPeerTyping,
       currentUserId: currentUserId ?? this.currentUserId,
       currentPage: currentPage ?? this.currentPage,
+      editingMessage: clearEditing ? null : (editingMessage ?? this.editingMessage),
+      replyingToMessage: clearReplying ? null : (replyingToMessage ?? this.replyingToMessage),
     );
   }
 }
@@ -168,6 +204,11 @@ class PrivateChatBloc extends Bloc<PrivateChatEvent, PrivateChatState> {
     on<PrivateChatSendMessage>(_onSendMessage);
     on<PrivateChatSendMedia>(_onSendMedia);
     on<PrivateChatTyping>(_onTyping);
+    on<PrivateChatEditMessage>(_onEditMessage);
+    on<PrivateChatDeleteMessage>(_onDeleteMessage);
+    on<PrivateChatStartEditing>((e, emit) => emit(state.copyWith(editingMessage: e.message, clearReplying: true)));
+    on<PrivateChatReplyToMessage>((e, emit) => emit(state.copyWith(replyingToMessage: e.message, clearEditing: true)));
+    on<PrivateChatCancelAction>((e, emit) => emit(state.copyWith(clearEditing: true, clearReplying: true)));
     on<_NewMessage>(_onNewMessage);
     on<_HistoryReceived>(_onHistoryReceived);
     on<_LocalLoaded>(_onLocalLoaded);
@@ -300,8 +341,37 @@ class PrivateChatBloc extends Bloc<PrivateChatEvent, PrivateChatState> {
       'type': event.type ?? 'text',
       'text': event.text,
       if (event.mediaPath != null) 'mediaPath': event.mediaPath,
-      if (event.replyToId != null) 'replyToId': event.replyToId,
+      if (state.replyingToMessage != null) 'replyToId': state.replyingToMessage!.id,
     });
+
+    if (state.replyingToMessage != null) {
+      emit(state.copyWith(clearReplying: true));
+    }
+  }
+
+  Future<void> _onEditMessage(PrivateChatEditMessage event, Emitter<PrivateChatState> emit) async {
+    final result = await repository.editMessage(event.messageId, event.text);
+    if (result.isSuccess) {
+      final list = state.messages.map((m) {
+        if (m.id == event.messageId) {
+          return m.copyWith(text: event.text);
+        }
+        return m;
+      }).toList();
+      emit(state.copyWith(messages: list, clearEditing: true));
+    } else {
+      emit(state.copyWith(error: 'Tahrirlashda xatolik'));
+    }
+  }
+
+  Future<void> _onDeleteMessage(PrivateChatDeleteMessage event, Emitter<PrivateChatState> emit) async {
+    final result = await repository.deleteMessage(event.messageId);
+    if (result.isSuccess) {
+      final list = state.messages.where((m) => m.id != event.messageId).toList();
+      emit(state.copyWith(messages: list));
+    } else {
+      emit(state.copyWith(error: 'O\'chirishda xatolik'));
+    }
   }
 
   // ─── Send media ───────────────────────────────────────────────

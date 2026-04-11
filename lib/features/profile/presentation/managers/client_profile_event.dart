@@ -30,3 +30,6 @@ class ClientProfileUsernameChanged extends ClientProfileEvent {
 
   const ClientProfileUsernameChanged(this.username, this.currentUsername);
 }
+class ClientProfileDeleteAccountRequested extends ClientProfileEvent {
+  const ClientProfileDeleteAccountRequested();
+}
